@@ -3,6 +3,10 @@ import { supabase } from './supabase.js';
 // Регулярные платежи для блока «На горизонте»: автопоиск по истории, подтверждение, сопоставление с реальной операцией
 export const rec = $state({ list: [], dismissed: [], found: [], paid: [], loaded: false, scanning: false, error: '' });
 export const HORIZON = 14;
+const RK = 'aurum.hz.range';
+let r0 = 'days'; try { r0 = localStorage.getItem(RK) === 'month' ? 'month' : 'days'; } catch {}
+export const view = $state({ range: r0 });
+export function setRange(r) { view.range = r; try { localStorage.setItem(RK, r); } catch {} }
 
 const pad = (n) => String(n).padStart(2, '0');
 export const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -35,7 +39,8 @@ export function daysLabel(n) {
 // Платежи текущего месяца: ещё не списанные (в т.ч. просроченные до 5 дней) и уже списавшиеся
 const monthEnd0 = () => { const t = today0(); return new Date(t.getFullYear(), t.getMonth() + 1, 0); };
 export function monthPending() {
-  const t = today0(), end = monthEnd0(), out = [];
+  const t = today0(), out = [];
+  const end = view.range === 'month' ? monthEnd0() : new Date(t.getTime() + HORIZON * 864e5);
   for (const p of rec.list) {
     let d = parseD(p.next_date), guard = 0;
     while (d <= end && guard++ < 6) {

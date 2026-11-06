@@ -3,10 +3,10 @@
   import Icon from '../lib/Icon.svelte';
   import { refs } from '../lib/refs.svelte.js';
   import { noEmoji, money, dayLabel } from '../lib/format.js';
-  import { rec, monthPending, monthPaid, daysLabel, PERIODS, MONTH_IN } from '../lib/recurring.svelte.js';
+  import { rec, view, setRange, HORIZON, monthPending, monthPaid, daysLabel, PERIODS, MONTH_IN } from '../lib/recurring.svelte.js';
   let { shown, onopen, onedit, onadd } = $props();
   let pend = $derived(monthPending());
-  let paid = $derived(monthPaid());
+  let paid = $derived(view.range === 'month' ? monthPaid() : []);
   let left = $derived(pend.reduce((s, p) => s + p.amount, 0));
   let done = $derived(paid.reduce((s, p) => s + p.amount, 0));
   const mon = MONTH_IN[new Date().getMonth()];
@@ -18,6 +18,7 @@
 
 <div class="sh"><h2>На горизонте</h2><button onclick={onopen}>Все</button></div>
 <div class="grp" class:in={anim}>
+  <div class="rg"><div class="seg"><button class:on={view.range === 'days'} onclick={() => setRange('days')}>{HORIZON} дней</button><button class:on={view.range === 'month'} onclick={() => setRange('month')}>Месяц</button></div></div>
   {#if rec.found.length}
     <button class="find" onclick={onopen}>
       <span class="fi"><Icon name="radar" size={22} /></span>
@@ -46,10 +47,10 @@
     </button>
   {/each}
   {#if !pend.length && !paid.length}
-    <p class="none">В {mon} плановых платежей пока нет</p>
+    <p class="none">{view.range === 'month' ? `В ${mon} плановых платежей пока нет` : `На ${HORIZON} дней платежей нет`}</p>
   {/if}
   {#if pend.length || paid.length}
-    <div class="foot"><span>Осталось заплатить в {mon}</span><b>{money(left)}</b></div>
+    <div class="foot"><span>{view.range === 'month' ? `Осталось заплатить в ${mon}` : `За ${HORIZON} дней`}</span><b>{money(left)}</b></div>
     {#if paid.length}<div class="foot f2"><span>Уже оплачено</span><b>{money(done)}</b></div>{/if}
   {/if}
   <button class="add" onclick={onadd}><Icon name="plus" size={16} /> Добавить плановый платёж</button>
@@ -77,6 +78,10 @@
   .r { font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
   .foot { display: flex; justify-content: space-between; padding: 12px 16px; background: var(--gold-soft); font-size: 14px; color: var(--muted); border-top: .5px solid var(--line); }
   .foot b { color: var(--text); font-weight: 600; }
+  .rg { padding: 10px 16px 4px; }
+  .seg { display: flex; background: var(--fill); border-radius: 9px; padding: 2px; }
+  .seg button { flex: 1; min-height: 30px; border-radius: 7px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .seg .on { background: var(--seg-on); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
   .f2 { border-top: 0; padding-top: 0; }
   .done { opacity: .6; }
   .pill.ok { background: rgba(36,138,61,.12); color: var(--pos); display: inline-flex; align-items: center; gap: 3px; }
