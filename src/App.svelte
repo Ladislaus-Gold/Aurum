@@ -5,6 +5,7 @@
   import TabBar from './lib/TabBar.svelte';
   import Login from './pages/Login.svelte';
   import More from './pages/More.svelte';
+  import Home from './pages/Home.svelte';
   import Stub from './pages/Stub.svelte';
 
   const icons = { home: '🏠', ops: '🧾', budget: '🎯', accounts: '💳' };
@@ -16,9 +17,13 @@
 {:else if !auth.session}
   <Login />
 {:else}
-  <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
+  {#if current !== 'home'}
+    <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
+  {/if}
   <div class="content">
-    {#if current === 'more'}
+    {#if current === 'home'}
+      <Home />
+    {:else if current === 'more'}
       <More />
     {:else}
       <Stub icon={icons[current] ?? '🚧'} />
