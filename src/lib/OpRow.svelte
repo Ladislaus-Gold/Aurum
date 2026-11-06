@@ -19,8 +19,8 @@
   .row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 16px; position: relative; text-align: left; min-height: 64px; }
   .row:not(:first-child)::before { content: ""; position: absolute; top: 0; left: 72px; right: 0; height: .5px; background: var(--line); }
   .mid { flex: 1; min-width: 0; }
-  .t { font-size: 17px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .s { font-size: 13px; color: var(--muted); line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t { font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .s { font-size: 12px; color: var(--muted); line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .r { text-align: right; font-variant-numeric: tabular-nums; flex: none; }
   .r .t { font-weight: 600; }
   .pos { color: var(--pos); }

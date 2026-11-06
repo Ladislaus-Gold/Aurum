@@ -78,22 +78,22 @@
 
 <style>
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--safe-t) + 16px) 20px 4px; }
-  .d { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .37px; line-height: 41px; }
+  .d { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: .37px; line-height: 41px; }
   .hb { display: flex; }
   .rf.plus :global(svg) { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; padding: 8px; width: 36px !important; height: 36px !important; box-sizing: border-box; border-radius: 50%; stroke: #fff; }
   .rf { width: 44px; height: 44px; display: grid; place-items: center; }
   .rf svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); color: var(--gold); box-sizing: border-box; }
-  .up { display: flex; align-items: center; gap: 6px; height: 34px; margin: 5px 6px 0 0; padding: 0 14px; border-radius: 99px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-size: 15px; font-weight: 600; }
+  .up { display: flex; align-items: center; gap: 6px; height: 34px; margin: 5px 6px 0 0; padding: 0 14px; border-radius: 99px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-size: 14px; font-weight: 600; }
   .rf.spin svg { animation: spin .9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .wrap { padding: 0 var(--pad); }
   .sh { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 4px 8px; }
-  .sh h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .35px; }
-  .sh button { font-size: 17px; color: var(--gold); min-height: 28px; }
+  .sh h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: .35px; }
+  .sh button { font-size: 15px; color: var(--gold); min-height: 28px; }
   .bt { display: block; width: 100%; text-align: left; border-radius: 20px; transition: transform .15s; }
   .bt:active { transform: scale(.98); }
   .err { margin-top: 24px; padding: 18px 16px; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); }
-  .err p { color: var(--muted); font-size: 15px; word-break: break-word; }
+  .err p { color: var(--muted); font-size: 14px; word-break: break-word; }
   .err button { color: var(--gold); font-weight: 600; min-height: 44px; }
 </style>

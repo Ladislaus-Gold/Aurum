@@ -129,15 +129,15 @@
 
 <style>
   .page { padding: 0 var(--pad) 24px; }
-  .nb { display: flex; align-items: center; color: var(--gold); padding: calc(var(--safe-t) + 12px) 0 4px; font-size: 17px; min-height: 48px; }
-  h1 { font-size: 34px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 4px; }
-  .cnt { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+  .nb { display: flex; align-items: center; color: var(--gold); padding: calc(var(--safe-t) + 12px) 0 4px; font-size: 15px; min-height: 48px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 4px; }
+  .cnt { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
   .msg { color: var(--muted); text-align: center; padding: 28px 0; }
   .mh { border-radius: 22px; padding: 18px; background: linear-gradient(150deg, #1a1410, #0a0807); color: #b9a27a; margin-bottom: 18px; box-shadow: var(--shadow); }
   .mh .t { display: flex; justify-content: space-between; align-items: center; }
   .live { font-size: 11px; font-weight: 700; color: #1a1410; background: #E8C277; border-radius: 6px; padding: 2px 7px; letter-spacing: .5px; }
-  .cn { font-size: 13px; margin-top: 10px; } .n { font-size: 38px; font-weight: 700; color: #F4DDA6; letter-spacing: -1px; margin: 2px 0 4px; font-variant-numeric: tabular-nums; } .up { font-size: 12px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
+  .cn { font-size: 12px; margin-top: 10px; } .n { font-size: 32px; font-weight: 700; color: #F4DDA6; letter-spacing: -1px; margin: 2px 0 4px; font-variant-numeric: tabular-nums; } .up { font-size: 11.5px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
   .card { background: var(--card); border-radius: 14px; margin-bottom: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .r { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 44px; position: relative; }
   .r + .r::before { content: ""; position: absolute; left: 14px; right: 0; top: 0; border-top: .5px solid var(--line); }
@@ -148,12 +148,12 @@
   .stp { display: flex; gap: 8px; margin: 4px 0 16px; } .stp i { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); } .stp i.on { background: #B8862C; }
   .tk { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
   .tk input { width: 100%; border: 0; outline: none; background: var(--fill); color: var(--text); border-radius: 10px; padding: 11px 12px; }
-  .tk small { display: block; color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.4; }
-  .pk { cursor: pointer; } .pk input { accent-color: #B8862C; width: 20px; height: 20px; } .m { flex: 1; min-width: 0; } .m small { display: block; color: var(--muted); font-size: 12px; }
+  .tk small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 8px; line-height: 1.4; }
+  .pk { cursor: pointer; } .pk input { accent-color: #B8862C; width: 20px; height: 20px; } .m { flex: 1; min-width: 0; } .m small { display: block; color: var(--muted); font-size: 11.5px; }
   .mk { color: var(--pos); font-weight: 700; width: 18px; } .mk.w { color: #C25E00; }
-  .err { color: var(--neg); font-size: 13px; text-align: center; } .info { color: var(--muted); font-size: 13px; text-align: center; }
+  .err { color: var(--neg); font-size: 12px; text-align: center; } .info { color: var(--muted); font-size: 12px; text-align: center; }
   .dim { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 60; }
   .al { position: fixed; left: 50%; top: 40%; transform: translateX(-50%); width: min(300px, 80vw); background: var(--card); border-radius: 18px; padding: 20px 16px 0; text-align: center; overflow: hidden; z-index: 61; }
-  .al b { font-size: 17px; display: block; } .al p { color: var(--muted); font-size: 13px; margin: 6px 0 16px; }
-  .bt { display: flex; border-top: .5px solid var(--line); margin: 0 -16px; } .bt button { flex: 1; padding: 13px 0; font-size: 17px; color: var(--gold); } .bt button + button { border-left: .5px solid var(--line); } .bt .dg { color: var(--neg); font-weight: 600; }
+  .al b { font-size: 15px; display: block; } .al p { color: var(--muted); font-size: 12px; margin: 6px 0 16px; }
+  .bt { display: flex; border-top: .5px solid var(--line); margin: 0 -16px; } .bt button { flex: 1; padding: 13px 0; font-size: 15px; color: var(--gold); } .bt button + button { border-left: .5px solid var(--line); } .bt .dg { color: var(--neg); font-weight: 600; }
 </style>
