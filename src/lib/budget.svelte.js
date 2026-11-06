@@ -100,7 +100,7 @@ export async function loadBudget(y, m) {
     });
 
     bud.data = {
-      y, m, month, days, day, state, left, plan, spent, remaining: plan - spent, perDay: perDayCan,
+      y, m, month, label: new Date(y, m, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', ''), days, day, state, left, plan, spent, remaining: plan - spent, perDay: perDayCan,
       series, norm, pacedFact, hasPaced: paced.length > 0,
       exp, buckets,
       badge: buckets.reduce((s, b) => s + b.undist, 0),
