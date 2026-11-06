@@ -5,10 +5,11 @@
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
   import PlanSheet from './PlanSheet.svelte';
+  import DistSheet from './DistSheet.svelte';
 
   const now = new Date();
   let ym = $state({ y: now.getFullYear(), m: now.getMonth() });
-  let more = $state(false), planOpen = $state(false);
+  let more = $state(false), planOpen = $state(false), distOpen = $state(false);
   let picked = $state(null), last = $state(null), plan = $state(0), saving = $state(false), serr = $state(''), note = $state('');
   const load = () => loadBudget(ym.y, ym.m);
   onMount(load);
@@ -134,7 +135,7 @@
 
     <div class="acts">
       <button class="ab p" onclick={() => (planOpen = true)}><Icon name="scale" size={18} />План расходов</button>
-      <button class="ab" onclick={() => soon('Разложить деньги')}><Icon name="coin" size={18} />Разложить деньги{#if d.badge > 0}<span class="bd">{f(d.badge)}</span>{/if}</button>
+      <button class="ab" onclick={() => (distOpen = true)}><Icon name="coin" size={18} />Разложить деньги{#if d.badge > 0}<span class="bd">{f(d.badge)}</span>{/if}</button>
     </div>
     {#if note}<div class="note">{note}</div>{/if}
 
@@ -185,6 +186,7 @@
   {/if}
 </div>
 
+<DistSheet open={distOpen} {d} onclose={() => (distOpen = false)} ondone={load} />
 <PlanSheet open={planOpen} {d} onclose={() => (planOpen = false)} ondone={load} />
 
 <Sheet open={!!picked} onclose={() => (picked = null)}>
