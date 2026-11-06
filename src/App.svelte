@@ -12,6 +12,7 @@
   import Stub from './pages/Stub.svelte';
   import Rules from './pages/Rules.svelte';
   import Mono from './pages/Mono.svelte';
+  import Analytics from './pages/Analytics.svelte';
   import NewOp from './lib/NewOp.svelte';
 
   
@@ -23,7 +24,7 @@
 {:else if !auth.session}
   <Login />
 {:else}
-  {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget' && current !== 'more' && current !== 'rules' && current !== 'mono'}
+  {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget' && current !== 'more' && current !== 'rules' && current !== 'mono' && current !== 'analytics'}
     <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
   {/if}
   <div class="content">
@@ -38,6 +39,8 @@
       <Budget />
     {:else if current === 'mono'}
       <Mono />
+    {:else if current === 'analytics'}
+      <Analytics />
     {:else if current === 'rules'}
       <Rules />
     {:else if current === 'more'}
