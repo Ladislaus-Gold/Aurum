@@ -92,6 +92,7 @@
   .hd { width: 40px; height: 44px; display: grid; place-items: center; color: var(--muted); touch-action: none; cursor: grab; flex: none; }
   .lift .hd { color: var(--gold); }
   .t { flex: 1; font-weight: 500; font-size: 17px; }
+  .ic { display: flex; align-items: center; justify-content: center; flex: none; }
   .r.off .t { color: var(--muted); }
   .r.off .ic { background: var(--fill) !important; color: var(--muted) !important; box-shadow: none; }
   .sw { width: 50px; height: 30px; border-radius: 15px; background: rgba(120,120,128,.32); position: relative; flex: none; transition: background .2s; margin-right: 4px; }
