@@ -1,11 +1,12 @@
 <script>
+  import { untrack } from 'svelte';
   import Sheet from './Sheet.svelte';
   import Icon from './Icon.svelte';
   import OpAvatar from './OpAvatar.svelte';
   import { supabase } from './supabase.js';
   import { noEmoji, fmt } from './format.js';
   import { loadRefs, logoFor } from './refs.svelte.js';
-  let { open = false, edit = null, onclose, onsaved } = $props();
+  let { open = false, edit = null, preAcc = 0, onclose, onsaved } = $props();
 
   const KINDS = [['EXPENSE', 'Расход'], ['INCOME', 'Доход'], ['RETURN', 'Возврат'], ['TRANSFER', 'Перевод']];
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -16,9 +17,9 @@
   let isEdit = $derived(!!edit), bank = $derived(!!edit?.mono_op_id);
   const ymd = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
-  $effect(() => { if (open) init(); });
+  $effect(() => { if (open) untrack(init); });
   async function init() {
-    askDel = false; err = ''; name = ''; amount = ''; cat = 0; split = false; rule = false; date = today(); action = 'EXPENSE';
+    askDel = false; err = ''; name = ''; amount = ''; cat = 0; split = false; rule = false; date = today(); action = 'EXPENSE'; parts = [{ c: 0, a: '' }, { c: 0, a: '' }];
     if (!ready) {
       try {
         await loadRefs();
@@ -34,6 +35,17 @@
     }
     const m = accs.find((x) => x.mono) ?? accs[0];
     acc = m?.id ?? 0; from = (accs.find((x) => x.src) ?? m)?.id ?? 0; to = accs.find((x) => x.id !== from)?.id ?? 0;
+    if (!edit) {
+      try {
+        const lt = JSON.parse(localStorage.getItem('aurum.lastTransfer') || 'null');
+        if (lt && accs.some((x) => x.id === lt.from) && accs.some((x) => x.id === lt.to) && lt.from !== lt.to) { from = lt.from; to = lt.to; }
+      } catch {}
+      if (preAcc && accs.some((x) => x.id === preAcc)) {
+        acc = preAcc;
+        if (from !== preAcc) { if (to === preAcc) to = from; from = preAcc; }
+        if (to === from) to = accs.find((x) => x.id !== from)?.id ?? 0;
+      }
+    }
     if (edit) {
       action = edit.action; name = edit.note ?? ''; amount = String(edit.amount); date = ymd(edit.date);
       acc = edit.account_id ?? acc; from = edit.from_account_id ?? from; to = edit.to_account_id ?? to; cat = edit.category_id ?? 0;
@@ -51,6 +63,17 @@
   let total = $derived(num(amount));
   let splitSum = $derived(Math.round(parts.reduce((s, p) => s + num(p.a), 0) * 100) / 100);
   const isT = $derived(action === 'TRANSFER');
+  $effect(() => {
+    if (!split) return;
+    const rest = parts.slice(1).reduce((t, p) => t + num(p.a), 0);
+    const first = String(Math.max(0, Math.round((total - rest) * 100) / 100));
+    untrack(() => { if (parts[0].a !== first) parts[0].a = first; });
+  });
+  function toggleSplit(e) {
+    split = e.currentTarget.checked;
+    if (split) parts = [{ c: cat, a: amount }, { c: 0, a: '' }];
+    else if (parts[0]?.c) cat = parts[0].c;
+  }
   const setAction = (a) => { action = a; cat = 0; split = false; parts = [{ c: 0, a: '' }, { c: 0, a: '' }]; };
   const sub = $derived(isT ? 'между своими счетами' : [hasLogo ? 'Магазин' : '', chosen?.name].filter(Boolean).join(' · ') || 'выбери категорию');
 
@@ -94,6 +117,7 @@
         const r = await supabase.from('transaction_splits').insert(sp.map((p, i) => ({ transaction_id: id, ...p, sort_order: i })));
         if (r.error) { if (!isEdit) await supabase.from('transactions').delete().eq('id', id); throw r.error; }
       }
+      if (isT) { try { localStorage.setItem('aurum.lastTransfer', JSON.stringify({ from, to })); } catch {} }
       if (rule && !isT && !split && row.note && cat) {
         const r = await supabase.from('rules').upsert({ action, category_id: cat, note: row.note }, { onConflict: 'action,note' });
         if (r.error) throw r.error;
@@ -152,7 +176,7 @@
               <div class="sp">
                 <label class="sc"><Icon name={cats.find((c) => c.id === p.c)?.icon ?? 'tag'} size={17} /><span>{cats.find((c) => c.id === p.c)?.name ?? 'Категория'}</span>
                   <select bind:value={p.c}><option value={0}>Категория</option>{#each list as c}<option value={c.id}>{c.name}</option>{/each}</select></label>
-                <input class="pa" type="text" inputmode="decimal" placeholder="0" bind:value={p.a} />
+                <input class="pa" type="text" inputmode="decimal" placeholder="0" bind:value={p.a} readonly={i === 0} />
               </div>
             {/each}
             <button class="add" onclick={() => (parts = [...parts, { c: 0, a: '' }])}>+ Добавить категорию</button>
@@ -166,7 +190,7 @@
       <div class="card">
         <label class="r"><div class="ic"><Icon name="card" size={17} /></div><div class="l">Дата</div><input class="dt" type="date" bind:value={date} disabled={bank} /></label>
         {#if !isT}
-          <label class="r"><div class="ic"><Icon name="swap" size={17} /></div><div class="l">Разделить на категории</div><input class="sw" type="checkbox" bind:checked={split} /></label>
+          <label class="r"><div class="ic"><Icon name="swap" size={17} /></div><div class="l">Разделить на категории</div><input class="sw" type="checkbox" checked={split} onchange={toggleSplit} /></label>
           {#if name.trim() && !split}<label class="r"><div class="ic"><Icon name="rule" size={17} /></div><div class="l">Запомнить для «{name.trim()}»</div><input class="sw" type="checkbox" bind:checked={rule} /></label>{/if}
         {/if}
       </div>

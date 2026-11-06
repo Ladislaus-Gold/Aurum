@@ -19,15 +19,6 @@
       <div class="n in">{money(budget.spent)}<small>· потрачено</small></div>
     {/if}
   </div>
-  {#each cats as c (c.id)}
-    <div class="row">
-      <div class="ic"><Icon name={c.icon || 'tag'} size={18} /></div>
-      <div class="mid">
-        <div class="top"><span class="t">{c.name}</span><span class="s num" class:in={anim}>{fmt(c.spent)} из {money(c.plan)}</span></div>
-        <div class="bar"><i class:over={c.spent > c.plan} style:width={anim ? pct(c.spent, c.plan) + '%' : '0'}></i></div>
-      </div>
-    </div>
-  {/each}
 </div>
 
 <style>
