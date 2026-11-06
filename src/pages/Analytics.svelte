@@ -129,6 +129,6 @@
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bar { height: 5px; border-radius: 3px; background: var(--fill); margin-top: 6px; } .bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #B8862C, #E8C277); }
   .am { font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
-  .btn { width: 100%; height: 48px; border-radius: 14px; background: var(--card); color: var(--gold); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: var(--shadow); margin: 4px 0 8px; } .btn:disabled { opacity: .6; }
+  .btn { width: 100%; height: 48px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; margin: 4px 0 8px; } .btn:disabled { opacity: .6; }
   .note { color: var(--muted); font-size: 13px; text-align: center; line-height: 1.45; margin: 8px 0; padding: 0 14px; } .err { color: var(--neg); font-size: 13px; text-align: center; }
 </style>

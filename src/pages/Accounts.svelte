@@ -119,5 +119,5 @@
   .a { font-weight: 600; font-variant-numeric: tabular-nums; }
   .a.z { color: var(--muted); font-weight: 400; }
   .err { color: var(--neg); }
-  .retry { border: 0; background: var(--gold-soft); color: var(--gold); border-radius: 12px; padding: 10px 16px; font: inherit; }
+  .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; font: inherit; }
 </style>

@@ -98,7 +98,7 @@
   .ic.warn { background: rgba(194,94,0,.14); color: #C25E00; } .ic.bad { background: rgba(215,0,21,.1); color: var(--neg); }
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; } .m small { display: block; color: var(--muted); font-size: 12px; line-height: 1.35; } .m small.h { margin-top: 2px; }
   .st { font-size: 13px; font-weight: 600; color: var(--pos); flex: none; } .st.warn { color: #C25E00; } .st.bad { color: var(--neg); }
-  .btn { width: 100%; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; margin-bottom: 10px; background: var(--card); color: var(--gold); box-shadow: var(--shadow); }
+  .btn { width: 100%; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; margin-bottom: 10px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; }
   .btn.p { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; } .btn:disabled { opacity: .6; }
   .err { color: var(--neg); font-size: 13px; text-align: center; }
 </style>

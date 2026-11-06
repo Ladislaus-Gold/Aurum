@@ -143,8 +143,8 @@
   .r + .r::before { content: ""; position: absolute; left: 14px; right: 0; top: 0; border-top: .5px solid var(--line); }
   .kv .r { justify-content: space-between; } .kv .r span { color: var(--muted); } .kv b { font-weight: 500; text-align: right; }
   .ok { color: var(--pos); } .bad { color: var(--neg); }
-  .btn { width: 100%; height: 48px; border-radius: 14px; background: var(--card); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; color: var(--gold); margin-bottom: 10px; box-shadow: var(--shadow); }
-  .btn.p { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; } .btn.red { color: var(--neg); } .btn:disabled { opacity: .6; }
+  .btn { width: 100%; height: 48px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+  .btn.p { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; } .btn.red { background: var(--card); color: var(--neg); box-shadow: var(--shadow); } .btn:disabled { opacity: .6; }
   .stp { display: flex; gap: 8px; margin: 4px 0 16px; } .stp i { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); } .stp i.on { background: #B8862C; }
   .tk { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: var(--shadow); }
   .tk input { width: 100%; border: 0; outline: none; background: var(--fill); color: var(--text); border-radius: 10px; padding: 11px 12px; }
