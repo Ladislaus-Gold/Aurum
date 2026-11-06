@@ -7,6 +7,9 @@
   import { upd, checkUpdate, applyUpdate } from '../lib/update.svelte.js';
   import { loadRefs } from '../lib/refs.svelte.js';
   import HomeBlocks from './HomeBlocks.svelte';
+  import HorizonSheet from './HorizonSheet.svelte';
+  import Horizon from '../home/Horizon.svelte';
+  import { rec, loadRecurring, syncRecurring, detect } from '../lib/recurring.svelte.js';
   import { hb } from '../lib/homeblocks.svelte.js';
   import BalanceCard from '../home/BalanceCard.svelte';
   import BudgetCard from '../home/BudgetCard.svelte';
@@ -14,7 +17,7 @@
   import RecentOps from '../home/RecentOps.svelte';
 
   let shown = $state(false);
-  let picked = $state(null), setOpen = $state(false);
+  let picked = $state(null), setOpen = $state(false), hzOpen = $state(false), hzEdit = $state(null);
   const date = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
   async function refresh() {
@@ -24,6 +27,7 @@
   }
   onMount(() => {
     loadRefs().catch(() => {}); refresh(); checkUpdate();
+    loadRecurring().then(syncRecurring).then(() => { if (!rec.found.length) detect(); }).catch(() => {});
     // при возврате в приложение: проверить новую версию и тихо обновить данные
     const vis = () => { if (document.visibilityState === 'visible') { checkUpdate(); if (!home.loading) loadHome(); } };
     document.addEventListener('visibilitychange', vis);
@@ -55,6 +59,8 @@
       {:else if b.id === 'budget'}
         <div class="sh"><h2>Бюджет на {home.budget.month}</h2></div>
         <button class="bt" onclick={() => (nav.tab = 'budget')} aria-label="Открыть бюджет"><BudgetCard budget={home.budget} cats={home.cats} {shown} /></button>
+      {:else if b.id === 'horizon'}
+        <Horizon {shown} onopen={() => { hzEdit = null; hzOpen = true; }} onedit={(p) => { hzEdit = p; hzOpen = true; }} />
       {:else if b.id === 'flow'}
         <div class="sh"><h2>Денежный поток</h2></div>
         <FlowCard months={home.months} {shown} />
@@ -67,6 +73,7 @@
 </div>
 
 <OpSheet {picked} onclose={() => (picked = null)} />
+<HorizonSheet open={hzOpen} edit={hzEdit} onclose={() => (hzOpen = false)} />
 <HomeBlocks open={setOpen} onclose={() => (setOpen = false)} />
 
 <style>
