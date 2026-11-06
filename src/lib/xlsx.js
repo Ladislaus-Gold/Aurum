@@ -1,8 +1,8 @@
 /* Генератор оформленного отчёта .xlsx без внешних библиотек (перенесён из Accounting; акцент — золото Aurum) */
 
-  var C = { ink: '1C1C1E', muted: '6C6C70', line: 'E5E5EA', card: 'F5F6FA', blue: 'B8862C', blueSoft: 'F7EEDA', green: '1E9E5A', red: 'D63B3B', hero: '1C1C1E', white: 'FFFFFF', amber: 'F59E0B' };
-  var PALETTE = ['B8862C', '1E9E5A', 'F59E0B', 'D63B3B', '8B5CF6', '06B6D4', 'EC4899', '94A3B8'];
-  var FONT = 'Segoe UI';
+  var C = { ink: '1A1410', muted: '6E665A', line: 'E8DFCC', card: 'FAF6EC', blue: 'B8862C', blueSoft: 'F7EEDA', green: '2F7D5B', red: 'B5503C', hero: '0F0C09', white: 'FFFFFF', amber: 'C9963A', gold: 'E8C277', goldText: 'F4DDA6', heroMuted: 'B9A27A' };
+  var PALETTE = ['C9963A', '2F7D5B', '4A6FA5', 'B5503C', '8B6BB0', '3E9AA6', 'A8A29A', '6E5B3A'];
+  var FONT = 'Arial';
   var WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   var MON = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
   var FMT_MONEY = '#,##0.00\\ "₴"';
@@ -205,7 +205,7 @@
     var sb = new StyleBook(), sst = new SST();
     var S = function (o) { return sb.get(o); };
     var ops = new Sheet('Операции'), sum = new Sheet('Сводка');
-    ops.tab = C.green;
+    ops.tab = C.gold;
     function R(col) { return 'Операции!$' + col + '$2:$' + col + '$' + N; }
     function sumIf(fn) { var s = 0; rows.forEach(function (r) { if (fn(r)) s += r.amt; }); return s; }
     function cntIf(fn) { var s = 0; rows.forEach(function (r) { if (fn(r)) s++; }); return s; }
@@ -215,7 +215,7 @@
     var heads = ['Дата', 'Тип', 'Сумма', 'Валюта', 'Категория', 'Счёт', 'Со счёта', 'На счёт', 'Заметка', 'Источник', 'Месяц', 'День недели'];
     var widths = [17, 10, 13, 8, 28, 18, 16, 16, 42, 11, 10, 13];
     widths.forEach(function (w, i) { ops.cols.push([i + 1, i + 1, w]); });
-    var hs = S({ b: 1, sz: 9, color: C.white, fill: C.hero, v: 'center', indent: 1 });
+    var hs = S({ b: 1, sz: 9, color: C.goldText, fill: C.hero, v: 'center', indent: 1 });
     heads.forEach(function (h, i) { ops.set(1, i + 1, h, hs); });
     ops.heights[1] = 26;
     var bb = ['thin', C.line];
@@ -248,9 +248,9 @@
 
     var heroS = function (o) { o = o || {}; o.fill = C.hero; o.color = o.color || C.white; return S(o); };
     sum.heights[1] = 8;
-    for (var c = 2; c <= 13; c++) { sum.set(2, c, '', heroS()); sum.set(3, c, '', heroS()); sum.set(4, c, '', S({ fill: C.blue })); }
-    sum.set(2, 2, 'Финансовый отчёт', heroS({ sz: 20, b: 1, indent: 1 })); sum.merge(2, 2, 2, 13); sum.heights[2] = 38;
-    sum.set(3, 2, 'Период: ' + model.periodLabel + '   ·   ' + model.accountLabel + '   ·   Сформирован ' + ddmmyyyy(gen) + ' ' + pad2(gen.getHours()) + ':' + pad2(gen.getMinutes()), heroS({ sz: 10, color: 'C7C7CC', indent: 1 })); sum.merge(3, 2, 3, 13); sum.heights[3] = 24;
+    for (var c = 2; c <= 13; c++) { sum.set(2, c, '', heroS()); sum.set(3, c, '', heroS()); sum.set(4, c, '', S({ fill: C.gold })); }
+    sum.set(2, 2, 'AURUM  ·  Финансовый отчёт', heroS({ sz: 20, b: 1, indent: 1, color: C.goldText })); sum.merge(2, 2, 2, 13); sum.heights[2] = 38;
+    sum.set(3, 2, 'Период: ' + model.periodLabel + '   ·   ' + model.accountLabel + '   ·   Сформирован ' + ddmmyyyy(gen) + ' ' + pad2(gen.getHours()) + ':' + pad2(gen.getMinutes()), heroS({ sz: 10, color: C.heroMuted, indent: 1 })); sum.merge(3, 2, 3, 13); sum.heights[3] = 24;
     sum.merge(4, 2, 4, 13); sum.heights[4] = 4; sum.heights[5] = 12;
 
     var W = ['thick', C.white];
@@ -353,7 +353,7 @@
     addChart(barChart({
       title: 'Доходы и расходы ' + granTitle, legend: true, gap: gran === 'day' ? 40 : 70,
       cat: { f: 'Сводка!$B$' + r0 + ':$B$' + rl, vals: labs },
-      series: [{ name: 'Доходы', nameF: 'Сводка!$D$' + hdr, f: 'Сводка!$D$' + r0 + ':$D$' + rl, vals: incV, color: C.green }, { name: 'Расходы', nameF: 'Сводка!$E$' + hdr, f: 'Сводка!$E$' + r0 + ':$E$' + rl, vals: expV, color: 'F25C5C' }]
+      series: [{ name: 'Доходы', nameF: 'Сводка!$D$' + hdr, f: 'Сводка!$D$' + r0 + ':$D$' + rl, vals: incV, color: C.green }, { name: 'Расходы', nameF: 'Сводка!$E$' + hdr, f: 'Сводка!$E$' + r0 + ':$E$' + rl, vals: expV, color: 'C9963A' }]
     }), 8, hdr - 1, 13, hdr - 1 + CH_ROWS);
     row = Math.max(rt, hdr + CH_ROWS - 1) + 2;
 
@@ -383,7 +383,7 @@
       cell(ct, 5, 1, catList.reduce(function (s, x) { return s + x.r; }, 0), Object.assign({ fmt: FMT_NUM, h: 'right' }, tS), 'SUM(E' + c0r + ':E' + cl + ')');
       cell(ct, 6, 1, totNet, Object.assign({ fmt: FMT_NUM, h: 'right' }, tS), 'SUM(F' + c0r + ':F' + cl + ')');
       cell(ct, 7, 1, totNet ? 1 : 0, Object.assign({ fmt: FMT_PCT, h: 'right' }, tS), 'SUM(G' + c0r + ':G' + cl + ')');
-      sum.cf.push('<conditionalFormatting sqref="F' + c0r + ':F' + cl + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFB7C6FF"/></dataBar></cfRule></conditionalFormatting>');
+      sum.cf.push('<conditionalFormatting sqref="F' + c0r + ':F' + cl + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFF0D9A6"/></dataBar></cfRule></conditionalFormatting>');
       var top = catList.slice(0, 8);
       chartNo++;
       addChart(doughnutChart({
@@ -413,7 +413,7 @@
       cell(it, 4, 1, income, Object.assign({ fmt: FMT_NUM, h: 'right' }, tS), 'SUM(D' + i0 + ':D' + il + ')');
       cell(it, 5, 1, incList.reduce(function (s, x) { return s + x.n; }, 0), Object.assign({ fmt: FMT_INT, h: 'right' }, tS), 'SUM(E' + i0 + ':E' + il + ')');
       cell(it, 6, 1, income ? 1 : 0, Object.assign({ fmt: FMT_PCT, h: 'right' }, tS), 'SUM(F' + i0 + ':F' + il + ')');
-      sum.cf.push('<conditionalFormatting sqref="D' + i0 + ':D' + il + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFA8E0C1"/></dataBar></cfRule></conditionalFormatting>');
+      sum.cf.push('<conditionalFormatting sqref="D' + i0 + ':D' + il + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFB9D9C7"/></dataBar></cfRule></conditionalFormatting>');
       row = it + 2;
     }
 
@@ -439,7 +439,7 @@
       cell(wt, 5, 1, cntExp, Object.assign({ fmt: FMT_INT, h: 'right' }, tS), 'SUM(E' + w0 + ':E' + wl + ')');
       cell(wt, 6, 1, '', Object.assign({ h: 'right' }, tS)); cell(wt, 7, 1, wNet ? 1 : 0, Object.assign({ fmt: FMT_PCT, h: 'right' }, tS), 'SUM(G' + w0 + ':G' + wl + ')');
       sum.set(wt + 1, 2, 'Больше всего вы тратите в: ' + WD[peakI] + ' (' + money(peak) + ')', S({ i: 1, color: C.muted, sz: 9, indent: 1 })); sum.merge(wt + 1, 2, wt + 1, 7);
-      sum.cf.push('<conditionalFormatting sqref="D' + w0 + ':D' + wl + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFFFD58A"/></dataBar></cfRule></conditionalFormatting>');
+      sum.cf.push('<conditionalFormatting sqref="D' + w0 + ':D' + wl + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFF0D9A6"/></dataBar></cfRule></conditionalFormatting>');
       chartNo++;
       addChart(barChart({
         title: 'Расходы по дням недели', gap: 50, labels: true,
@@ -463,7 +463,7 @@
         cell(r, 6, 1, x.n, { fmt: FMT_INT, h: 'right', color: C.muted }); cell(r, 7, 1, expGross ? x.s / expGross : 0, { fmt: FMT_PCT, h: 'right', color: C.muted });
       });
       sum.set(ml + 1, 2, 'Суммы по заметке операции, без учёта возвратов; доля — от всех расходов.', S({ i: 1, color: C.muted, sz: 9, indent: 1 })); sum.merge(ml + 1, 2, ml + 1, 7);
-      sum.cf.push('<conditionalFormatting sqref="E' + m0 + ':E' + ml + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFB7C6FF"/></dataBar></cfRule></conditionalFormatting>');
+      sum.cf.push('<conditionalFormatting sqref="E' + m0 + ':E' + ml + '"><cfRule type="dataBar" priority="' + (pr++) + '"><dataBar><cfvo type="num" val="0"/><cfvo type="max"/><color rgb="FFF0D9A6"/></dataBar></cfRule></conditionalFormatting>');
       chartNo++;
       addChart(barChart({
         title: 'Топ мест трат', horizontal: true, gap: 40, labels: true,
@@ -528,9 +528,9 @@
 
       // шапка
       yoy.heights[1] = 8;
-      for (var yc = 2; yc <= lastCol; yc++) { yoy.set(2, yc, '', heroS()); yoy.set(3, yc, '', heroS()); yoy.set(4, yc, '', S({ fill: C.blue })); }
-      yoy.set(2, 2, 'Год к году', heroS({ sz: 20, b: 1, indent: 1 })); yoy.merge(2, 2, 2, lastCol); yoy.heights[2] = 38;
-      yoy.set(3, 2, 'Сравнение календарных лет   ·   ' + model.accountLabel + '   ·   Данные с ' + ddmmyyyy(model.start) + ' по ' + ddmmyyyy(addDays(model.end, -1)), heroS({ sz: 10, color: 'C7C7CC', indent: 1 })); yoy.merge(3, 2, 3, lastCol); yoy.heights[3] = 24;
+      for (var yc = 2; yc <= lastCol; yc++) { yoy.set(2, yc, '', heroS()); yoy.set(3, yc, '', heroS()); yoy.set(4, yc, '', S({ fill: C.gold })); }
+      yoy.set(2, 2, 'AURUM  ·  Год к году', heroS({ sz: 20, b: 1, indent: 1, color: C.goldText })); yoy.merge(2, 2, 2, lastCol); yoy.heights[2] = 38;
+      yoy.set(3, 2, 'Сравнение календарных лет   ·   ' + model.accountLabel + '   ·   Данные с ' + ddmmyyyy(model.start) + ' по ' + ddmmyyyy(addDays(model.end, -1)), heroS({ sz: 10, color: C.heroMuted, indent: 1 })); yoy.merge(3, 2, 3, lastCol); yoy.heights[3] = 24;
       yoy.merge(4, 2, 4, lastCol); yoy.heights[4] = 4; yoy.heights[5] = 12;
 
       var yLast = years[ny - 1], yPrev = yLast - 1;
@@ -580,7 +580,7 @@
       addChart(barChart({
         title: 'Доходы и расходы по годам', legend: true, gap: 80,
         cat: { f: '\'Год к году\'!$B$' + y0r + ':$B$' + ylr, vals: years.slice(), numeric: true },
-        series: [{ name: 'Доходы', nameF: '\'Год к году\'!$D$' + yh, f: '\'Год к году\'!$D$' + y0r + ':$D$' + ylr, vals: incYs, color: C.green }, { name: 'Расходы', nameF: '\'Год к году\'!$E$' + yh, f: '\'Год к году\'!$E$' + y0r + ':$E$' + ylr, vals: expYs, color: 'F25C5C' }]
+        series: [{ name: 'Доходы', nameF: '\'Год к году\'!$D$' + yh, f: '\'Год к году\'!$D$' + y0r + ':$D$' + ylr, vals: incYs, color: C.green }, { name: 'Расходы', nameF: '\'Год к году\'!$E$' + yh, f: '\'Год к году\'!$E$' + y0r + ':$E$' + ylr, vals: expYs, color: 'C9963A' }]
       }), 1, cTop - 1, toCol, cTop - 1 + 16);
       var yNext = cTop + 16 + 1;
 
@@ -635,7 +635,7 @@
         cell(mt, DC, 1, tl - tp, Object.assign({ fmt: FMT_NUM, h: 'right' }, tS), lL + mt + '-' + pL + mt);
         cell(mt, PCt, 1, tp === 0 ? '—' : (tl - tp) / tp, Object.assign({ fmt: FMT_PCT, h: 'right' }, tS), 'IF(' + pL + mt + '=0,"—",' + dL + mt + '/' + pL + mt + ')');
         // тепловая карта по годам и цвета изменений (для расходов рост красный, для доходов зелёный)
-        yoy.cf.push('<conditionalFormatting sqref="' + colName(YC0) + m0 + ':' + colName(lastYearCol) + ml + '"><cfRule type="colorScale" priority="' + (pr++) + '"><colorScale><cfvo type="min"/><cfvo type="max"/><color rgb="FFFFFFFF"/><color rgb="FF' + (isExp ? 'BFCBFF' : 'B5E5CA') + '"/></colorScale></cfRule></conditionalFormatting>');
+        yoy.cf.push('<conditionalFormatting sqref="' + colName(YC0) + m0 + ':' + colName(lastYearCol) + ml + '"><cfRule type="colorScale" priority="' + (pr++) + '"><colorScale><cfvo type="min"/><cfvo type="max"/><color rgb="FFFFFFFF"/><color rgb="FF' + (isExp ? 'F0D9A6' : 'B5E5CA') + '"/></colorScale></cfRule></conditionalFormatting>');
         var up = isExp ? dResNeg : dResPos, down = isExp ? dResPos : dResNeg;
         [dL, colName(PCt)].forEach(function (L) {
           yoy.cf.push('<conditionalFormatting sqref="' + L + m0 + ':' + L + mt + '"><cfRule type="expression" dxfId="' + up + '" priority="' + (pr++) + '"><formula>AND(ISNUMBER(' + L + m0 + '),' + L + m0 + '&gt;0)</formula></cfRule><cfRule type="expression" dxfId="' + down + '" priority="' + (pr++) + '"><formula>AND(ISNUMBER(' + L + m0 + '),' + L + m0 + '&lt;0)</formula></cfRule></conditionalFormatting>');
