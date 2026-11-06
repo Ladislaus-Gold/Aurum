@@ -35,7 +35,8 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .caption2 { font-size: 11px; color: var(--muted); }
 
 /* Чёткая верхняя граница: под статус-баром сплошная заливка, контент уходит под неё без дымки */
-body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-t); background: var(--bg); z-index: 60; pointer-events: none; }
+/* Настоящий элемент (не ::before и без pointer-events:none): iOS 26 ищет его hit-тестом у верхнего края и тогда не рисует свой размытый «scroll edge» */
+#edge-top { position: fixed; top: 0; left: 0; right: 0; height: max(var(--safe-t), 12px); background: var(--bg); z-index: 60; }
 
 /* Единый значок Aurum: золотой круг с белой линейной иконкой (как в «Последних операциях») */
 .ic:not(.re):not(.warn):not(.bad):not(.out .ic) {
