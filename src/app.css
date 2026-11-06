@@ -15,9 +15,9 @@
     --tab: rgba(29,29,31,.86); --pos: #30D158; --neg: #FF453A; --shadow: none; }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 html, body, #app { margin: 0; height: 100%; }
-body { font-family: var(--font); font-size: 17px; line-height: 1.3; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+body { overscroll-behavior-x: none; touch-action: pan-y; max-width: 100vw; font-family: var(--font); font-size: 17px; line-height: 1.3; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 input, select, textarea { font: inherit; font-size: 16px; }
 .num { font-variant-numeric: tabular-nums; }
