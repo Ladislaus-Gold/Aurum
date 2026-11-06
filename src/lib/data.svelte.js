@@ -57,7 +57,7 @@ export async function loadHome() {
       supabase.from('budgets').select('category_id,amount').eq('month', cur),
       supabase.rpc('month_category_totals', { p_month: cur }),
       supabase.from('transactions')
-        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note')
+        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
         .order('date', { ascending: false }).limit(4),
       supabase.from('accounts').select('id,name'),
       allTransactions()

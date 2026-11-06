@@ -3,6 +3,7 @@
   import OpAvatar from './OpAvatar.svelte';
   import { money, fullDate } from './format.js';
   import { opTitle } from './refs.svelte.js';
+  import { nav } from './nav.svelte.js';
   let { picked, onclose } = $props();
   const kind = { EXPENSE: 'Расход', INCOME: 'Доход', RETURN: 'Возврат', TRANSFER: 'Перевод' };
   let amount = $derived(picked ? (picked.action === 'EXPENSE' ? '−' : picked.action === 'TRANSFER' ? '' : '+') + money(picked.amount, 2) : '');
@@ -27,7 +28,7 @@
       {/if}
       <div class="r"><span>Дата</span><span>{fullDate(t.date)}</span></div>
     </div>
-    <button class="done" onclick={onclose}>Готово</button>
+    <div class="two"><button class="gh" onclick={onclose}>Готово</button><button class="done" onclick={() => { const x = t; onclose?.(); nav.edit = x; }}>Изменить</button></div>
   {/if}
 </Sheet>
 
@@ -39,5 +40,7 @@
   .r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 17px; position: relative; }
   .r + .r::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--line); }
   .r span:last-child { color: var(--muted); text-align: right; }
-  .done { margin-top: 14px; width: 100%; height: 50px; border-radius: 14px; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; font-weight: 700; font-size: 17px; }
+  .two { display: flex; gap: 10px; margin-top: 14px; } .two > * { flex: 1; }
+  .gh { height: 50px; border-radius: 14px; background: var(--fill); font-weight: 600; font-size: 17px; }
+  .done { width: 100%; height: 50px; border-radius: 14px; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; font-weight: 700; font-size: 17px; }
 </style>

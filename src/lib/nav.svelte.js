@@ -13,6 +13,6 @@ export const moreItems = [
   { id: 'status', label: 'Статус', icon: 'stat', group: 'Система' },
   { id: 'backup', label: 'Резервная копия', icon: 'save', group: 'Деньги' }
 ];
-export const nav = $state({ tab: 'home', sub: null, newOp: false, rev: 0 });
+export const nav = $state({ tab: 'home', sub: null, newOp: false, edit: null, rev: 0 });
 export const titleOf = (id) =>
   [...tabs, ...moreItems].find((x) => x.id === id)?.label ?? '';

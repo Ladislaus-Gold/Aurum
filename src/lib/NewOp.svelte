@@ -5,18 +5,20 @@
   import { supabase } from './supabase.js';
   import { noEmoji, fmt } from './format.js';
   import { loadRefs, logoFor } from './refs.svelte.js';
-  let { open = false, onclose, onsaved } = $props();
+  let { open = false, edit = null, onclose, onsaved } = $props();
 
   const KINDS = [['EXPENSE', 'Расход'], ['INCOME', 'Доход'], ['RETURN', 'Возврат'], ['TRANSFER', 'Перевод']];
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   let cats = $state([]), accs = $state([]);
   let action = $state('EXPENSE'), name = $state(''), amount = $state(''), acc = $state(0), from = $state(0), to = $state(0);
   let cat = $state(0), date = $state(today()), split = $state(false), parts = $state([{ c: 0, a: '' }, { c: 0, a: '' }]), rule = $state(false);
-  let busy = $state(false), err = $state(''), ready = $state(false);
+  let busy = $state(false), err = $state(''), ready = $state(false), askDel = $state(false);
+  let isEdit = $derived(!!edit), bank = $derived(!!edit?.mono_op_id);
+  const ymd = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
   $effect(() => { if (open) init(); });
   async function init() {
-    err = ''; name = ''; amount = ''; cat = 0; split = false; rule = false; date = today(); action = 'EXPENSE';
+    askDel = false; err = ''; name = ''; amount = ''; cat = 0; split = false; rule = false; date = today(); action = 'EXPENSE';
     if (!ready) {
       try {
         await loadRefs();
@@ -32,6 +34,12 @@
     }
     const m = accs.find((x) => x.mono) ?? accs[0];
     acc = m?.id ?? 0; from = (accs.find((x) => x.src) ?? m)?.id ?? 0; to = accs.find((x) => x.id !== from)?.id ?? 0;
+    if (edit) {
+      action = edit.action; name = edit.note ?? ''; amount = String(edit.amount); date = ymd(edit.date);
+      acc = edit.account_id ?? acc; from = edit.from_account_id ?? from; to = edit.to_account_id ?? to; cat = edit.category_id ?? 0;
+      const sp = await supabase.from('transaction_splits').select('category_id,amount,sort_order').eq('transaction_id', edit.id).order('sort_order');
+      if (!sp.error && sp.data.length > 1) { split = true; parts = sp.data.map((x) => ({ c: x.category_id, a: String(x.amount) })); }
+    }
   }
 
   let list = $derived(cats.filter((c) => c.type === (action === 'INCOME' ? 'INCOME' : 'EXPENSE')));
@@ -68,12 +76,23 @@
     }
     busy = true;
     try {
-      const ins = await supabase.from('transactions').insert(row).select('id');
-      if (ins.error) throw ins.error;
-      const id = ins.data?.[0]?.id;
+      let id;
+      if (isEdit) {
+        id = edit.id;
+        const upd = bank ? { category_id: cat, note: row.note } : { ...row, date: date === ymd(edit.date) ? edit.date : row.date };
+        const u = await supabase.from('transactions').update({ ...upd, updated_at: new Date().toISOString() }).eq('id', id).select('id');
+        if (u.error) throw u.error;
+        if (!u.data?.length) throw new Error('Операция не найдена или нет доступа.');
+        const d = await supabase.from('transaction_splits').delete().eq('transaction_id', id);
+        if (d.error) throw d.error;
+      } else {
+        const ins = await supabase.from('transactions').insert(row).select('id');
+        if (ins.error) throw ins.error;
+        id = ins.data?.[0]?.id;
+      }
       if (sp && id) {
         const r = await supabase.from('transaction_splits').insert(sp.map((p, i) => ({ transaction_id: id, ...p, sort_order: i })));
-        if (r.error) { await supabase.from('transactions').delete().eq('id', id); throw r.error; }
+        if (r.error) { if (!isEdit) await supabase.from('transactions').delete().eq('id', id); throw r.error; }
       }
       if (rule && !isT && !split && row.note && cat) {
         const r = await supabase.from('rules').upsert({ action, category_id: cat, note: row.note }, { onConflict: 'action,note' });
@@ -83,20 +102,29 @@
     } catch (e) { err = e?.message ?? String(e); }
     busy = false;
   }
+  async function del() {
+    busy = true; err = '';
+    try {
+      const d = await supabase.from('transactions').delete().eq('id', edit.id).select('id');
+      if (d.error) throw d.error;
+      askDel = false; onclose?.(); await onsaved?.();
+    } catch (e) { err = e?.message ?? String(e); askDel = false; }
+    busy = false;
+  }
   const money2 = (n) => fmt(n, Math.round(n * 100) % 100 ? 2 : 0);
 </script>
 
 <Sheet {open} {onclose}>
   <div class="body">
-    <div class="top"><b>Новая операция</b><button onclick={onclose}>Отмена</button></div>
+    <div class="top"><b>{isEdit ? 'Изменить операцию' : 'Новая операция'}</b><button onclick={onclose}>Отмена</button></div>
     <div class="scroll">
       <div class="hero">
-        <div class="seg">{#each KINDS as [k, l]}<button class:on={action === k} onclick={() => setAction(k)}>{l}</button>{/each}</div>
+        <div class="seg">{#each KINDS as [k, l]}<button class:on={action === k} disabled={isEdit && action !== k} class:off={isEdit && action !== k} onclick={() => setAction(k)}>{l}</button>{/each}</div>
         <div class="who">
           <OpAvatar t={tv} size={46} />
           <div class="nm"><input placeholder={isT ? 'Название (необязательно)' : 'Название или магазин'} bind:value={name} autocomplete="off" /><small>{sub}</small></div>
         </div>
-        <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={amount} aria-label="Сумма" style:width="{Math.max(1, amount.length)}ch" /><span>₴</span></div>
+        <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={amount} readonly={bank} aria-label="Сумма" style:width="{Math.max(1, amount.length)}ch" /><span>₴</span></div>
         {#if isT}
           <div class="pills">
             <label class="pill">{accName(from)} ▾<select bind:value={from}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
@@ -104,8 +132,9 @@
             <label class="pill">{accName(to)} ▾<select bind:value={to}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
           </div>
         {:else}
-          <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)} ▾<select bind:value={acc}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
+          <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)}{bank ? '' : ' ▾'}<select bind:value={acc} disabled={bank}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
         {/if}
+        {#if bank}<div class="lock"><Icon name="lock" size={15} />Операция из Monobank: сумму, счёт и дату менять нельзя</div>{/if}
       </div>
 
       {#if !isT}
@@ -135,7 +164,7 @@
       {/if}
 
       <div class="card">
-        <label class="r"><div class="ic"><Icon name="card" size={17} /></div><div class="l">Дата</div><input class="dt" type="date" bind:value={date} /></label>
+        <label class="r"><div class="ic"><Icon name="card" size={17} /></div><div class="l">Дата</div><input class="dt" type="date" bind:value={date} disabled={bank} /></label>
         {#if !isT}
           <label class="r"><div class="ic"><Icon name="swap" size={17} /></div><div class="l">Разделить на категории</div><input class="sw" type="checkbox" bind:checked={split} /></label>
           {#if name.trim() && !split}<label class="r"><div class="ic"><Icon name="rule" size={17} /></div><div class="l">Запомнить для «{name.trim()}»</div><input class="sw" type="checkbox" bind:checked={rule} /></label>{/if}
@@ -144,6 +173,12 @@
       {#if err}<p class="err">{err}</p>{/if}
     </div>
     <button class="go" disabled={busy} onclick={save}>{busy ? 'Сохраняю…' : 'Сохранить'}</button>
+    {#if isEdit && !bank}<button class="del" disabled={busy} onclick={() => (askDel = true)}>Удалить операцию</button>{/if}
+    {#if askDel}
+      <div class="dim" onclick={() => (askDel = false)} aria-hidden="true"></div>
+      <div class="al" role="alertdialog"><b>Удалить операцию?</b><p>{[name || 'Без названия', `${edit.action === 'EXPENSE' ? '−' : ''}${money2(num(amount))} ₴`].join(' · ')}.<br />Это действие нельзя отменить.</p>
+        <div class="bt"><button onclick={() => (askDel = false)}>Отмена</button><button class="dg" onclick={del}>Удалить</button></div></div>
+    {/if}
   </div>
 </Sheet>
 
@@ -192,4 +227,13 @@
   .err { color: var(--neg); font-size: 13px; text-align: center; margin: 4px 0; }
   .go { height: 50px; width: 100%; margin-top: 10px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; font-size: 17px; }
   .go:disabled { opacity: .6; }
+  .seg button.off { opacity: .35; }
+  .lock { display: flex; gap: 8px; align-items: center; background: rgba(232,194,119,.14); color: #E8C277; border-radius: 10px; padding: 7px 10px; font-size: 12px; margin-top: 10px; }
+  .del { width: 100%; height: 46px; margin-top: 8px; border-radius: 14px; background: rgba(215,0,21,.1); color: var(--neg); font-weight: 600; }
+  .dim { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 60; }
+  .al { position: fixed; left: 50%; top: 40%; transform: translateX(-50%); width: min(300px, 80vw); background: var(--card); border-radius: 18px; padding: 20px 16px 0; text-align: center; overflow: hidden; z-index: 61; }
+  .al b { font-size: 17px; display: block; } .al p { color: var(--muted); font-size: 13px; margin: 6px 0 16px; }
+  .bt { display: flex; border-top: .5px solid var(--line); margin: 0 -16px; }
+  .bt button { flex: 1; padding: 13px 0; font-size: 17px; color: var(--gold); } .bt button + button { border-left: .5px solid var(--line); }
+  .bt .dg { color: var(--neg); font-weight: 600; }
 </style>
