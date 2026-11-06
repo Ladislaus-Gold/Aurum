@@ -16,6 +16,7 @@ const diffDays = (a, b) => Math.round((a - b) / 864e5);
 const dim = (y, m) => new Date(y, m + 1, 0).getDate();
 const norm = (s) => (s ?? '').trim().toLowerCase();
 const same = (pattern, note) => { const n = norm(note); return !!n && (n === pattern || n.startsWith(pattern + ' ')); };
+const stripFx = (s) => (s ?? '').replace(/\s*\(fx[^)]*\)/gi, '');
 const median = (a) => { const s = [...a].sort((x, y) => x - y); const k = s.length >> 1; return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
 
 export function addPeriod(dateStr, period, day) {
@@ -127,30 +128,36 @@ export async function detect() {
     }
     const groups = new Map();
     for (const x of rows) {
-      const k = norm(x.note); if (!k) continue;
-      (groups.get(k) ?? groups.set(k, []).get(k)).push({ d: new Date(x.date), amount: Number(x.amount), note: x.note, cat: x.category_id, acc: x.account_id });
+      const k = norm(stripFx(x.note)); if (!k) continue;
+      (groups.get(k) ?? groups.set(k, []).get(k)).push({ d: new Date(x.date), amount: Number(x.amount), note: stripFx(x.note), cat: x.category_id, acc: x.account_id });
     }
     const known = [...rec.list.map((p) => p.pattern), ...rec.dismissed];
     const t = today0(), out = [];
-    for (const [k, g] of groups) {
-      if (g.length < 3 || known.some((p) => same(p, k))) continue;
+
+    // одна «серия» операций → кандидат или null
+    const evalSeries = (k, g, whole) => {
+      if (g.length < 2) return null;
       g.sort((a, b) => a.d - b.d);
       const last = g[g.length - 1];
       const amounts = g.map((x) => x.amount), med = median(amounts);
       const lo = Math.min(...amounts), hi = Math.max(...amounts);
-      if (hi - lo > med * 0.35) continue; // сумма гуляет — не подписка
       const gaps = g.slice(1).map((x, i) => diffDays(x.d, g[i].d)).filter((n) => n > 0);
       const months = new Set(g.map((x) => x.d.getFullYear() * 12 + x.d.getMonth()));
-      let period = null, day = null;
-      if (months.size >= 3 && g.length <= months.size * 1.5) {
-        const days = g.map((x) => x.d.getDate()), md = median(days);
-        if (days.filter((n) => Math.abs(n - md) <= 3).length >= days.length * 0.6 && diffDays(t, last.d) <= 50) { period = 'month'; day = Math.round(md); }
+      const days = g.map((x) => x.d.getDate()), md = median(days);
+      let period = null, day = null, amount = Math.round(med), approx = hi - lo > med * 0.02;
+      if (months.size >= 2 && g.length <= months.size * 1.5 + 0.5 && diffDays(t, last.d) <= 50) {
+        const within = (n) => days.filter((v) => Math.abs(v - md) <= n).length;
+        const loose = months.size >= 3 && within(3) >= days.length * 0.6 && hi - lo <= med * 0.35;
+        const tight = within(2) === days.length && hi - lo <= med * 0.1; // 2 месяца подряд в один день и на ту же сумму
+        // подписка, у которой выросла цена: день держится стабильно, сумму берём из последней операции
+        const priced = whole && months.size >= 3 && within(1) >= days.length * 0.75;
+        if (loose || tight || priced) { period = 'month'; day = Math.round(md); if (priced && !loose) { amount = Math.round(last.amount); approx = false; } }
       }
-      if (!period && g.length >= 5 && gaps.length) {
+      if (!period && g.length >= 5 && gaps.length && hi - lo <= med * 0.35) {
         const ok = gaps.filter((n) => n >= 5 && n <= 9).length;
         if (ok >= gaps.length * 0.7 && diffDays(t, last.d) <= 16) period = 'week';
       }
-      if (!period) continue;
+      if (!period) return null;
       let next;
       if (period === 'month') {
         let y = last.d.getFullYear(), m = last.d.getMonth(), c;
@@ -162,11 +169,26 @@ export async function detect() {
         next = ymd(c);
       }
       const cats = g.map((x) => x.cat).filter(Boolean);
-      out.push({
-        name: last.note.trim(), pattern: k, amount: Math.round(med), period, next_date: next,
+      return {
+        name: last.note.trim(), pattern: k, amount, period, next_date: next,
         category_id: cats.length ? cats[cats.length - 1] : null, account_id: last.acc ?? null,
-        approx: hi - lo > med * 0.02, count: g.length, lo: Math.round(lo), hi: Math.round(hi), day
-      });
+        approx, count: g.length, lo: Math.round(lo), hi: Math.round(hi), day
+      };
+    };
+    // группы сумм: суммы в пределах 15% друг от друга (отделяет подписку от разовых покупок у того же магазина)
+    const clusters = (g) => {
+      const s = [...g].sort((a, b) => a.amount - b.amount), res = [];
+      for (const x of s) {
+        const c = res[res.length - 1];
+        if (c && x.amount <= c[0].amount * 1.15) c.push(x); else res.push([x]);
+      }
+      return res;
+    };
+    for (const [k, g] of groups) {
+      if (g.length < 2 || known.some((p) => same(p, k))) continue;
+      let c = evalSeries(k, [...g], true);
+      if (!c) for (const cl of clusters(g)) { c = evalSeries(k, cl, false); if (c) break; }
+      if (c) out.push(c);
     }
     out.sort((a, b) => b.count - a.count);
     rec.found = out.slice(0, 12);
