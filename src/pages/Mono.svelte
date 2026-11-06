@@ -70,6 +70,12 @@
       <div class="n">{own != null ? money(own, st.account?.currency) : '—'}</div>
       <div class="up">{st.state?.updated_at ? `Обновлено ${when(st.state.updated_at)}${SRC[st.state.source] ? ` · ${SRC[st.state.source]}` : ''}` : 'ещё не обновлялся'}</div>
     </div>
+    {#if Number(st.state?.credit_limit_kop) > 0}
+      <div class="card kv" style="margin-bottom:14px">
+        <div class="r"><span>Кредитный лимит</span><b>{money(Number(st.state.credit_limit_kop) / 100, st.account?.currency)}</b></div>
+        <div class="r"><span>Доступно на карте</span><b>{money(Number(st.state.balance_kop) / 100, st.account?.currency)}</b></div>
+      </div>
+    {/if}
     <h2>Подключение</h2>
     <div class="card kv">
       <div class="r"><span>Счёт в Aurum</span><b>{st.account?.name ?? '—'}</b></div>

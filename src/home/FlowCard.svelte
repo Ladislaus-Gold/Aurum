@@ -26,7 +26,7 @@
         <div class="up" style:height="{up}px"><i style:height="{hi(m)}px"></i></div>
         <div class="axis"></div>
         <div class="dn" style:height="{dn}px"><i style:height="{he(m)}px"></i></div>
-        <em>{m.label}</em>
+        <em class:cov={sel === i && he(m) > dn + 6}>{m.label}</em>
       </button>
     {/each}
   </div>
@@ -58,6 +58,7 @@
   .axis { width: 100%; height: 1.5px; background: var(--line); }
   em { font-style: normal; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-top: 7px; }
   .col.sel em { color: var(--gold); }
+  .col.sel em.cov { color: #fff; position: relative; z-index: 1; }
   .tri { display: flex; border-top: .5px solid var(--line); }
   .tri > div { flex: 1; padding: 12px; min-width: 0; }
   .tri > div + div { border-left: .5px solid var(--line); }

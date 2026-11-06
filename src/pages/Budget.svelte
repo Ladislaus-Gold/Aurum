@@ -5,6 +5,8 @@
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
   import PlanSheet from './PlanSheet.svelte';
+  import TxList from '../lib/TxList.svelte';
+  import { txByCategory } from '../lib/txq.js';
   import DistSheet from './DistSheet.svelte';
 
   const now = new Date();
@@ -82,7 +84,12 @@
   // лист категории
   $effect(() => { if (picked) last = picked; });
   let c = $derived(picked ?? last);
-  function open(cat) { picked = cat; plan = cat.plan; serr = ''; note = ''; }
+  let ctx = $state([]), ctxLoad = $state(false), ctxErr = $state('');
+  function open(cat) {
+    picked = cat; plan = cat.plan; serr = ''; note = ''; ctx = []; ctxErr = ''; ctxLoad = true;
+    const id = cat.id;
+    txByCategory(id, ym.y, ym.m).then((r) => { if (picked?.id === id) ctx = r; }).catch((e) => { ctxErr = e?.message ?? String(e); }).finally(() => (ctxLoad = false));
+  }
   const minOk = (cat, v) => cat.mandatory ? v >= cat.min : (v === 0 || v >= cat.min);
   function bump(dv) { plan = Math.max(0, plan + dv); }
   async function save() {
@@ -195,6 +202,7 @@
     <div class="ml">{modeLabel(c)}</div>
     <div class="step"><button onclick={() => bump(-500)} aria-label="Минус 500">−500</button><div class="pv">{f(plan)} ₴</div><button onclick={() => bump(500)} aria-label="Плюс 500">+500</button></div>
     <div class="list">{#each detail(c) as [k, v]}<div class="dr"><span>{k}</span><span>{v}</span></div>{/each}</div>
+    <TxList rows={ctx} loading={ctxLoad} error={ctxErr} title="Операции за месяц" />
     {#if serr}<p class="err">{serr}</p>{/if}
     <button class="save" disabled={saving} onclick={save}>{saving ? 'Сохраняю…' : 'Сохранить'}</button>
   {/if}
