@@ -1,6 +1,6 @@
 <script>
   import { auth } from './lib/auth.svelte.js';
-  import { nav, titleOf } from './lib/nav.svelte.js';
+  import { nav, titleOf, moreItems } from './lib/nav.svelte.js';
   import NavBar from './lib/NavBar.svelte';
   import TabBar from './lib/TabBar.svelte';
   import Login from './pages/Login.svelte';
@@ -11,7 +11,7 @@
   import Budget from './pages/Budget.svelte';
   import Stub from './pages/Stub.svelte';
 
-  const icons = { home: '🏠', ops: '🧾', budget: '🎯', accounts: '💳' };
+  
   let current = $derived(nav.sub ?? nav.tab);
 </script>
 
@@ -20,7 +20,7 @@
 {:else if !auth.session}
   <Login />
 {:else}
-  {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget'}
+  {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget' && current !== 'more'}
     <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
   {/if}
   <div class="content">
@@ -35,7 +35,7 @@
     {:else if current === 'more'}
       <More />
     {:else}
-      <Stub icon={icons[current] ?? '🚧'} />
+      <Stub icon={moreItems.find((x) => x.id === current)?.icon} />
     {/if}
   </div>
   <TabBar />
