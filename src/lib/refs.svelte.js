@@ -22,7 +22,7 @@ export function loadRefs() {
 }
 
 export function logoFor(note) {
-  const n = (note ?? '').trim().toLowerCase();
+  const n = (note ?? '').trim().toLowerCase().replace(/^(скасування|повернення|відміна|возврат|отмена)[.:]?\s+/, '');
   if (!n) return '';
   const b = refs.brands.find((x) => n === x.pattern || n.startsWith(x.pattern + ' '));
   if (!b) return '';

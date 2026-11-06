@@ -3,6 +3,7 @@
   import { glyph } from './glyph.js';
   let { t, size = 44 } = $props();
   let url = $derived(logoFor(t.note));
+  let emoji = $derived((t.category ?? '').match(/\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*/u)?.[0] ?? '');
   let failed = $state(false);
   $effect(() => { url; failed = false; });
 </script>
@@ -11,6 +12,8 @@
   <div class="av fill" style:width="{size}px" style:height="{size}px">↗</div>
 {:else if url && !failed}
   <img class="av logo" style:width="{size}px" style:height="{size}px" src={url} alt="" loading="lazy" onerror={() => (failed = true)} />
+{:else if emoji}
+  <div class="av soft" style:width="{size}px" style:height="{size}px" style:font-size="{size * 0.5}px">{emoji}</div>
 {:else}
   <div class="av gold" style:width="{size}px" style:height="{size}px">
     <svg viewBox="0 0 24 24" style:width="{size * 0.5}px" style:height="{size * 0.5}px"><path d={glyph(t.category)} /></svg>
@@ -23,5 +26,6 @@
   .gold { background: linear-gradient(160deg, #EBC77A, #B8862C); box-shadow: 0 1px 2px rgba(120,80,10,.25); }
   @media (prefers-color-scheme: dark) { .gold { background: linear-gradient(160deg, #E8C277, #A8741F); } }
   .gold svg { stroke: #fff; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .soft { background: var(--gold-soft); line-height: 1; }
   .fill { background: var(--fill); color: var(--gold); font-size: 20px; }
 </style>
