@@ -12,7 +12,7 @@
 <ul class="gap">
   <li><button onclick={signOut}><span class="ic">🚪</span><span class="name">Выйти</span></button></li>
 </ul>
-<p class="caption1 ver">Oura · версия {version}</p>
+<p class="caption1 ver">Aurum · версия {version}</p>
 
 <style>
   ul { list-style: none; margin: 16px var(--pad) 0; padding: 0; background: var(--card); border-radius: 12px; overflow: hidden; }
