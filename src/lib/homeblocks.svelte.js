@@ -3,17 +3,18 @@ const KEY = 'aurum.homeBlocks';
 export const BLOCKS = {
   balance: { name: 'Общий баланс', icon: 'wallet' },
   budget: { name: 'Бюджет', icon: 'chart' },
+  horizon: { name: 'На горизонте', icon: 'radar' },
   flow: { name: 'Денежный поток', icon: 'swap' },
   recent: { name: 'Последние операции', icon: 'clock' }
 };
-const DEFAULT = ['balance', 'budget', 'flow', 'recent'].map((id) => ({ id, on: true }));
+const DEFAULT = ['balance', 'horizon', 'budget', 'flow', 'recent'].map((id) => ({ id, on: true }));
 
 function load() {
   try {
     const v = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (Array.isArray(v)) {
       const known = v.filter((x) => BLOCKS[x.id]).map((x) => ({ id: x.id, on: x.on !== false }));
-      for (const d of DEFAULT) if (!known.some((x) => x.id === d.id)) known.push({ ...d });
+      DEFAULT.forEach((d, i) => { if (!known.some((x) => x.id === d.id)) known.splice(Math.min(i, known.length), 0, { ...d }); });
       return known;
     }
   } catch {}
