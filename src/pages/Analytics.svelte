@@ -126,7 +126,7 @@
   .r + .r::before { content: ""; position: absolute; left: 58px; right: 0; top: 0; border-top: .5px solid var(--line); }
   .r p { margin: 0; font-size: 14px; line-height: 1.35; flex: 1; } .r p b { font-weight: 600; }
   .ic { width: 32px; height: 32px; border-radius: 50%; background: var(--gold-soft); color: var(--gold); display: flex; align-items: center; justify-content: center; flex: none; }
-  .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; overflow-wrap: anywhere; }
   .bar { height: 5px; border-radius: 3px; background: var(--fill); margin-top: 6px; } .bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #B8862C, #E8C277); }
   .am { font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
   .btn { width: 100%; height: 48px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; margin: 4px 0 8px; } .btn:disabled { opacity: .6; }

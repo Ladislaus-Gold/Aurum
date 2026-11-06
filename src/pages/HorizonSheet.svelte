@@ -88,7 +88,7 @@
   .del { display: block; width: 100%; min-height: 44px; margin-top: 4px; color: var(--neg); font-size: 15px; }
   .hero { background: #14100c; color: #B9A27A; border-radius: 18px; padding: 14px 16px; margin: 8px 0 10px; } .hero b { display: block; color: #F4DDA6; font-size: 22px; font-weight: 600; } .hero span, .hero small { font-size: 12px; } .hero small { display: block; }
   .cd { background: var(--bg); border-radius: 16px; padding: 10px 12px; margin-bottom: 10px; }
-  .cr, .li { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; } .m { flex: 1; min-width: 0; } .m b { font-size: 15px; font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cr, .li { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; } .m { flex: 1; min-width: 0; } .m b { font-size: 15px; font-weight: 600; display: block; overflow-wrap: anywhere; }
   .am { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
   .sm { display: flex; gap: 8px; margin-top: 10px; } .sm button { flex: 1; min-height: 38px; border-radius: 10px; font-size: 14px; font-weight: 600; }
   .no { background: var(--fill); } .ok { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; }

@@ -140,7 +140,7 @@
   .card { background: var(--card); border-radius: 14px; margin-bottom: 22px; overflow: hidden; box-shadow: var(--shadow); }
   .r { display: flex; align-items: center; gap: 12px; padding: 9px 14px; min-height: 56px; width: 100%; text-align: left; position: relative; }
   .r + .r::before { content: ""; position: absolute; left: 64px; right: 0; top: 0; border-top: .5px solid var(--line); }
-  .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; overflow-wrap: anywhere; }
   .m small { color: var(--gold); font-size: 12px; display: flex; }
   .chev { color: var(--muted); opacity: .5; display: flex; }
   .msg { color: var(--muted); text-align: center; padding: 28px 8px; } .err { color: var(--neg); font-size: 12px; text-align: center; }
