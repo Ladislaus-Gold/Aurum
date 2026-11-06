@@ -3,10 +3,12 @@ import { refs, loadRefs } from './refs.svelte.js';
 import { noEmoji } from './format.js';
 
 export const MODES = [
-  { id: 'WEEK', label: 'Неделя' }, { id: 'MONTH', label: 'Месяц' }, { id: 'QUARTER', label: 'Квартал' },
-  { id: 'YEAR', label: 'Год' }, { id: 'ALL', label: 'Всё время' }
+  { id: 'WEEK', label: 'Неделя' }, { id: 'MONTH', label: 'Месяц' },
+  { id: 'YEAR', label: 'Год' }, { id: 'ALL', label: 'Всё' }
 ];
 const MON = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+export const PREV = { WEEK: 'прошлой неделе', MONTH: 'прошлом месяце', YEAR: 'прошлом году' };
+export const dayLong = (d) => `${d.getDate()} ${['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][d.getMonth()]}`;
 export const WD = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const WD_DAT = ['понедельникам', 'вторникам', 'средам', 'четвергам', 'пятницам', 'субботам', 'воскресеньям'];
 const pad = (n) => String(n).padStart(2, '0');
@@ -87,7 +89,7 @@ const catName = (id) => (id == null ? 'Без категории' : noEmoji(refs
 function aggregate(rows, start, end) {
   const days = Math.max(1, Math.round((end - start) / 864e5));
   const gran = days <= 35 ? 'day' : days <= 140 ? 'week' : 'month';
-  const out = { income: 0, expense: 0, returns: 0, count: 0, gran, cat: { EXPENSE: {}, INCOME: {}, RETURN: {} }, merch: {}, wd: [0, 0, 0, 0, 0, 0, 0], top: [], buckets: buckets(start, end, gran) };
+  const out = { income: 0, expense: 0, returns: 0, count: 0, gran, cat: { EXPENSE: {}, INCOME: {}, RETURN: {} }, merch: {}, dayMap: {}, wd: [0, 0, 0, 0, 0, 0, 0], top: [], buckets: buckets(start, end, gran) };
   const addTo = (m, k, n) => { m[k] = (m[k] || 0) + n; };
   for (const r of rows) {
     if (r.action === 'TRANSFER') continue;
@@ -100,12 +102,15 @@ function aggregate(rows, start, end) {
     if (r.action === 'INCOME') { out.income += n; out.count++; if (b) b.income += n; parts.forEach(([c, v]) => addTo(out.cat.INCOME, c ?? 'none', v)); }
     else if (r.action === 'EXPENSE') {
       out.expense += n; out.count++; if (b) b.expense += n; out.wd[(d.getDay() + 6) % 7] += n;
+      const dk = ymd(d); out.dayMap[dk] = (out.dayMap[dk] || 0) + n;
       parts.forEach(([c, v]) => addTo(out.cat.EXPENSE, c ?? 'none', v));
       const k = name.toLowerCase(); const m = out.merch[k] ?? (out.merch[k] = { name, sum: 0, count: 0 }); m.sum += n; m.count++;
       out.top.push({ date: d, amount: n, name, cat: catName(parts[0][0]), icon: refs.cats[parts[0][0]]?.icon || 'tag', note: r.note });
     } else if (r.action === 'RETURN') { out.returns += n; out.count++; if (b) b.expense -= n; parts.forEach(([c, v]) => addTo(out.cat.RETURN, c ?? 'none', v)); }
   }
   out.net = Math.max(0, out.expense - out.returns);
+  const pk = Object.entries(out.dayMap).sort((a, b) => b[1] - a[1])[0];
+  out.peakDay = pk ? { date: new Date(pk[0] + 'T12:00:00'), amount: pk[1] } : null;
   out.top.sort((a, b) => b.amount - a.amount); out.top = out.top.slice(0, 5);
   return out;
 }
