@@ -42,8 +42,8 @@
     </div>
   {:else if home.months.length}
     <BalanceCard total={home.total} series={home.series} {shown} onaccounts={() => (nav.tab = 'accounts')} />
-    <div class="sh"><h2>Бюджет на {home.budget.month}</h2><button onclick={() => (nav.tab = 'budget')}>Бюджет</button></div>
-    <BudgetCard budget={home.budget} cats={home.cats} {shown} />
+    <div class="sh"><h2>Бюджет на {home.budget.month}</h2></div>
+    <button class="bt" onclick={() => (nav.tab = 'budget')} aria-label="Открыть бюджет"><BudgetCard budget={home.budget} cats={home.cats} {shown} /></button>
     <div class="sh"><h2>Денежный поток</h2></div>
     <FlowCard months={home.months} {shown} />
     <div class="sh"><h2>Последние операции</h2><button onclick={() => (nav.tab = 'ops')}>Все</button></div>
@@ -67,6 +67,8 @@
   .sh { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 4px 8px; }
   .sh h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .35px; }
   .sh button { font-size: 17px; color: var(--gold); min-height: 28px; }
+  .bt { display: block; width: 100%; text-align: left; border-radius: 20px; transition: transform .15s; }
+  .bt:active { transform: scale(.98); }
   .err { margin-top: 24px; padding: 18px 16px; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); }
   .err p { color: var(--muted); font-size: 15px; word-break: break-word; }
   .err button { color: var(--gold); font-weight: 600; min-height: 44px; }
