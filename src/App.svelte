@@ -10,6 +10,7 @@
   import Accounts from './pages/Accounts.svelte';
   import Budget from './pages/Budget.svelte';
   import Stub from './pages/Stub.svelte';
+  import Rules from './pages/Rules.svelte';
   import NewOp from './lib/NewOp.svelte';
 
   
@@ -21,7 +22,7 @@
 {:else if !auth.session}
   <Login />
 {:else}
-  {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget' && current !== 'more'}
+  {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget' && current !== 'more' && current !== 'rules'}
     <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
   {/if}
   <div class="content">
@@ -34,6 +35,8 @@
       <Accounts />
     {:else if current === 'budget'}
       <Budget />
+    {:else if current === 'rules'}
+      <Rules />
     {:else if current === 'more'}
       <More />
     {:else}
