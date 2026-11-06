@@ -3,7 +3,7 @@
   --bg: #F2F2F7; --card: #ffffff; --text: #000000; --muted: #6C6C70; --ter: #AEAEB2;
   --line: rgba(60,60,67,.14); --gold: #9A6B12; --gold-soft: rgba(184,137,43,.16);
   --fill: rgba(118,118,128,.12); --bar: rgba(60,60,67,.10); --seg-on: #ffffff;
-  --tab: rgba(249,249,249,.86); --pos: #248A3D; --neg: #D70015;
+  --tab: #F9F9F9; --pos: #248A3D; --neg: #D70015;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(80,55,10,.06);
   --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
   --bar-h: 44px; --tabbar: 49px; --pad: 16px;
@@ -12,7 +12,7 @@
   :root { --bg: #000000; --card: #1C1C1E; --text: #ffffff; --muted: #98989F; --ter: #636366;
     --line: rgba(84,84,88,.55); --gold: #E8C277; --gold-soft: rgba(232,194,119,.16);
     --fill: rgba(118,118,128,.24); --bar: rgba(120,120,128,.28); --seg-on: #636366;
-    --tab: rgba(29,29,31,.86); --pos: #30D158; --neg: #FF453A; --shadow: none; }
+    --tab: #1D1D1F; --pos: #30D158; --neg: #FF453A; --shadow: none; }
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
@@ -33,3 +33,6 @@ input, select, textarea { font: inherit; font-size: 16px; }
 .footnote { font-size: 13px; color: var(--muted); }
 .caption1 { font-size: 12px; color: var(--muted); }
 .caption2 { font-size: 11px; color: var(--muted); }
+
+/* Чёткая верхняя граница: под статус-баром сплошная заливка, контент уходит под неё без дымки */
+body::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: var(--safe-t); background: var(--bg); z-index: 60; pointer-events: none; }
