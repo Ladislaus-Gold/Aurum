@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { home, loadHome } from '../lib/data.svelte.js';
   import { nav } from '../lib/nav.svelte.js';
+  import Icon from '../lib/Icon.svelte';
   import OpSheet from '../lib/OpSheet.svelte';
   import { loadRefs } from '../lib/refs.svelte.js';
   import BalanceCard from '../home/BalanceCard.svelte';
@@ -27,9 +28,9 @@
     <div class="d">{date}</div>
     <h1>Главная</h1>
   </div>
-  <button class="rf" class:spin={home.loading} onclick={refresh} aria-label="Обновить данные">
+  <div class="hb"><button class="rf" class:spin={home.loading} onclick={refresh} aria-label="Обновить данные">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>
-  </button>
+  </button><button class="rf plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
 
 <div class="wrap">
@@ -56,6 +57,8 @@
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--safe-t) + 16px) 20px 4px; }
   .d { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .37px; line-height: 41px; }
+  .hb { display: flex; }
+  .rf.plus :global(svg) { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; padding: 8px; width: 36px !important; height: 36px !important; box-sizing: border-box; }
   .rf { width: 44px; height: 44px; display: grid; place-items: center; }
   .rf svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); color: var(--gold); box-sizing: border-box; }
   .rf.spin svg { animation: spin .9s linear infinite; }

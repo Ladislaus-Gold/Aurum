@@ -10,6 +10,7 @@
   import Accounts from './pages/Accounts.svelte';
   import Budget from './pages/Budget.svelte';
   import Stub from './pages/Stub.svelte';
+  import NewOp from './lib/NewOp.svelte';
 
   
   let current = $derived(nav.sub ?? nav.tab);
@@ -24,6 +25,7 @@
     <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
   {/if}
   <div class="content">
+   {#key nav.rev}
     {#if current === 'home'}
       <Home />
     {:else if current === 'ops'}
@@ -37,7 +39,9 @@
     {:else}
       <Stub icon={moreItems.find((x) => x.id === current)?.icon} />
     {/if}
+   {/key}
   </div>
+  <NewOp open={nav.newOp} onclose={() => (nav.newOp = false)} onsaved={() => nav.rev++} />
   <TabBar />
 {/if}
 
