@@ -40,12 +40,12 @@
 <style>
   .grp { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
   .hd { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; gap: 12px; }
-  .l { font-size: 13px; color: var(--muted); text-transform: capitalize; }
-  .l b { display: block; font-size: 22px; color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 1px; text-transform: none;
+  .l { font-size: 12px; color: var(--muted); text-transform: capitalize; }
+  .l b { display: block; font-size: 18px; color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 1px; text-transform: none;
     opacity: 0; transform: translateY(8px); transition: opacity .7s, transform .7s; }
   .l b.in { opacity: 1; transform: none; }
   .sg { display: flex; background: var(--fill); border-radius: 9px; padding: 2px; }
-  .sg button { min-height: 28px; padding: 0 11px; font-size: 13px; font-weight: 600; border-radius: 7px; transition: background .25s, box-shadow .25s; }
+  .sg button { min-height: 28px; padding: 0 11px; font-size: 12px; font-weight: 600; border-radius: 7px; transition: background .25s, box-shadow .25s; }
   .sg .on { background: var(--seg-on); box-shadow: 0 1px 3px rgba(0,0,0,.18); }
   .flow { display: flex; gap: 9px; padding: 14px 16px 12px; }
   .col { flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -62,8 +62,8 @@
   .tri { display: flex; border-top: .5px solid var(--line); }
   .tri > div { flex: 1; padding: 12px; min-width: 0; }
   .tri > div + div { border-left: .5px solid var(--line); }
-  .a { font-size: 13px; color: var(--muted); }
-  .b { font-size: 16px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; opacity: 0; transform: translateY(8px); transition: opacity .7s, transform .7s; }
+  .a { font-size: 12px; color: var(--muted); }
+  .b { font-size: 15px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; opacity: 0; transform: translateY(8px); transition: opacity .7s, transform .7s; }
   .tri.in .b { opacity: 1; transform: none; }
   .pos { color: var(--pos); } .neg { color: var(--neg); }
 </style>

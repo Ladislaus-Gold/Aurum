@@ -17,21 +17,21 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 html, body, #app { margin: 0; height: 100%; }
-body { overscroll-behavior-x: none; touch-action: pan-y; max-width: 100vw; font-family: var(--font); font-size: 17px; line-height: 1.3; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+body { overscroll-behavior-x: none; touch-action: pan-y; max-width: 100vw; font-family: var(--font); font-size: 15px; line-height: 1.3; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 input, select, textarea { font: inherit; font-size: 16px; }
 .num { font-variant-numeric: tabular-nums; }
 /* Шкала iOS */
-.large-title { font-size: 34px; font-weight: 700; }
-.title1 { font-size: 28px; font-weight: 700; }
-.title2 { font-size: 22px; font-weight: 700; }
-.title3 { font-size: 20px; font-weight: 600; }
-.headline { font-size: 17px; font-weight: 600; }
-.body { font-size: 17px; }
-.callout { font-size: 16px; }
-.subhead { font-size: 15px; }
-.footnote { font-size: 13px; color: var(--muted); }
-.caption1 { font-size: 12px; color: var(--muted); }
+.large-title { font-size: 28px; font-weight: 700; }
+.title1 { font-size: 24px; font-weight: 700; }
+.title2 { font-size: 18px; font-weight: 700; }
+.title3 { font-size: 17px; font-weight: 600; }
+.headline { font-size: 15px; font-weight: 600; }
+.body { font-size: 15px; }
+.callout { font-size: 15px; }
+.subhead { font-size: 14px; }
+.footnote { font-size: 12px; color: var(--muted); }
+.caption1 { font-size: 11.5px; color: var(--muted); }
 .caption2 { font-size: 11px; color: var(--muted); }
 
 /* Чёткая верхняя граница: под статус-баром сплошная заливка, контент уходит под неё без дымки */

@@ -76,23 +76,23 @@
 </Sheet>
 
 <style>
-  .top { display: flex; justify-content: space-between; align-items: center; min-height: 40px; } .top b { font-size: 20px; font-weight: 700; } .top button { color: var(--gold); font-size: 17px; font-weight: 600; } .top span { width: 50px; }
+  .top { display: flex; justify-content: space-between; align-items: center; min-height: 40px; } .top b { font-size: 17px; font-weight: 700; } .top button { color: var(--gold); font-size: 15px; font-weight: 600; } .top span { width: 50px; }
   .scroll { max-height: 66vh; overflow-y: auto; touch-action: pan-y; padding-bottom: 4px; }
-  .who { display: flex; gap: 12px; align-items: center; margin: 8px 0 4px; } .who b { font-size: 20px; font-weight: 600; display: block; } .who small, .m small, .am small { display: block; font-size: 13px; color: var(--muted); }
-  .f { display: flex; justify-content: space-between; align-items: center; min-height: 52px; border-top: .5px solid var(--line); font-size: 17px; }
+  .who { display: flex; gap: 12px; align-items: center; margin: 8px 0 4px; } .who b { font-size: 17px; font-weight: 600; display: block; } .who small, .m small, .am small { display: block; font-size: 12px; color: var(--muted); }
+  .f { display: flex; justify-content: space-between; align-items: center; min-height: 52px; border-top: .5px solid var(--line); font-size: 15px; }
   .pill { background: var(--fill); border-radius: 9px; padding: 6px 10px; font-weight: 600; display: inline-flex; gap: 4px; align-items: center; max-width: 60%; }
   .pill input, .pill select { background: none; border: 0; font: inherit; color: inherit; text-align: right; outline: 0; max-width: 100%; }
   .pill input[type=number] { width: 96px; }
-  .seg { display: flex; background: var(--fill); border-radius: 9px; padding: 2px; } .seg button { padding: 5px 12px; border-radius: 7px; font-size: 14px; font-weight: 600; } .seg .on { background: var(--seg-on); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
-  .btn { display: block; width: 100%; margin-top: 14px; min-height: 50px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-size: 17px; font-weight: 600; } .btn:disabled { opacity: .6; }
-  .del { display: block; width: 100%; min-height: 44px; margin-top: 4px; color: var(--neg); font-size: 17px; }
-  .hero { background: #14100c; color: #B9A27A; border-radius: 18px; padding: 14px 16px; margin: 8px 0 10px; } .hero b { display: block; color: #F4DDA6; font-size: 26px; font-weight: 600; } .hero span, .hero small { font-size: 13px; } .hero small { display: block; }
+  .seg { display: flex; background: var(--fill); border-radius: 9px; padding: 2px; } .seg button { padding: 5px 12px; border-radius: 7px; font-size: 13px; font-weight: 600; } .seg .on { background: var(--seg-on); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .btn { display: block; width: 100%; margin-top: 14px; min-height: 50px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-size: 15px; font-weight: 600; } .btn:disabled { opacity: .6; }
+  .del { display: block; width: 100%; min-height: 44px; margin-top: 4px; color: var(--neg); font-size: 15px; }
+  .hero { background: #14100c; color: #B9A27A; border-radius: 18px; padding: 14px 16px; margin: 8px 0 10px; } .hero b { display: block; color: #F4DDA6; font-size: 22px; font-weight: 600; } .hero span, .hero small { font-size: 12px; } .hero small { display: block; }
   .cd { background: var(--bg); border-radius: 16px; padding: 10px 12px; margin-bottom: 10px; }
-  .cr, .li { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; } .m { flex: 1; min-width: 0; } .m b { font-size: 17px; font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cr, .li { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; } .m { flex: 1; min-width: 0; } .m b { font-size: 15px; font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .am { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
-  .sm { display: flex; gap: 8px; margin-top: 10px; } .sm button { flex: 1; min-height: 38px; border-radius: 10px; font-size: 15px; font-weight: 600; }
+  .sm { display: flex; gap: 8px; margin-top: 10px; } .sm button { flex: 1; min-height: 38px; border-radius: 10px; font-size: 14px; font-weight: 600; }
   .no { background: var(--fill); } .ok { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; }
-  h3 { margin: 16px 2px 6px; font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  h3 { margin: 16px 2px 6px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
   .lst { background: var(--bg); border-radius: 16px; } .li { padding: 10px 12px; min-height: 64px; } .li + .li { border-top: .5px solid var(--line); }
-  .empty { color: var(--muted); font-size: 15px; margin: 6px 2px; } .err { color: var(--neg); font-size: 14px; margin: 8px 2px 0; word-break: break-word; }
+  .empty { color: var(--muted); font-size: 14px; margin: 6px 2px; } .err { color: var(--neg); font-size: 13px; margin: 8px 2px 0; word-break: break-word; }
 </style>

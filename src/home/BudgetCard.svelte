@@ -24,10 +24,10 @@
 <style>
   .grp { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
   .big { padding: 18px 16px 14px; }
-  .l { font-size: 13px; color: var(--muted); }
-  .n { font-size: 34px; font-weight: 700; letter-spacing: .3px; font-variant-numeric: tabular-nums; margin-top: 2px; opacity: 0; transform: translateY(8px); transition: opacity .7s, transform .7s; }
+  .l { font-size: 12px; color: var(--muted); }
+  .n { font-size: 28px; font-weight: 700; letter-spacing: .3px; font-variant-numeric: tabular-nums; margin-top: 2px; opacity: 0; transform: translateY(8px); transition: opacity .7s, transform .7s; }
   .n.in { opacity: 1; transform: none; }
-  .n small { font-size: 17px; font-weight: 500; color: var(--muted); margin-left: 6px; letter-spacing: 0; }
+  .n small { font-size: 15px; font-weight: 500; color: var(--muted); margin-left: 6px; letter-spacing: 0; }
   .bar { height: 5px; border-radius: 99px; background: var(--bar); margin-top: 6px; overflow: hidden; }
   .bar.thick { height: 8px; margin-top: 12px; }
   .bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #B07A1E, #E8C277); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
@@ -39,7 +39,7 @@
   @media (prefers-color-scheme: dark) { .ic { background: linear-gradient(160deg, #E8C277, #A8741F); } }
   .mid { flex: 1; min-width: 0; }
   .top { display: flex; justify-content: space-between; gap: 8px; }
-  .t { font-size: 17px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .s { font-size: 13px; color: var(--muted); line-height: 22px; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .7s, transform .7s; }
+  .t { font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .s { font-size: 12px; color: var(--muted); line-height: 22px; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .7s, transform .7s; }
   .s.in { opacity: 1; transform: none; }
 </style>

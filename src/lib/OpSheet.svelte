@@ -34,13 +34,13 @@
 
 <style>
   .av { display: flex; justify-content: center; margin: 4px 0 8px; }
-  h3 { margin: 0 0 4px; font-size: 20px; font-weight: 700; text-align: center; }
-  .amt { text-align: center; font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0 14px; letter-spacing: .3px; }
+  h3 { margin: 0 0 4px; font-size: 17px; font-weight: 700; text-align: center; }
+  .amt { text-align: center; font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0 14px; letter-spacing: .3px; }
   .list { background: var(--bg); border-radius: 14px; overflow: hidden; }
-  .r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 17px; position: relative; }
+  .r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 15px; position: relative; }
   .r + .r::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--line); }
   .r span:last-child { color: var(--muted); text-align: right; }
   .two { display: flex; gap: 10px; margin-top: 14px; } .two > * { flex: 1; }
-  .gh { height: 50px; border-radius: 14px; background: var(--fill); font-weight: 600; font-size: 17px; }
-  .done { width: 100%; height: 50px; border-radius: 14px; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; font-weight: 700; font-size: 17px; }
+  .gh { height: 50px; border-radius: 14px; background: var(--fill); font-weight: 600; font-size: 15px; }
+  .done { width: 100%; height: 50px; border-radius: 14px; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; font-weight: 700; font-size: 15px; }
 </style>

@@ -49,14 +49,14 @@
   .hero { margin-top: 14px; border-radius: 26px; padding: 22px 20px 18px; position: relative; overflow: hidden; color: #F6E7C1;
     background: radial-gradient(120% 90% at 100% 100%, rgba(214,160,70,.40) 0%, rgba(214,160,70,0) 55%), linear-gradient(160deg, #1c1815 0%, #0a0807 60%);
     box-shadow: 0 0 0 .5px rgba(232,194,119,.35) inset, 0 14px 34px rgba(30,20,5,.28); }
-  .cap { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: rgba(246,231,193,.62); text-transform: uppercase; letter-spacing: .08em; }
-  .cap button { color: #E8C277; font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 15px; min-height: 28px; }
-  .sum { margin-top: 6px; font-size: 44px; font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; white-space: nowrap;
+  .cap { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: rgba(246,231,193,.62); text-transform: uppercase; letter-spacing: .08em; }
+  .cap button { color: #E8C277; font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 14px; min-height: 28px; }
+  .sum { margin-top: 6px; font-size: 38px; font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; white-space: nowrap;
     background: linear-gradient(180deg, #FFF1CC 0%, #E9C071 55%, #C28C2E 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
     opacity: 0; transform: translateY(8px); transition: opacity .5s, transform .5s; }
-  .sum small { font-size: 28px; font-weight: 600; }
+  .sum small { font-size: 24px; font-weight: 600; }
   .sum.in { opacity: 1; transform: none; }
-  .chip { display: inline-flex; margin-top: 4px; padding: 5px 11px; border-radius: 99px; background: rgba(232,194,119,.14); color: #F0CF8A; font-size: 13px; font-weight: 600;
+  .chip { display: inline-flex; margin-top: 4px; padding: 5px 11px; border-radius: 99px; background: rgba(232,194,119,.14); color: #F0CF8A; font-size: 12px; font-weight: 600;
     font-variant-numeric: tabular-nums; opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
   .chip.in { opacity: 1; transform: none; }
   .chart { margin-top: 10px; display: block; overflow: visible; width: 100%; height: 104px; }
@@ -67,6 +67,6 @@
   .dot { transform-box: fill-box; transform-origin: center; transform: scale(0); opacity: 0; transition: transform .5s cubic-bezier(.3,1.6,.5,1) 1.1s, opacity .3s 1.1s; }
   .dot.in { transform: none; opacity: 1; }
   .seg { display: flex; background: rgba(255,255,255,.08); border-radius: 9px; padding: 2px; margin-top: 14px; }
-  .seg button { flex: 1; min-height: 28px; font-size: 13px; font-weight: 600; color: rgba(246,231,193,.6); border-radius: 7px; }
+  .seg button { flex: 1; min-height: 28px; font-size: 12px; font-weight: 600; color: rgba(246,231,193,.6); border-radius: 7px; }
   .seg .on { background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
 </style>

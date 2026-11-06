@@ -36,12 +36,12 @@
 
 <style>
   .page { padding: 0 var(--pad); }
-  h1 { font-size: 34px; font-weight: 700; letter-spacing: -.5px; margin: 0; padding: calc(var(--safe-t) + 18px) 0 14px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin: 0; padding: calc(var(--safe-t) + 18px) 0 14px; }
   .pr { background: var(--card); border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 22px; box-shadow: var(--shadow); }
-  .av { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: none; background: linear-gradient(150deg, #1a1410, #0a0807); color: #E8C277; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .av { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; flex: none; background: linear-gradient(150deg, #1a1410, #0a0807); color: #E8C277; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
   .av img { width: 100%; height: 100%; object-fit: cover; }
-  .pr b { font-size: 17px; display: block; } .pr small { color: var(--muted); font-size: 13px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
+  .pr b { font-size: 15px; display: block; } .pr small { color: var(--muted); font-size: 12px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
   .card { background: var(--card); border-radius: 14px; margin-bottom: 22px; overflow: hidden; box-shadow: var(--shadow); }
   .r { display: flex; align-items: center; gap: 12px; padding: 9px 14px; min-height: 48px; width: 100%; text-align: left; position: relative; }
   .r + .r::before { content: ""; position: absolute; left: 58px; right: 0; top: 0; border-top: .5px solid var(--line); }
@@ -49,5 +49,5 @@
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; }
   .chev { color: var(--muted); opacity: .5; display: flex; }
   .out .ic { background: rgba(215,0,21,.1); color: var(--neg); } .out b { color: var(--neg); }
-  .ver { text-align: center; color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .ver { text-align: center; color: var(--muted); font-size: 11.5px; margin: 6px 0 0; }
 </style>
