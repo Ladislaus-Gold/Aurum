@@ -6,7 +6,7 @@
 
 <main>
   <div class="logo">📊</div>
-  <h1 class="large-title">Oura</h1>
+  <h1 class="large-title">Aurum</h1>
   <p class="callout sub">Учёт финансов</p>
   <button class="g" onclick={go} disabled={busy}>{busy ? '⏳ Переходим…' : '🔐 Войти через Google'}</button>
 </main>
