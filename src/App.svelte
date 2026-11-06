@@ -22,7 +22,7 @@
 </script>
 
 {#if !auth.ready}
-  <div class="boot">⏳</div>
+  <div class="boot"><img src="{import.meta.env.BASE_URL}icon-192.png" alt="" width="72" height="72" /></div>
 {:else if !auth.session}
   <Login />
 {:else}
@@ -61,6 +61,7 @@
 {/if}
 
 <style>
-  .boot { height: 100%; display: grid; place-items: center; font-size: 32px; }
+  .boot { height: 100%; display: grid; place-items: center; }
+  .boot img { border-radius: 17px; opacity: .9; }
   .content { padding-bottom: calc(var(--tabbar) + var(--safe-b) + 16px); }
 </style>
