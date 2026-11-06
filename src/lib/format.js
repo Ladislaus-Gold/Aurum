@@ -1,4 +1,6 @@
 const clean = (s) => s.replace(/[  ]/g, ' ');
+// «Transport 🚗» → «Transport»: эмодзи из названий в базе не показываем
+export const noEmoji = (s = '') => s.replace(/\s*(\p{Extended_Pictographic}|\uFE0F|\u200D|\p{Emoji_Modifier})+\s*/gu, ' ').replace(/\s+/g, ' ').trim();
 export const fmt = (n, d = 0) =>
   clean(Number(n).toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d })).replace('-', '−');
 export const money = (n, d = 0) => `${fmt(n, d)} ₴`;

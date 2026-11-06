@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js';
+import { noEmoji } from './format.js';
 
 // Справочники для списков операций: категории, счета и сопоставление магазин → логотип
 export const refs = $state({ cats: {}, accs: {}, brands: [], loaded: false });
@@ -8,13 +9,13 @@ let pending = null;
 export function loadRefs() {
   pending ??= (async () => {
     const [c, a, b] = await Promise.all([
-      supabase.from('categories').select('id,name,type'),
+      supabase.from('categories').select('id,name,type,icon'),
       supabase.from('accounts').select('id,name'),
       supabase.from('merchant_brands').select('pattern,domain,logo_url')
     ]);
     for (const r of [c, a, b]) if (r.error) throw r.error;
     refs.cats = Object.fromEntries(c.data.map((x) => [x.id, x]));
-    refs.accs = Object.fromEntries(a.data.map((x) => [x.id, x.name]));
+    refs.accs = Object.fromEntries(a.data.map((x) => [x.id, noEmoji(x.name)]));
     refs.brands = b.data;
     refs.loaded = true;
   })().catch((e) => { pending = null; throw e; });
@@ -31,7 +32,7 @@ export function logoFor(note) {
 
 export const enrich = (t) => ({
   ...t, amount: Number(t.amount),
-  category: refs.cats[t.category_id]?.name ?? '',
+  category: noEmoji(refs.cats[t.category_id]?.name ?? ''), icon: refs.cats[t.category_id]?.icon ?? '',
   account: refs.accs[t.account_id] ?? '',
   from: refs.accs[t.from_account_id] ?? '', to: refs.accs[t.to_account_id] ?? ''
 });

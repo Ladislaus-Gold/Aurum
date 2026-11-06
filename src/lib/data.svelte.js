@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js';
+import { noEmoji } from './format.js';
 
 export const home = $state({
   loading: true, error: '', total: 0, series: [], months: [],
@@ -52,7 +53,7 @@ export async function loadHome() {
     const [bal, sums, cats, bud, totals, recent, accs, txs] = await Promise.all([
       supabase.from('account_balances').select('balance'),
       Promise.all(monthList.map((p) => supabase.rpc('month_summary', { p_month: p }))),
-      supabase.from('categories').select('id,name,type'),
+      supabase.from('categories').select('id,name,type,icon'),
       supabase.from('budgets').select('category_id,amount').eq('month', cur),
       supabase.rpc('month_category_totals', { p_month: cur }),
       supabase.from('transactions')
@@ -87,13 +88,13 @@ export async function loadHome() {
     }
     home.cats = ok(bud)
       .filter((b) => Number(b.amount) > 0 && catById.get(b.category_id)?.type === 'EXPENSE')
-      .map((b) => ({ id: b.category_id, name: catById.get(b.category_id).name, plan: Number(b.amount), spent: Math.max(0, spent.get(b.category_id) ?? 0) }))
+      .map((b) => ({ id: b.category_id, name: noEmoji(catById.get(b.category_id).name), icon: catById.get(b.category_id).icon, plan: Number(b.amount), spent: Math.max(0, spent.get(b.category_id) ?? 0) }))
       .sort((a, b) => b.plan - a.plan).slice(0, 3);
     home.recent = ok(recent).map((t) => ({
       ...t, amount: Number(t.amount),
-      category: catById.get(t.category_id)?.name ?? '',
-      account: accById.get(t.account_id) ?? '',
-      from: accById.get(t.from_account_id) ?? '', to: accById.get(t.to_account_id) ?? ''
+      category: noEmoji(catById.get(t.category_id)?.name ?? ''), icon: catById.get(t.category_id)?.icon ?? '',
+      account: noEmoji(accById.get(t.account_id) ?? ''),
+      from: noEmoji(accById.get(t.from_account_id) ?? ''), to: noEmoji(accById.get(t.to_account_id) ?? '')
     }));
     home.version++;
   } catch (e) {

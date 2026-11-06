@@ -1,6 +1,6 @@
 <script>
   import { fmt, money } from '../lib/format.js';
-  import { glyph } from '../lib/glyph.js';
+  import Icon from '../lib/Icon.svelte';
   let { budget, cats, shown } = $props();
   let anim = $state(false);
   $effect(() => { if (shown) requestAnimationFrame(() => (anim = true)); else anim = false; });
@@ -21,7 +21,7 @@
   </div>
   {#each cats as c (c.id)}
     <div class="row">
-      <div class="ic"><svg viewBox="0 0 24 24"><path d={glyph(c.name)} /></svg></div>
+      <div class="ic"><Icon name={c.icon || 'tag'} size={18} /></div>
       <div class="mid">
         <div class="top"><span class="t">{c.name}</span><span class="s num" class:in={anim}>{fmt(c.spent)} из {money(c.plan)}</span></div>
         <div class="bar"><i class:over={c.spent > c.plan} style:width={anim ? pct(c.spent, c.plan) + '%' : '0'}></i></div>
@@ -43,10 +43,9 @@
   .bar i.over { background: var(--neg); }
   .row { display: flex; align-items: center; gap: 12px; padding: 11px 16px; position: relative; }
   .row::before { content: ""; position: absolute; top: 0; left: 58px; right: 0; height: .5px; background: var(--line); }
-  .ic { width: 32px; height: 32px; border-radius: 8px; flex: none; display: flex; align-items: center; justify-content: center;
+  .ic { color: #fff; width: 32px; height: 32px; border-radius: 8px; flex: none; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(160deg, #EBC77A, #B8862C); box-shadow: 0 1px 2px rgba(120,80,10,.3); }
   @media (prefers-color-scheme: dark) { .ic { background: linear-gradient(160deg, #E8C277, #A8741F); } }
-  .ic svg { width: 19px; height: 19px; stroke: #fff; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
   .mid { flex: 1; min-width: 0; }
   .top { display: flex; justify-content: space-between; gap: 8px; }
   .t { font-size: 17px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
