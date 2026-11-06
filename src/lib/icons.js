@@ -39,6 +39,7 @@ export const ICONS = {
   swap: 'M4 8h14l-3-3M20 16H6l3 3',
   bolt: 'M13 3L5 13.5h6L10 21l8-10.5h-6z',
   cup: 'M5 8h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5zM16 9h2a2 2 0 0 1 0 4h-2',
+  sliders: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 4v6M9 14v6',
   tag: 'M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8zM8.5 8.5h.01'
 };
 export const iconPath = (k) => ICONS[k] ?? ICONS.tag;

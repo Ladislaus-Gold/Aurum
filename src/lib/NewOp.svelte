@@ -240,7 +240,7 @@
   .dt { background: none; border: 0; color: var(--muted); font-size: 16px; }
   .sw { appearance: none; -webkit-appearance: none; width: 46px; height: 28px; border-radius: 14px; background: var(--fill); position: relative; transition: background .2s; flex: none; }
   .sw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: left .2s; }
-  .sw:checked { background: #B8862C; } .sw:checked::after { left: 20px; }
+  .sw:checked { background: linear-gradient(160deg, #EBC77A, #B8862C); } .sw:checked::after { left: 20px; }
   .sp { display: flex; align-items: center; gap: 10px; padding: 8px 14px; position: relative; }
   .sc { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; position: relative; color: var(--gold); }
   .sc span { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

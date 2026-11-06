@@ -250,7 +250,7 @@
   .rt small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
   .ok { color: var(--pos); font-weight: 500; } .mu { color: var(--muted); font-weight: 400; }
   .chev { color: var(--muted); opacity: .6; display: flex; transition: transform .2s; } .chev.up { transform: rotate(90deg); }
-  .err { color: var(--neg); } .retry { border: 0; background: var(--gold-soft); color: var(--gold); border-radius: 12px; padding: 10px 16px; }
+  .err { color: var(--neg); } .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; }
   h3 { margin: 0; font-size: 20px; font-weight: 700; text-align: center; }
   .ml { text-align: center; color: var(--muted); font-size: 13px; margin: 2px 0 10px; }
   .step { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }

@@ -6,13 +6,15 @@
   import OpSheet from '../lib/OpSheet.svelte';
   import { upd, checkUpdate, applyUpdate } from '../lib/update.svelte.js';
   import { loadRefs } from '../lib/refs.svelte.js';
+  import HomeBlocks from './HomeBlocks.svelte';
+  import { hb } from '../lib/homeblocks.svelte.js';
   import BalanceCard from '../home/BalanceCard.svelte';
   import BudgetCard from '../home/BudgetCard.svelte';
   import FlowCard from '../home/FlowCard.svelte';
   import RecentOps from '../home/RecentOps.svelte';
 
   let shown = $state(false);
-  let picked = $state(null);
+  let picked = $state(null), setOpen = $state(false);
   const date = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
   async function refresh() {
@@ -36,7 +38,7 @@
     <div class="d">{date}</div>
     <h1>Главная</h1>
   </div>
-  <div class="hb">{#if upd.ready}<button class="up" onclick={applyUpdate} aria-label="Установить обновление"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>Обновить</button>{/if}<button class="rf plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
+  <div class="hb">{#if upd.ready}<button class="up" onclick={applyUpdate} aria-label="Установить обновление"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>Обновить</button>{/if}<button class="rf" onclick={() => (setOpen = true)} aria-label="Блоки главной"><Icon name="sliders" size={20} /></button><button class="rf plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
 
 <div class="wrap">
@@ -47,17 +49,25 @@
       <button onclick={refresh}>Повторить</button>
     </div>
   {:else if home.months.length}
-    <BalanceCard total={home.total} series={home.series} {shown} onaccounts={() => (nav.tab = 'accounts')} />
-    <div class="sh"><h2>Бюджет на {home.budget.month}</h2></div>
-    <button class="bt" onclick={() => (nav.tab = 'budget')} aria-label="Открыть бюджет"><BudgetCard budget={home.budget} cats={home.cats} {shown} /></button>
-    <div class="sh"><h2>Денежный поток</h2></div>
-    <FlowCard months={home.months} {shown} />
-    <div class="sh"><h2>Последние операции</h2><button onclick={() => (nav.tab = 'ops')}>Все</button></div>
-    <RecentOps rows={home.recent} {shown} onpick={(t) => (picked = t)} />
+    {#each hb.list as b (b.id)}{#if b.on}
+      {#if b.id === 'balance'}
+        <BalanceCard total={home.total} series={home.series} {shown} onaccounts={() => (nav.tab = 'accounts')} />
+      {:else if b.id === 'budget'}
+        <div class="sh"><h2>Бюджет на {home.budget.month}</h2></div>
+        <button class="bt" onclick={() => (nav.tab = 'budget')} aria-label="Открыть бюджет"><BudgetCard budget={home.budget} cats={home.cats} {shown} /></button>
+      {:else if b.id === 'flow'}
+        <div class="sh"><h2>Денежный поток</h2></div>
+        <FlowCard months={home.months} {shown} />
+      {:else if b.id === 'recent'}
+        <div class="sh"><h2>Последние операции</h2><button onclick={() => (nav.tab = 'ops')}>Все</button></div>
+        <RecentOps rows={home.recent} {shown} onpick={(t) => (picked = t)} />
+      {/if}
+    {/if}{/each}
   {/if}
 </div>
 
 <OpSheet {picked} onclose={() => (picked = null)} />
+<HomeBlocks open={setOpen} onclose={() => (setOpen = false)} />
 
 <style>
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--safe-t) + 16px) 20px 4px; }
@@ -67,7 +77,7 @@
   .rf.plus :global(svg) { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; padding: 8px; width: 36px !important; height: 36px !important; box-sizing: border-box; border-radius: 50%; stroke: #fff; }
   .rf { width: 44px; height: 44px; display: grid; place-items: center; }
   .rf svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); color: var(--gold); box-sizing: border-box; }
-  .up { display: flex; align-items: center; gap: 6px; height: 34px; margin: 5px 6px 0 0; padding: 0 14px; border-radius: 99px; background: var(--gold-soft); color: var(--gold); font-size: 15px; font-weight: 600; }
+  .up { display: flex; align-items: center; gap: 6px; height: 34px; margin: 5px 6px 0 0; padding: 0 14px; border-radius: 99px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-size: 15px; font-weight: 600; }
   .rf.spin svg { animation: spin .9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .wrap { padding: 0 var(--pad); }
