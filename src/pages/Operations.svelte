@@ -30,7 +30,7 @@
       await loadRefs();
       const { y, m } = months[mi];
       const { data, error: e } = await supabase.from('transactions')
-        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note')
+        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
         .gte('date', new Date(y, m, 1).toISOString()).lt('date', new Date(y, m + 1, 1).toISOString())
         .order('date', { ascending: false }).range(0, 999);
       if (e) throw e;

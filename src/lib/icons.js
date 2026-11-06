@@ -1,5 +1,6 @@
 // Нарисованные линейные иконки (24×24, stroke) вместо эмодзи. Ключ хранится в categories.icon / accounts.icon
 export const ICONS = {
+  lock: 'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3',
   plus: 'M12 5v14M5 12h14',
   imp: 'M12 4v12M7 11l5 5 5-5M4 20h16',
   save: 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6',

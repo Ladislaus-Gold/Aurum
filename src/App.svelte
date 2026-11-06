@@ -41,7 +41,7 @@
     {/if}
    {/key}
   </div>
-  <NewOp open={nav.newOp} onclose={() => (nav.newOp = false)} onsaved={() => nav.rev++} />
+  <NewOp open={nav.newOp || !!nav.edit} edit={nav.edit} onclose={() => { nav.newOp = false; nav.edit = null; }} onsaved={() => nav.rev++} />
   <TabBar />
 {/if}
 
