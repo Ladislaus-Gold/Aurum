@@ -102,7 +102,7 @@ function aggregate(rows, start, end) {
       out.expense += n; out.count++; if (b) b.expense += n; out.wd[(d.getDay() + 6) % 7] += n;
       parts.forEach(([c, v]) => addTo(out.cat.EXPENSE, c ?? 'none', v));
       const k = name.toLowerCase(); const m = out.merch[k] ?? (out.merch[k] = { name, sum: 0, count: 0 }); m.sum += n; m.count++;
-      out.top.push({ date: d, amount: n, name, cat: catName(parts[0][0]) });
+      out.top.push({ date: d, amount: n, name, cat: catName(parts[0][0]), icon: refs.cats[parts[0][0]]?.icon || 'tag', note: r.note });
     } else if (r.action === 'RETURN') { out.returns += n; out.count++; if (b) b.expense -= n; parts.forEach(([c, v]) => addTo(out.cat.RETURN, c ?? 'none', v)); }
   }
   out.net = Math.max(0, out.expense - out.returns);
@@ -115,7 +115,7 @@ export function catItems(agg, type) {
   for (const k of Object.keys(agg.cat[type])) {
     let v = agg.cat[type][k];
     if (type === 'EXPENSE') v = Math.max(0, v - (agg.cat.RETURN[k] || 0));
-    if (v > 0.004) items.push({ key: k, name: catName(k === 'none' ? null : Number(k)), amount: v });
+    if (v > 0.004) items.push({ key: k, name: catName(k === 'none' ? null : Number(k)), icon: refs.cats[k]?.icon || 'tag', amount: v });
   }
   return items.sort((a, b) => b.amount - a.amount);
 }
