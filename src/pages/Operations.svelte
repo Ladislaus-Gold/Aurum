@@ -1,11 +1,12 @@
 <script>
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
-  import { loadRefs, enrich, opSigned } from '../lib/refs.svelte.js';
-  import { signed } from '../lib/format.js';
+  import { loadRefs, enrich, opSigned, refs } from '../lib/refs.svelte.js';
+  import { signed, noEmoji } from '../lib/format.js';
   import OpRow from '../lib/OpRow.svelte';
   import OpSheet from '../lib/OpSheet.svelte';
   import Icon from '../lib/Icon.svelte';
+  import Sheet from '../lib/Sheet.svelte';
   import { nav } from '../lib/nav.svelte.js';
 
   const SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
@@ -21,6 +22,34 @@
   let picked = $state(null);
   let query = $state('');
   let searching = $state(false);
+  let ftype = $state('ALL'), fcat = $state(0), facc = $state(0);
+  const TYPES = [['ALL', 'Все типы'], ['EXPENSE', 'Расходы'], ['INCOME', 'Доходы'], ['RETURN', 'Возвраты'], ['TRANSFER', 'Переводы']];
+  let catList = $derived(Object.values(refs.cats).sort((a, b) => (a.type === b.type ? 0 : a.type === 'EXPENSE' ? -1 : 1)));
+  let accList = $derived(Object.entries(refs.accs));
+  const PERIODS = [['month', 'Месяц'], ['3m', '3 месяца'], ['6m', '6 месяцев'], ['year', 'Год'], ['custom', 'Свой вариант'], ['all', 'Всё']];
+  const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  let period = $state('month'), cFrom = $state(ymd(new Date(now.getFullYear(), now.getMonth(), 1))), cTo = $state(ymd(now));
+  let fsheet = $state(false);
+  const typeName = (k) => TYPES.find((x) => x[0] === k)?.[1];
+  let tags = $derived([
+    period !== 'month' && { k: 'period', t: period === 'custom' ? `${cFrom.slice(5).split('-').reverse().join('.')} – ${cTo.slice(5).split('-').reverse().join('.')}` : PERIODS.find((x) => x[0] === period)[1] },
+    ftype !== 'ALL' && { k: 'type', t: typeName(ftype) },
+    fcat && { k: 'cat', t: noEmoji(refs.cats[fcat]?.name ?? 'Категория') },
+    facc && { k: 'acc', t: refs.accs[facc] ?? 'Счёт' }
+  ].filter(Boolean));
+  function drop(k) { if (k === 'period') setPeriod('month'); else if (k === 'type') ftype = 'ALL'; else if (k === 'cat') fcat = 0; else facc = 0; }
+  function toggleSearch() { searching = !searching; if (!searching) { query = ''; ftype = 'ALL'; fcat = 0; facc = 0; fsheet = false; if (period !== 'month') setPeriod('month'); } }
+  function setPeriod(p) { if (period === p) return; period = p; load(); }
+  function rangeOf() {
+    const y = now.getFullYear(), m = now.getMonth();
+    if (period === 'month') { const c = months[mi]; return [new Date(c.y, c.m, 1), new Date(c.y, c.m + 1, 1)]; }
+    const end = new Date(y, m, now.getDate() + 1);
+    if (period === '3m') return [new Date(y, m - 2, 1), end];
+    if (period === '6m') return [new Date(y, m - 5, 1), end];
+    if (period === 'year') return [new Date(y, m - 11, 1), end];
+    if (period === 'custom') { const a = new Date(`${cFrom}T00:00:00`), b = new Date(`${cTo}T00:00:00`); return [a, new Date(b.getFullYear(), b.getMonth(), b.getDate() + 1)]; }
+    return [new Date(2000, 0, 1), end];
+  }
   let shown = $state(false);
   let chipsEl;
 
@@ -28,13 +57,19 @@
     loading = true; error = ''; shown = false;
     try {
       await loadRefs();
-      const { y, m } = months[mi];
-      const { data, error: e } = await supabase.from('transactions')
-        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
-        .gte('date', new Date(y, m, 1).toISOString()).lt('date', new Date(y, m + 1, 1).toISOString())
-        .order('date', { ascending: false }).range(0, 999);
-      if (e) throw e;
-      rows = data.map(enrich);
+      const [a, b] = rangeOf();
+      if (!(a < b)) throw new Error('Дата «с» позже даты «по».');
+      const all = [];
+      for (let off = 0; off < 10000; off += 1000) {
+        const { data, error: e } = await supabase.from('transactions')
+          .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
+          .gte('date', a.toISOString()).lt('date', b.toISOString())
+          .order('date', { ascending: false }).range(off, off + 999);
+        if (e) throw e;
+        all.push(...data);
+        if (data.length < 1000) break;
+      }
+      rows = all.map(enrich);
       requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
     } catch (e) { error = e?.message ?? String(e); }
     loading = false;
@@ -44,7 +79,10 @@
 
   let filtered = $derived.by(() => {
     const q = query.trim().toLowerCase();
-    return q ? rows.filter((t) => [t.note, t.category, t.account, t.from, t.to].some((s) => s?.toLowerCase().includes(q))) : rows;
+    return rows.filter((t) =>
+      (ftype === 'ALL' || t.action === ftype) && (!fcat || t.category_id === fcat) &&
+      (!facc || t.account_id === facc || t.from_account_id === facc || t.to_account_id === facc) &&
+      (!q || [t.note, t.category, t.account, t.from, t.to].some((s) => s?.toLowerCase().includes(q))));
   });
   const key = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const head = (iso) => {
@@ -70,17 +108,23 @@
 
 <div class="head">
   <h1>Операции</h1>
-  <div class="hb"><button class="ib" class:on={searching} onclick={() => { searching = !searching; if (!searching) query = ''; }} aria-label="Поиск">
+  <div class="hb"><button class="ib" class:on={searching} onclick={toggleSearch} aria-label="Поиск и фильтры">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
   </button><button class="ib plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
 <div class="wrap">
   {#if searching}
-    <input class="search" placeholder="Поиск по названию, категории, счёту" bind:value={query} />
+    <div class="fp">
+      <input class="search" placeholder="Категория, заметка или счёт" bind:value={query} />
+      <div class="tags">
+        {#each tags as g (g.k)}<button class="tg" onclick={() => drop(g.k)}>{g.t}<i>×</i></button>{/each}
+        <button class="add" onclick={() => (fsheet = true)}>+ Фильтр</button>
+      </div>
+    </div>
   {/if}
-  <div class="chips" bind:this={chipsEl}>
+  {#if period === 'month'}<div class="chips" bind:this={chipsEl}>
     {#each months as mo, i}<button class:on={mi === i} onclick={() => pick(i)}>{mo.label}</button>{/each}
-  </div>
+  </div>{/if}
   {#if error}
     <div class="msg"><b>Не удалось загрузить</b><p>{error}</p><button onclick={load}>Повторить</button></div>
   {:else if loading}
@@ -102,6 +146,23 @@
 </div>
 <OpSheet {picked} onclose={() => (picked = null)} />
 
+<Sheet open={fsheet} onclose={() => (fsheet = false)}>
+  <div class="ft"><b>Фильтры</b><button onclick={() => (fsheet = false)}>Готово</button></div>
+  <div class="fs">
+    <div class="fl">По дате</div>
+    <div class="cp">{#each PERIODS as [k, l]}<button class:on={period === k} onclick={() => setPeriod(k)}>{l}</button>{/each}</div>
+    {#if period === 'custom'}
+      <div class="cr"><label>С<input type="date" bind:value={cFrom} onchange={load} /></label><label>По<input type="date" bind:value={cTo} onchange={load} /></label></div>
+    {/if}
+    <div class="fl">Тип</div>
+    <div class="cp">{#each TYPES as [k, l]}<button class:on={ftype === k} onclick={() => (ftype = k)}>{l}</button>{/each}</div>
+    <div class="fl">Категория</div>
+    <div class="cp"><button class:on={!fcat} onclick={() => (fcat = 0)}>Все</button>{#each catList as c (c.id)}<button class:on={fcat === c.id} onclick={() => (fcat = c.id)}>{noEmoji(c.name)}</button>{/each}</div>
+    <div class="fl">Счёт</div>
+    <div class="cp"><button class:on={!facc} onclick={() => (facc = 0)}>Все</button>{#each accList as [id, n]}<button class:on={facc === Number(id)} onclick={() => (facc = Number(id))}>{n}</button>{/each}</div>
+  </div>
+</Sheet>
+
 <style>
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--safe-t) + 16px) 20px 4px; }
   h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .37px; line-height: 41px; }
@@ -111,7 +172,20 @@
   .ib svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; box-sizing: border-box; }
   .ib.on svg { background: var(--gold); stroke: var(--bg); }
   .wrap { padding: 0 var(--pad); }
-  .search { width: 100%; margin-top: 10px; height: 40px; border: 0; border-radius: 10px; padding: 0 12px; background: var(--fill); color: var(--text); outline: none; }
+  .fp { margin-top: 10px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .tg { display: flex; align-items: center; gap: 6px; background: var(--gold-soft); color: var(--gold); padding: 6px 8px 6px 12px; border-radius: 99px; font-size: 14px; font-weight: 500; min-height: 32px; }
+  .tg i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; background: rgba(184,137,43,.22); display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1; }
+  .add { padding: 6px 14px; border-radius: 99px; border: .5px dashed var(--gold); color: var(--gold); font-size: 14px; font-weight: 500; min-height: 32px; }
+  .ft { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; } .ft b { font-size: 22px; font-weight: 700; } .ft button { color: var(--gold); font-size: 17px; font-weight: 600; }
+  .fs { max-height: 62vh; overflow-y: auto; touch-action: pan-y; padding-bottom: 8px; }
+  .fl { font-size: 13px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 14px 4px 6px; font-weight: 600; }
+  .cp { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cp button { padding: 7px 14px; border-radius: 99px; background: var(--fill); font-size: 15px; font-weight: 500; min-height: 36px; }
+  .cp .on { background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; }
+  .cr { display: flex; gap: 10px; margin-top: 10px; } .cr label { flex: 1; font-size: 13px; color: var(--muted); }
+  .cr input { display: block; width: 100%; margin-top: 4px; height: 40px; border: 0; border-radius: 10px; padding: 0 10px; background: var(--fill); color: var(--text); }
+  .search { width: 100%; margin-top: 0; height: 40px; border: 0; border-radius: 10px; padding: 0 12px; background: var(--fill); color: var(--text); outline: none; }
   .chips { display: flex; gap: 8px; margin: 12px 0 4px; overflow-x: auto; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
   .chips button { padding: 7px 14px; border-radius: 99px; background: var(--fill); font-size: 15px; font-weight: 600; white-space: nowrap; text-transform: capitalize; min-height: 36px; }
