@@ -5,7 +5,7 @@
   --fill: rgba(118,118,128,.12); --bar: rgba(60,60,67,.10); --seg-on: #ffffff;
   --tab: #F9F9F9; --pos: #248A3D; --neg: #D70015;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 6px 20px rgba(80,55,10,.06);
-  --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px); --safe-t: 0px; --safe-b: env(safe-area-inset-bottom, 0px);
   --bar-h: 44px; --tabbar: 49px; --pad: 16px;
 }
 @media (prefers-color-scheme: dark) {
@@ -16,7 +16,10 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { -webkit-text-size-adjust: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
-html, body, #app { margin: 0; height: 100%; }
+html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; }
+/* Как в старом Accounting: прокручивается не страница, а область приложения под строкой статуса.
+   Тогда iOS 26 не рисует размытую дымку над контентом. --safe-t = 0, т.к. отступ уже сделан через top. */
+#app { position: fixed; left: 0; right: 0; top: var(--safe-top); bottom: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; background: var(--bg); }
 body { overscroll-behavior-x: none; touch-action: pan-y; max-width: 100vw; font-family: var(--font); font-size: 15px; line-height: 1.3; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 input, select, textarea { font: inherit; font-size: 16px; }
@@ -36,7 +39,7 @@ input, select, textarea { font: inherit; font-size: 16px; }
 
 /* Чёткая верхняя граница: под статус-баром сплошная заливка, контент уходит под неё без дымки */
 /* Настоящий элемент (не ::before и без pointer-events:none): iOS 26 ищет его hit-тестом у верхнего края и тогда не рисует свой размытый «scroll edge» */
-#edge-top { position: fixed; top: 0; left: 0; right: 0; height: max(var(--safe-t), 12px); background: var(--bg); z-index: 60; }
+#edge-top { position: fixed; top: 0; left: 0; right: 0; height: var(--safe-top); background: var(--bg); z-index: 60; }
 
 /* Единый значок Aurum: золотой круг с белой линейной иконкой (как в «Последних операциях») */
 .ic:not(.re):not(.warn):not(.bad):not(.out .ic) {
