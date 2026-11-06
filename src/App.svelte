@@ -6,6 +6,7 @@
   import Login from './pages/Login.svelte';
   import More from './pages/More.svelte';
   import Home from './pages/Home.svelte';
+  import Operations from './pages/Operations.svelte';
   import Stub from './pages/Stub.svelte';
 
   const icons = { home: '🏠', ops: '🧾', budget: '🎯', accounts: '💳' };
@@ -17,12 +18,14 @@
 {:else if !auth.session}
   <Login />
 {:else}
-  {#if current !== 'home'}
+  {#if current !== 'home' && current !== 'ops'}
     <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
   {/if}
   <div class="content">
     {#if current === 'home'}
       <Home />
+    {:else if current === 'ops'}
+      <Operations />
     {:else if current === 'more'}
       <More />
     {:else}

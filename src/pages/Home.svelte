@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import { home, loadHome } from '../lib/data.svelte.js';
   import { nav } from '../lib/nav.svelte.js';
-  import { money, fullDate } from '../lib/format.js';
-  import Sheet from '../lib/Sheet.svelte';
+  import OpSheet from '../lib/OpSheet.svelte';
+  import { loadRefs } from '../lib/refs.svelte.js';
   import BalanceCard from '../home/BalanceCard.svelte';
   import BudgetCard from '../home/BudgetCard.svelte';
   import FlowCard from '../home/FlowCard.svelte';
@@ -18,10 +18,8 @@
     await loadHome();
     if (!home.error) requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
   }
-  onMount(refresh);
+  onMount(() => { loadRefs().catch(() => {}); refresh(); });
 
-  const kind = { EXPENSE: 'Расход', INCOME: 'Доход', RETURN: 'Возврат', TRANSFER: 'Перевод' };
-  let sheetAmount = $derived(picked ? (picked.action === 'EXPENSE' ? '−' : picked.action === 'TRANSFER' ? '' : '+') + money(picked.amount, 2) : '');
 </script>
 
 <div class="head">
@@ -52,24 +50,7 @@
   {/if}
 </div>
 
-<Sheet open={!!picked} onclose={() => (picked = null)}>
-  {#if picked}
-    <h3>{picked.note || picked.category || kind[picked.action]}</h3>
-    <div class="amt">{sheetAmount}</div>
-    <div class="list">
-      <div class="r"><span>Тип</span><span>{kind[picked.action]}</span></div>
-      {#if picked.action === 'TRANSFER'}
-        <div class="r"><span>Откуда</span><span>{picked.from}</span></div>
-        <div class="r"><span>Куда</span><span>{picked.to}</span></div>
-      {:else}
-        <div class="r"><span>Счёт</span><span>{picked.account}</span></div>
-        {#if picked.category}<div class="r"><span>Категория</span><span>{picked.category}</span></div>{/if}
-      {/if}
-      <div class="r"><span>Дата</span><span>{fullDate(picked.date)}</span></div>
-    </div>
-    <button class="done" onclick={() => (picked = null)}>Готово</button>
-  {/if}
-</Sheet>
+<OpSheet {picked} onclose={() => (picked = null)} />
 
 <style>
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--safe-t) + 16px) 20px 4px; }
@@ -86,11 +67,4 @@
   .err { margin-top: 24px; padding: 18px 16px; background: var(--card); border-radius: 20px; box-shadow: var(--shadow); }
   .err p { color: var(--muted); font-size: 15px; word-break: break-word; }
   .err button { color: var(--gold); font-weight: 600; min-height: 44px; }
-  h3 { margin: 0 0 4px; font-size: 20px; font-weight: 700; text-align: center; }
-  .amt { text-align: center; font-size: 40px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0 14px; letter-spacing: .3px; }
-  .list { background: var(--bg); border-radius: 14px; overflow: hidden; }
-  .r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 17px; position: relative; }
-  .r + .r::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--line); }
-  .r span:last-child { color: var(--muted); text-align: right; }
-  .done { margin-top: 14px; width: 100%; height: 50px; border-radius: 14px; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; font-weight: 700; font-size: 17px; }
 </style>
