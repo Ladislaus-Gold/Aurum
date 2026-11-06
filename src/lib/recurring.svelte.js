@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 
 // Регулярные платежи для блока «На горизонте»: автопоиск по истории, подтверждение, сопоставление с реальной операцией
-export const rec = $state({ list: [], dismissed: [], found: [], loaded: false, scanning: false, error: '' });
+export const rec = $state({ list: [], dismissed: [], found: [], paid: [], loaded: false, scanning: false, error: '' });
 export const HORIZON = 14;
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -29,16 +29,44 @@ export function daysLabel(n) {
   if (n === 0) return 'сегодня';
   if (n === 1) return 'завтра';
   const t = n % 10, h = n % 100;
-  return `через ${n} ${t >= 2 && t <= 4 && (h < 12 || h > 14) ? 'дня' : 'дней'}`;
+  return `через ${n} ${t === 1 && h !== 11 ? 'день' : t >= 2 && t <= 4 && (h < 12 || h > 14) ? 'дня' : 'дней'}`;
 }
 
-// ближайшие платежи на HORIZON дней (и просроченные до 5 дней: «ещё не списалось»)
-export function upcoming() {
-  const t = today0();
-  return rec.list
-    .map((p) => ({ ...p, amount: Number(p.amount), days: diffDays(parseD(p.next_date), t) }))
-    .filter((p) => p.days <= HORIZON && p.days >= -5)
-    .sort((a, b) => a.days - b.days);
+// Платежи текущего месяца: ещё не списанные (в т.ч. просроченные до 5 дней) и уже списавшиеся
+const monthEnd0 = () => { const t = today0(); return new Date(t.getFullYear(), t.getMonth() + 1, 0); };
+export function monthPending() {
+  const t = today0(), end = monthEnd0(), out = [];
+  for (const p of rec.list) {
+    let d = parseD(p.next_date), guard = 0;
+    while (d <= end && guard++ < 6) {
+      const days = diffDays(d, t);
+      if (days >= -5) out.push({ ...p, key: `${p.id}-${ymd(d)}`, amount: Number(p.amount), days, due: ymd(d) });
+      if (p.period !== 'week') break;
+      d = parseD(addPeriod(ymd(d), 'week'));
+    }
+  }
+  return out.sort((a, b) => a.days - b.days);
+}
+export const monthPaid = () => rec.paid;
+export const MONTH_IN = ['январе', 'феврале', 'марте', 'апреле', 'мае', 'июне', 'июле', 'августе', 'сентябре', 'октябре', 'ноябре', 'декабре'];
+
+export function blankPlan() {
+  return { manual: true, name: '', pattern: '', amount: '', period: 'month', next_date: ymd(today0()), category_id: null, account_id: null, approx: false };
+}
+
+async function loadMonthPaid() {
+  const t = today0(), from = new Date(t.getFullYear(), t.getMonth(), 1);
+  if (!rec.list.length) { rec.paid = []; return; }
+  const r = await supabase.from('transactions').select('id,date,amount,note,category_id').eq('action', 'EXPENSE')
+    .gte('date', from.toISOString()).order('date', { ascending: false }).limit(1000);
+  if (r.error) return;
+  const out = [];
+  for (const x of r.data) {
+    const p = rec.list.find((q) => same(q.pattern, x.note));
+    if (!p) continue;
+    out.push({ key: `tx-${x.id}`, id: p.id, name: p.name, category_id: p.category_id ?? x.category_id, period: p.period, amount: Number(x.amount), date: x.date, paid: true });
+  }
+  rec.paid = out;
 }
 
 export async function loadRecurring() {
@@ -48,6 +76,7 @@ export async function loadRecurring() {
   rec.list = r.data.filter((p) => p.active && !p.dismissed);
   rec.dismissed = r.data.filter((p) => p.dismissed).map((p) => p.pattern);
   rec.loaded = true;
+  await loadMonthPaid();
 }
 
 // Пришла настоящая операция в срок → платёж сдвигается на следующий период; не пришла 5+ дней → тоже сдвигается тихо
@@ -146,6 +175,7 @@ const fields = (c) => ({
 });
 
 export async function saveRecurring(c) {
+  if (c.manual) { c = { ...c, name: c.name.trim(), pattern: norm(c.name) }; if (!c.pattern) throw new Error('Укажи название'); }
   const res = c.id
     ? await supabase.from('recurring_payments').update(fields(c)).eq('id', c.id)
     : await supabase.from('recurring_payments').insert({ ...fields(c), active: true });
