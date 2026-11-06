@@ -58,7 +58,7 @@
   .d { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .37px; line-height: 41px; }
   .hb { display: flex; }
-  .rf.plus :global(svg) { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; padding: 8px; width: 36px !important; height: 36px !important; box-sizing: border-box; }
+  .rf.plus :global(svg) { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; padding: 8px; width: 36px !important; height: 36px !important; box-sizing: border-box; border-radius: 50%; stroke: #fff; }
   .rf { width: 44px; height: 44px; display: grid; place-items: center; }
   .rf svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); color: var(--gold); box-sizing: border-box; }
   .rf.spin svg { animation: spin .9s linear infinite; }

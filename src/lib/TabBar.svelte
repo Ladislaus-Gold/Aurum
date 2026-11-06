@@ -21,7 +21,7 @@
 <style>
   nav { position: fixed; inset: auto 0 0 0; z-index: 10; display: grid; grid-template-columns: repeat(5, 1fr);
     height: calc(var(--tabbar) + var(--safe-b)); padding-bottom: var(--safe-b);
-    background: var(--tab); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+    background: var(--tab);
     border-top: .5px solid var(--line); }
   button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; color: var(--muted); }
   svg { width: 25px; height: 25px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
