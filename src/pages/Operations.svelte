@@ -5,6 +5,8 @@
   import { signed } from '../lib/format.js';
   import OpRow from '../lib/OpRow.svelte';
   import OpSheet from '../lib/OpSheet.svelte';
+  import Icon from '../lib/Icon.svelte';
+  import { nav } from '../lib/nav.svelte.js';
 
   const SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
   const now = new Date();
@@ -68,9 +70,9 @@
 
 <div class="head">
   <h1>Операции</h1>
-  <button class="ib" class:on={searching} onclick={() => { searching = !searching; if (!searching) query = ''; }} aria-label="Поиск">
+  <div class="hb"><button class="ib" class:on={searching} onclick={() => { searching = !searching; if (!searching) query = ''; }} aria-label="Поиск">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
-  </button>
+  </button><button class="ib plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
 <div class="wrap">
   {#if searching}
@@ -103,6 +105,8 @@
 <style>
   .head { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--safe-t) + 16px) 20px 4px; }
   h1 { margin: 0; font-size: 34px; font-weight: 700; letter-spacing: .37px; line-height: 41px; }
+  .hb { display: flex; }
+  .ib.plus { color: #fff; } .ib.plus :global(svg) { width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: linear-gradient(160deg, #EBC77A, #B8862C); box-sizing: border-box; stroke: #fff; width: 36px !important; height: 36px !important; }
   .ib { width: 44px; height: 44px; display: grid; place-items: center; }
   .ib svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; box-sizing: border-box; }
   .ib.on svg { background: var(--gold); stroke: var(--bg); }
