@@ -54,8 +54,8 @@
   .ft b { font-size: 15px; font-weight: 600; }
   .ft small { font-size: 12px; color: #B9A27A; }
   .mid { flex: 1; min-width: 0; }
-  .t { font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .s { font-size: 12px; color: var(--muted); line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t { font-size: 15px; line-height: 20px; overflow-wrap: anywhere; }
+  .s { font-size: 12px; color: var(--muted); line-height: 17px; overflow-wrap: anywhere; }
   .pill { margin-left: 8px; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 99px; background: var(--gold-soft); color: var(--gold); vertical-align: 1px; }
   .pill.soon { background: rgba(215,0,21,.1); color: var(--neg); }
   .r { font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
