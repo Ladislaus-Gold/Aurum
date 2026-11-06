@@ -1,9 +1,9 @@
 export const tabs = [
-  { id: 'home', label: 'Главная', icon: '🏠' },
-  { id: 'ops', label: 'Операции', icon: '🧾' },
-  { id: 'budget', label: 'Бюджет', icon: '🎯' },
-  { id: 'accounts', label: 'Счета', icon: '💳' },
-  { id: 'more', label: 'Ещё', icon: '⋯' }
+  { id: 'home', label: 'Главная' },
+  { id: 'accounts', label: 'Счета' },
+  { id: 'ops', label: 'Операции' },
+  { id: 'budget', label: 'Бюджет' },
+  { id: 'more', label: 'Ещё' }
 ];
 export const moreItems = [
   { id: 'analytics', label: 'Аналитика', icon: '📊' },
