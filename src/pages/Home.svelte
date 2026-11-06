@@ -9,7 +9,7 @@
   import HomeBlocks from './HomeBlocks.svelte';
   import HorizonSheet from './HorizonSheet.svelte';
   import Horizon from '../home/Horizon.svelte';
-  import { rec, loadRecurring, syncRecurring, detect } from '../lib/recurring.svelte.js';
+  import { rec, loadRecurring, syncRecurring, detect, blankPlan } from '../lib/recurring.svelte.js';
   import { hb } from '../lib/homeblocks.svelte.js';
   import BalanceCard from '../home/BalanceCard.svelte';
   import BudgetCard from '../home/BudgetCard.svelte';
@@ -60,7 +60,7 @@
         <div class="sh"><h2>Бюджет на {home.budget.month}</h2></div>
         <button class="bt" onclick={() => (nav.tab = 'budget')} aria-label="Открыть бюджет"><BudgetCard budget={home.budget} cats={home.cats} {shown} /></button>
       {:else if b.id === 'horizon'}
-        <Horizon {shown} onopen={() => { hzEdit = null; hzOpen = true; }} onedit={(p) => { hzEdit = p; hzOpen = true; }} />
+        <Horizon {shown} onopen={() => { hzEdit = null; hzOpen = true; }} onedit={(p) => { hzEdit = p; hzOpen = true; }} onadd={() => { hzEdit = blankPlan(); hzOpen = true; }} />
       {:else if b.id === 'flow'}
         <div class="sh"><h2>Денежный поток</h2></div>
         <FlowCard months={home.months} {shown} />

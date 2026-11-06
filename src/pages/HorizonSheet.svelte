@@ -4,7 +4,7 @@
   import OpAvatar from '../lib/OpAvatar.svelte';
   import { refs } from '../lib/refs.svelte.js';
   import { noEmoji, money, dayLabel } from '../lib/format.js';
-  import { rec, detect, saveRecurring, dismissRecurring, PERIODS, daysLabel, parseD } from '../lib/recurring.svelte.js';
+  import { rec, detect, saveRecurring, dismissRecurring, blankPlan, PERIODS, daysLabel, parseD } from '../lib/recurring.svelte.js';
   let { open = false, edit = null, onclose } = $props();
   let cur = $state(null), busy = $state(false), err = $state('');
 
@@ -35,7 +35,11 @@
 <Sheet {open} {onclose}>
   {#if cur}
     <div class="top"><button onclick={() => (edit ? onclose?.() : (cur = null))}>{edit ? 'Закрыть' : 'Назад'}</button><b>{cur.id ? 'Платёж' : 'Новый платёж'}</b><span></span></div>
-    <div class="who"><OpAvatar t={av(cur)} /><div><b>{cur.name}</b><small>{cur.id ? PERIODS[cur.period] : `нашёл по ${cur.count} операциям`}</small></div></div>
+    {#if cur.manual}
+      <div class="who"><OpAvatar t={av(cur)} /><input class="nm" placeholder="Название, например Интернет" bind:value={cur.name} /></div>
+    {:else}
+      <div class="who"><OpAvatar t={av(cur)} /><div><b>{cur.name}</b><small>{cur.id ? PERIODS[cur.period] : `нашёл по ${cur.count} операциям`}</small></div></div>
+    {/if}
     <div class="f"><span>Сумма</span><label class="pill"><input type="number" inputmode="decimal" bind:value={cur.amount} min="0" />₴</label></div>
     <div class="f"><span>Как часто</span>
       <div class="seg">{#each [['week', 'Неделя'], ['month', 'Месяц'], ['year', 'Год']] as [k, n]}<button class:on={cur.period === k} onclick={() => (cur.period = k)}>{n}</button>{/each}</div></div>
@@ -68,9 +72,10 @@
             </button>
           {/each}
         </div>
-      {:else}<p class="empty">Пока ничего нет. Запусти поиск — найду повторы в истории.</p>{/if}
+      {:else}<p class="empty">Пока ничего нет. Добавь платёж или запусти поиск повторов в истории.</p>{/if}
       {#if err || rec.error}<p class="err">{err || rec.error}</p>{/if}
-      <button class="btn" disabled={rec.scanning} onclick={detect}>{rec.scanning ? 'Ищу…' : 'Найти повторы в истории'}</button>
+      <button class="btn" onclick={() => (cur = blankPlan())}>Добавить платёж</button>
+      <button class="del gold" disabled={rec.scanning} onclick={detect}>{rec.scanning ? 'Ищу…' : 'Найти повторы в истории'}</button>
     </div>
   {/if}
 </Sheet>
@@ -86,6 +91,8 @@
   .seg { display: flex; background: var(--fill); border-radius: 9px; padding: 2px; } .seg button { padding: 5px 12px; border-radius: 7px; font-size: 13px; font-weight: 600; } .seg .on { background: var(--seg-on); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
   .btn { display: block; width: 100%; margin-top: 14px; min-height: 50px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-size: 15px; font-weight: 600; } .btn:disabled { opacity: .6; }
   .del { display: block; width: 100%; min-height: 44px; margin-top: 4px; color: var(--neg); font-size: 15px; }
+  .nm { flex: 1; min-width: 0; background: var(--fill); border-radius: 10px; padding: 10px 12px; font-size: 16px; border: 0; outline: 0; color: inherit; }
+  .gold { color: var(--gold); font-weight: 600; }
   .hero { background: #14100c; color: #B9A27A; border-radius: 18px; padding: 14px 16px; margin: 8px 0 10px; } .hero b { display: block; color: #F4DDA6; font-size: 22px; font-weight: 600; } .hero span, .hero small { font-size: 12px; } .hero small { display: block; }
   .cd { background: var(--bg); border-radius: 16px; padding: 10px 12px; margin-bottom: 10px; }
   .cr, .li { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; } .m { flex: 1; min-width: 0; } .m b { font-size: 15px; font-weight: 600; display: block; overflow-wrap: anywhere; }
