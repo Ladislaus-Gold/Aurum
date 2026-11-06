@@ -6,12 +6,12 @@ export const tabs = [
   { id: 'more', label: 'Ещё' }
 ];
 export const moreItems = [
-  { id: 'analytics', label: 'Аналитика', icon: '📊' },
-  { id: 'rules', label: 'Правила', icon: '🧠' },
-  { id: 'import', label: 'Импорт', icon: '📥' },
-  { id: 'mono', label: 'Monobank', icon: '🏦' },
-  { id: 'status', label: 'Статус', icon: '🩺' },
-  { id: 'backup', label: 'Резервная копия', icon: '💾' }
+  { id: 'analytics', label: 'Аналитика', icon: 'chart', group: 'Умные функции' },
+  { id: 'rules', label: 'Правила', icon: 'rule', group: 'Умные функции' },
+  { id: 'import', label: 'Импорт', icon: 'imp', group: 'Деньги' },
+  { id: 'mono', label: 'Monobank', icon: 'bank', group: 'Деньги' },
+  { id: 'status', label: 'Статус', icon: 'stat', group: 'Система' },
+  { id: 'backup', label: 'Резервная копия', icon: 'save', group: 'Деньги' }
 ];
 export const nav = $state({ tab: 'home', sub: null });
 export const titleOf = (id) =>
