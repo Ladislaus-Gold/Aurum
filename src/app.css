@@ -64,6 +64,7 @@ body.dim #edge-bottom { background: var(--card); }
 
 /* числа и точки — как на главной: плавное проявление с подъёмом / «выскакивание» точки */
 .num { animation: rise .45s cubic-bezier(.2,.8,.2,1) .05s both; }
+@keyframes bup { from { transform: scaleY(0); } to { transform: none; } }
 @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes area { from { transform: scaleY(0); opacity: 0; } to { transform: none; opacity: 1; } }
 
