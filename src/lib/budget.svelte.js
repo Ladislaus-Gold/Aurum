@@ -1,7 +1,10 @@
 import { supabase } from './supabase.js';
 import { noEmoji } from './format.js';
+import { cget, cset } from './persist.js';
 
-export const bud = $state({ loading: true, error: '', data: null });
+const sv = cget('bud');
+const nowD = new Date();
+export const bud = $state({ loading: true, error: '', data: sv && sv.y === nowD.getFullYear() && sv.m === nowD.getMonth() ? sv : null });
 
 const pad = (n) => String(n).padStart(2, '0');
 export const monthKey = (y, m) => { const d = new Date(y, m, 1); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-01`; };
@@ -106,6 +109,7 @@ export async function loadBudget(y, m) {
       badge: buckets.reduce((s, b) => s + b.undist, 0),
       incPlan: buckets.reduce((s, b) => s + b.plan, 0), incFact: buckets.reduce((s, b) => s + b.fact, 0)
     };
+    if (y === nowD.getFullYear() && m === nowD.getMonth()) cset('bud', bud.data);
   } catch (e) { bud.error = e?.message ?? String(e); }
   bud.loading = false;
 }

@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js';
+import { cclear } from './persist.js';
 
 export const auth = $state({ session: null, ready: false });
 
@@ -16,4 +17,4 @@ export function signInGoogle() {
     options: { redirectTo: location.origin + location.pathname }
   });
 }
-export const signOut = () => supabase.auth.signOut();
+export const signOut = () => { cclear(); return supabase.auth.signOut(); };

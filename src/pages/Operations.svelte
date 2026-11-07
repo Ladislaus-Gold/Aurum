@@ -1,11 +1,7 @@
-<script module>
-  const cache = new Map();
-</script>
-
 <script>
   import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
-  import { supabase } from '../lib/supabase.js';
+  import { opsCache as cache, opsKey, fetchOps, curMonthRange } from '../lib/prefetch.js';
   import { loadRefs, enrich, opSigned, refs } from '../lib/refs.svelte.js';
   import { signed, noEmoji } from '../lib/format.js';
   import OpRow from '../lib/OpRow.svelte';
@@ -21,8 +17,8 @@
     return { y: d.getFullYear(), m: d.getMonth(), label: SHORT[d.getMonth()] + (d.getFullYear() !== now.getFullYear() ? ` ${String(d.getFullYear()).slice(2)}` : '') };
   });
   let mi = $state(5);
-  let rows = $state([]);
-  let loading = $state(true);
+  let rows = $state(cache.get(opsKey(...curMonthRange())) ?? []);
+  let loading = $state(!cache.has(opsKey(...curMonthRange())));
   let error = $state('');
   let picked = $state(null);
   let query = $state('');
@@ -60,26 +56,13 @@
 
   async function load() {
     const [a, b] = rangeOf();
-    const ck = a.getTime() + '_' + b.getTime();
-    const hit = cache.get(ck);
+    if (!(a < b)) { error = 'Дата «с» позже даты «по».'; loading = false; return; }
+    const hit = cache.get(opsKey(a, b));
     if (hit) { rows = hit; loading = false; shown = true; } else { loading = true; shown = false; }
     error = '';
     try {
-      await loadRefs();
-      if (!(a < b)) throw new Error('Дата «с» позже даты «по».');
-      const all = [];
-      for (let off = 0; off < 10000; off += 1000) {
-        const { data, error: e } = await supabase.from('transactions')
-          .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
-          .gte('date', a.toISOString()).lt('date', b.toISOString())
-          .order('date', { ascending: false }).range(off, off + 999);
-        if (e) throw e;
-        all.push(...data);
-        if (data.length < 1000) break;
-      }
-      rows = all.map(enrich);
-      cache.set(ck, rows);
-      requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
+      rows = await fetchOps(a, b);
+      if (!hit) requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
     } catch (e) { error = e?.message ?? String(e); }
     loading = false;
   }
