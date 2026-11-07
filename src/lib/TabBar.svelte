@@ -7,11 +7,21 @@
     budget: ['M21 12A9 9 0 1 1 12 3v9z', 'M15 3.5A9 9 0 0 1 20.5 9H15z'],
     more: ['M5 12h.01M12 12h.01M19 12h.01']
   };
+  // Переключаем сразу при касании (pointerdown) и пока палец скользит по панели — не нужно «попадать» тапом
+  let navEl;
+  function pick(id) { if (nav.tab !== id || nav.sub) { nav.tab = id; nav.sub = null; } }
+  function at(e) {
+    const r = navEl.getBoundingClientRect();
+    const i = Math.min(tabs.length - 1, Math.max(0, Math.floor(((e.clientX - r.left) / r.width) * tabs.length)));
+    pick(tabs[i].id);
+  }
+  function down(e) { navEl.setPointerCapture?.(e.pointerId); at(e); }
+  function move(e) { if (e.buttons || e.pointerType === 'touch') at(e); }
 </script>
 
-<nav>
+<nav bind:this={navEl} onpointerdown={down} onpointermove={move}>
   {#each tabs as t}
-    <button class:active={nav.tab === t.id} onclick={() => { nav.tab = t.id; nav.sub = null; }}>
+    <button class:active={nav.tab === t.id} onclick={() => pick(t.id)}>
       <svg viewBox="0 0 24 24">{#each paths[t.id] as d}<path {d} />{/each}</svg>
       <span class="lb">{t.label}</span>
     </button>
@@ -22,7 +32,7 @@
   nav { position: fixed; inset: auto 0 0 0; z-index: 10; display: grid; grid-template-columns: repeat(5, 1fr);
     height: calc(var(--tabbar) + var(--safe-b)); padding-bottom: var(--safe-b);
     background: var(--tab);
-    border-top: .5px solid var(--line); }
+    border-top: .5px solid var(--line); touch-action: none; user-select: none; -webkit-user-select: none; }
   button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; color: var(--muted); }
   svg { width: 25px; height: 25px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .lb { font-size: 10px; font-weight: 500; }
