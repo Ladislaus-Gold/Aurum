@@ -1,7 +1,7 @@
 <script>
   import { openNewOp } from '../lib/fly.js';
   import { stagger } from '../lib/anim.js';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { opsCache as cache, opsKey, fetchOps, curMonthRange } from '../lib/prefetch.js';
   import { loadRefs, enrich, opSigned, refs } from '../lib/refs.svelte.js';
   import { signed, noEmoji } from '../lib/format.js';
@@ -40,7 +40,21 @@
     facc && { k: 'acc', t: refs.accs[facc] ?? 'Счёт' }
   ].filter(Boolean));
   function drop(k) { if (k === 'period') setPeriod('month'); else if (k === 'type') ftype = 'ALL'; else if (k === 'cat') fcat = 0; else facc = 0; }
-  function toggleSearch() { searching = !searching; if (!searching) { query = ''; ftype = 'ALL'; fcat = 0; facc = 0; fsheet = false; if (period !== 'month') setPeriod('month'); } }
+  let wrapEl, fpwEl, closing = $state(false);
+  // Без анимации высоты (она пересчитывает весь список каждый кадр): раскладка меняется сразу,
+  // а список «доезжает» на место через transform — это идёт на GPU и не лагает
+  async function toggleSearch() {
+    const opening = !searching;
+    const h = opening ? 0 : (fpwEl?.offsetHeight ?? 0);
+    if (!opening) closing = true;
+    searching = opening;
+    await tick();
+    const hh = opening ? (fpwEl?.offsetHeight ?? 0) : h;
+    const below = Array.from(wrapEl?.children ?? []).filter((el) => el !== fpwEl);
+    const from = opening ? -hh : hh;
+    below.forEach((el) => el.animate?.([{ transform: `translateY(${from}px)` }, { transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.32,.72,0,1)' }));
+    if (!opening) setTimeout(() => (closing = false), 260);
+    if (!searching) { query = ''; ftype = 'ALL'; fcat = 0; facc = 0; fsheet = false; if (period !== 'month') setPeriod('month'); } }
   function setPeriod(p) { if (period === p) return; period = p; load(true); }
   function rangeOf() {
     const y = now.getFullYear(), m = now.getMonth();
@@ -109,8 +123,8 @@
     <span class="c"><svg class="s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg><svg class="x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></span>
   </button><button class="ib plus" onclick={openNewOp} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
-<div class="wrap" class:rs use:stagger={{ skip: '.sum, .dh, .grp, .fpw' }}>
-  <div class="fpw" class:on={searching} inert={!searching}>
+<div class="wrap" class:rs bind:this={wrapEl} use:stagger={{ skip: '.sum, .dh, .grp, .fpw' }}>
+  <div class="fpw" class:on={searching} class:closing bind:this={fpwEl} inert={!searching}>
     <div class="fp">
       <input class="search" placeholder="Категория, заметка или счёт" bind:value={query} />
       <div class="tags">
@@ -175,15 +189,16 @@
   .ib.on .c .x { opacity: 1; transform: none; }
   .wrap { padding: 0 var(--pad); }
   .wrap.rs :global(*) { transition: none !important; }
-  .fpw { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .42s cubic-bezier(.32,.72,0,1), opacity .25s; }
-  .fpw.on { grid-template-rows: 1fr; opacity: 1; }
-  .fp { margin-top: 10px; overflow: hidden; min-height: 0; }
-  .fpw .search { width: 44px; padding-left: 0; padding-right: 0; transition: width .45s cubic-bezier(.32,.72,0,1), padding .3s; }
-  .fpw .search::placeholder { opacity: 0; transition: opacity .2s; }
-  .fpw.on .search { width: 100%; padding: 0 12px; }
-  .fpw.on .search::placeholder { opacity: 1; transition-delay: .25s; }
-  .fpw .tags { opacity: 0; transform: translateY(-6px); transition: opacity .35s .12s, transform .4s cubic-bezier(.32,.72,0,1) .12s; }
-  .fpw.on .tags { opacity: 1; transform: none; }
+  .fpw { display: none; }
+  .fpw.on { display: block; animation: fpin .3s ease both; }
+  .fpw.closing:not(.on) { display: block; position: absolute; width: calc(100% - var(--pad) * 2); pointer-events: none; animation: fpout .22s ease both; }
+  .fp { margin-top: 10px; }
+  .fpw.on .search { animation: sx .45s cubic-bezier(.32,.72,0,1) both; }
+  .fpw.on .tags { animation: tgin .4s cubic-bezier(.32,.72,0,1) .1s both; }
+  @keyframes fpin { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fpout { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes sx { from { clip-path: inset(0 0 0 86% round 10px); } to { clip-path: inset(0 0 0 0 round 10px); } }
+  @keyframes tgin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
   .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .tg { display: flex; align-items: center; gap: 6px; background: var(--gold-soft); color: var(--gold); padding: 6px 8px 6px 12px; border-radius: 99px; font-size: 13px; font-weight: 500; min-height: 32px; }
   .tg i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; background: rgba(184,137,43,.22); display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; }
