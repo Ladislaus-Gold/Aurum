@@ -1,4 +1,5 @@
 <script>
+  import { openNewOp } from '../lib/fly.js';
   import { onMount } from 'svelte';
   import { home, loadHome } from '../lib/data.svelte.js';
   import { nav } from '../lib/nav.svelte.js';
@@ -44,7 +45,7 @@
     <div class="d">{date}</div>
     <h1>Главная</h1>
   </div>
-  <div class="hb">{#if upd.ready}<button class="up" onclick={applyUpdate} aria-label="Установить обновление"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>Обновить</button>{/if}<button class="rf" onclick={() => (setOpen = true)} aria-label="Блоки главной"><Icon name="sliders" size={20} /></button><button class="rf plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
+  <div class="hb">{#if upd.ready}<button class="up" onclick={applyUpdate} aria-label="Установить обновление"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9" /><path d="M20 4v5h-5" /></svg>Обновить</button>{/if}<button class="rf" onclick={() => (setOpen = true)} aria-label="Блоки главной"><Icon name="sliders" size={20} /></button><button class="rf plus" onclick={openNewOp} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
 
 <div class="wrap">

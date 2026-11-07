@@ -1,4 +1,5 @@
 <script>
+  import { openNewOp } from '../lib/fly.js';
   import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { opsCache as cache, opsKey, fetchOps, curMonthRange } from '../lib/prefetch.js';
@@ -102,7 +103,7 @@
   <h1>Операции</h1>
   <div class="hb"><button class="ib" class:on={searching} onclick={toggleSearch} aria-label="Поиск и фильтры">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
-  </button><button class="ib plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
+  </button><button class="ib plus" onclick={openNewOp} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
 <div class="wrap" use:stagger={{ skip: '.sum, .dh, .grp' }}>
   {#if searching}

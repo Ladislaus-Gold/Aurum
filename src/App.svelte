@@ -16,6 +16,7 @@
   import Status from './pages/Status.svelte';
   import Backup from './pages/Backup.svelte';
   import NewOp from './lib/NewOp.svelte';
+  import { landBack } from './lib/fly.js';
   import { prefetchAll } from './lib/prefetch.js';
   let pf = false;
   $effect(() => { if (auth.session && !pf) { pf = true; prefetchAll(); } });
@@ -59,7 +60,7 @@
     {/if}
    {/key}
   </div>
-  <NewOp open={nav.newOp || !!nav.edit} edit={nav.edit} preAcc={nav.preAcc} onclose={() => { nav.newOp = false; nav.edit = null; nav.preAcc = 0; }} onsaved={() => nav.rev++} />
+  <NewOp open={nav.newOp || !!nav.edit} edit={nav.edit} preAcc={nav.preAcc} onclose={() => { nav.newOp = false; nav.edit = null; nav.preAcc = 0; landBack(); }} onsaved={() => nav.rev++} />
   <TabBar />
 {/if}
 
