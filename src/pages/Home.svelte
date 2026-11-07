@@ -22,8 +22,10 @@
 
   async function refresh() {
     shown = false;
+    const go = () => requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
+    if (home.has) go();
     await loadHome();
-    if (!home.error) requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
+    if (!home.has && !home.error) go();
   }
   onMount(() => {
     loadRefs().catch(() => {}); refresh(); checkUpdate();
@@ -46,7 +48,7 @@
 </div>
 
 <div class="wrap">
-  {#if home.error}
+  {#if home.error && !home.has}
     <div class="err">
       <b>Не удалось загрузить данные</b>
       <p>{home.error}</p>

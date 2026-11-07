@@ -16,6 +16,9 @@
   import Status from './pages/Status.svelte';
   import Backup from './pages/Backup.svelte';
   import NewOp from './lib/NewOp.svelte';
+  import { prefetchAll } from './lib/prefetch.js';
+  let pf = false;
+  $effect(() => { if (auth.session && !pf) { pf = true; prefetchAll(); } });
 
   
   let current = $derived(nav.sub ?? nav.tab);

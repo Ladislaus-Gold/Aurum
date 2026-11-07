@@ -1,9 +1,12 @@
 import { supabase } from './supabase.js';
 import { noEmoji } from './format.js';
+import { cget, cset } from './persist.js';
 
+const saved = cget('home');
 export const home = $state({
   loading: true, error: '', total: 0, series: [], months: [],
-  budget: { plan: 0, spent: 0 }, cats: [], recent: [], version: 0
+  budget: { plan: 0, spent: 0 }, cats: [], recent: [], version: 0,
+  ...(saved ?? {}), has: !!saved
 });
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -97,6 +100,8 @@ export async function loadHome() {
       from: noEmoji(accById.get(t.from_account_id) ?? ''), to: noEmoji(accById.get(t.to_account_id) ?? '')
     }));
     home.version++;
+    home.has = true;
+    cset('home', { total: home.total, series: home.series, months: home.months, budget: home.budget, cats: home.cats, recent: home.recent });
   } catch (e) {
     home.error = e?.message ?? String(e);
   } finally {

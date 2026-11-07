@@ -1,10 +1,6 @@
-<script module>
-  let cache = null;
-</script>
-
 <script>
   import { onMount } from 'svelte';
-  import { supabase } from '../lib/supabase.js';
+  import { accCache, fetchAccounts } from '../lib/prefetch.js';
   import { money, noEmoji } from '../lib/format.js';
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
@@ -12,10 +8,10 @@
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
 
-  let rows = $state(cache?.rows ?? []);
-  let loading = $state(!cache);
+  let rows = $state(accCache.v?.rows ?? []);
+  let loading = $state(!accCache.v);
   let error = $state('');
-  let limit = $state(cache?.limit ?? 0);
+  let limit = $state(accCache.v?.limit ?? 0);
   let picked = $state(null), last = $state(null), tx = $state([]), txLoad = $state(false), txErr = $state('');
   $effect(() => { if (picked) last = picked; });
   let c = $derived(picked ?? last);
@@ -26,24 +22,11 @@
   function create() { const id = picked.id; picked = null; nav.preAcc = id; nav.newOp = true; }
 
   async function load() {
-    if (!cache) loading = true;
+    if (!accCache.v) loading = true;
     error = '';
     try {
-      const [a, b, ms] = await Promise.all([
-        supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source').order('id'),
-        supabase.from('account_balances').select('id,balance,live'),
-        supabase.from('mono_state').select('credit_limit_kop').limit(1)
-      ]);
-      limit = Number(ms.data?.[0]?.credit_limit_kop || 0) / 100;
-      if (a.error) throw a.error;
-      if (b.error) throw b.error;
-      const bal = new Map(b.data.map((x) => [x.id, x]));
-      rows = a.data.map((x) => ({
-        id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono: x.is_monobank,
-        main: x.is_monobank || x.is_budget_source || x.icon === 'wallet',
-        balance: Number(bal.get(x.id)?.balance ?? 0), live: !!bal.get(x.id)?.live
-      }));
-      cache = { rows, limit };
+      const r = await fetchAccounts();
+      limit = r.limit; rows = r.rows;
     } catch (e) { error = e?.message ?? String(e); }
     loading = false;
   }

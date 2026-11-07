@@ -55,10 +55,10 @@ input, select, textarea { font: inherit; font-size: 16px; }
 /* появление: плавный подъём со стаггером (--i — порядковый номер) и рост полос (--w — итоговая ширина) */
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes grow { from { width: 0; } to { width: var(--w); } }
-.rise { animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms); }
-.grow { width: var(--w); animation: grow 1s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms + 150ms); }
+.rise { animation: rise .35s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 28ms); }
+.grow { width: var(--w); animation: grow .7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 28ms + 80ms); }
 
 /* числа и точки — как на главной: плавное проявление с подъёмом / «выскакивание» точки */
-.num { animation: rise .7s cubic-bezier(.2,.8,.2,1) .15s both; }
+.num { animation: rise .45s cubic-bezier(.2,.8,.2,1) .05s both; }
 @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes area { from { transform: scaleY(0); opacity: 0; } to { transform: none; opacity: 1; } }
