@@ -41,7 +41,7 @@
   ].filter(Boolean));
   function drop(k) { if (k === 'period') setPeriod('month'); else if (k === 'type') ftype = 'ALL'; else if (k === 'cat') fcat = 0; else facc = 0; }
   function toggleSearch() { searching = !searching; if (!searching) { query = ''; ftype = 'ALL'; fcat = 0; facc = 0; fsheet = false; if (period !== 'month') setPeriod('month'); } }
-  function setPeriod(p) { if (period === p) return; period = p; load(); }
+  function setPeriod(p) { if (period === p) return; period = p; load(true); }
   function rangeOf() {
     const y = now.getFullYear(), m = now.getMonth();
     if (period === 'month') { const c = months[mi]; return [new Date(c.y, c.m, 1), new Date(c.y, c.m + 1, 1)]; }
@@ -55,11 +55,15 @@
   let shown = $state(false);
   let chipsEl;
 
-  async function load() {
+  let rs = $state(false);
+  async function load(replay = false) {
     const [a, b] = rangeOf();
     if (!(a < b)) { error = 'Дата «с» позже даты «по».'; loading = false; return; }
     const hit = cache.get(opsKey(a, b));
-    if (hit) { rows = hit; loading = false; shown = true; } else { loading = true; shown = false; }
+    if (hit) {
+      rows = hit; loading = false;
+      if (replay === true) { rs = true; shown = false; requestAnimationFrame(() => requestAnimationFrame(() => { rs = false; shown = true; })); } else shown = true;
+    } else { loading = true; shown = false; }
     error = '';
     try {
       rows = await fetchOps(a, b);
@@ -68,7 +72,7 @@
     loading = false;
   }
   onMount(() => { if (chipsEl) chipsEl.scrollLeft = chipsEl.scrollWidth; load(); });
-  function pick(i) { if (i !== mi) { mi = i; load(); } }
+  function pick(i) { if (i !== mi) { mi = i; load(true); } }
 
   let filtered = $derived.by(() => {
     const q = query.trim().toLowerCase();
@@ -105,7 +109,7 @@
     <span class="c"><svg class="s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg><svg class="x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></span>
   </button><button class="ib plus" onclick={openNewOp} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
-<div class="wrap" use:stagger={{ skip: '.sum, .dh, .grp, .fpw' }}>
+<div class="wrap" class:rs use:stagger={{ skip: '.sum, .dh, .grp, .fpw' }}>
   <div class="fpw" class:on={searching} inert={!searching}>
     <div class="fp">
       <input class="search" placeholder="Категория, заметка или счёт" bind:value={query} />
@@ -145,7 +149,7 @@
     <div class="fl">По дате</div>
     <div class="cp">{#each PERIODS as [k, l]}<button class:on={period === k} onclick={() => setPeriod(k)}>{l}</button>{/each}</div>
     {#if period === 'custom'}
-      <div class="cr"><label>С<input type="date" bind:value={cFrom} onchange={load} /></label><label>По<input type="date" bind:value={cTo} onchange={load} /></label></div>
+      <div class="cr"><label>С<input type="date" bind:value={cFrom} onchange={() => load(true)} /></label><label>По<input type="date" bind:value={cTo} onchange={() => load(true)} /></label></div>
     {/if}
     <div class="fl">Тип</div>
     <div class="cp">{#each TYPES as [k, l]}<button class:on={ftype === k} onclick={() => (ftype = k)}>{l}</button>{/each}</div>
@@ -170,6 +174,7 @@
   .ib.on .c .s { opacity: 0; transform: rotate(90deg) scale(.5); }
   .ib.on .c .x { opacity: 1; transform: none; }
   .wrap { padding: 0 var(--pad); }
+  .wrap.rs :global(*) { transition: none !important; }
   .fpw { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .42s cubic-bezier(.32,.72,0,1), opacity .25s; }
   .fpw.on { grid-template-rows: 1fr; opacity: 1; }
   .fp { margin-top: 10px; overflow: hidden; min-height: 0; }
