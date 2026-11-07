@@ -57,4 +57,3 @@ input, select, textarea { font: inherit; font-size: 16px; }
 @keyframes grow { from { width: 0; } to { width: var(--w); } }
 .rise { animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms); }
 .grow { width: var(--w); animation: grow 1s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms + 150ms); }
-@media (prefers-reduced-motion: reduce) { .rise, .grow { animation: none; } }
