@@ -125,7 +125,9 @@
       }
       done = true;
       await new Promise((r) => setTimeout(r, 850));
-      onclose?.(); await onsaved?.();
+      onclose?.();
+      await new Promise((r) => setTimeout(r, 520));
+      await onsaved?.();
       setTimeout(() => (done = false), 500);
     } catch (e) { err = e?.message ?? String(e); }
     busy = false;
@@ -254,15 +256,20 @@
   .tt { text-align: center; font-size: 11.5px; color: var(--muted); padding: 0 0 10px; } .tt.okc { color: var(--pos); } .tt.bad { color: var(--neg); }
   .err { color: var(--neg); font-size: 12px; text-align: center; margin: 4px 0; }
   .gw { position: relative; display: flex; justify-content: center; margin-top: 10px; }
-  .go { position: relative; height: 50px; width: 100%; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; font-size: 15px;
-    display: flex; align-items: center; justify-content: center;
-    transition: width .5s cubic-bezier(.32,.72,0,1), border-radius .5s cubic-bezier(.32,.72,0,1), transform .15s cubic-bezier(.3,.7,.4,1), opacity .2s; }
-  .go .t { display: inline-block; white-space: nowrap; transition: transform .4s cubic-bezier(.5,0,.8,.4), opacity .25s .05s; }
-  .go .ck { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .go { position: relative; height: 50px; width: 100%; color: #fff; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center;
+    transition: transform .15s cubic-bezier(.3,.7,.4,1), opacity .2s; }
+  .go::before, .go::after { content: ""; position: absolute; background: linear-gradient(160deg, #EBC77A, #B8862C); will-change: transform, opacity;
+    transition: transform .5s cubic-bezier(.32,.72,0,1), opacity .3s ease; }
+  .go::before { inset: 0; border-radius: 14px; }
+  .go::after { left: 50%; top: 0; width: 50px; height: 50px; margin-left: -25px; border-radius: 25px; opacity: 0; transform: scale(.5); }
+  .go.ok::before { opacity: 0; transform: scaleX(.16); }
+  .go.ok::after { opacity: 1; transform: none; }
+  .go .t { position: relative; z-index: 1; display: inline-block; will-change: transform, opacity; white-space: nowrap; transition: transform .4s cubic-bezier(.5,0,.8,.4), opacity .25s .05s; }
+  .go .ck { position: absolute; z-index: 1; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   .go .ck svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: rotate(-90deg) scale(.4);
     transition: transform .55s cubic-bezier(.2,.9,.3,1.15) .2s, opacity .15s .2s; }
   .go .ck path { stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset .38s cubic-bezier(.4,0,.2,1) .38s; }
-  .go.ok { width: 50px; border-radius: 25px; opacity: 1; }
+  .go.ok { opacity: 1; }
   .go.ok .t { transform: rotate(90deg) scale(0); opacity: 0; }
   .go.ok .ck svg { opacity: 1; transform: none; }
   .go.ok .ck path { stroke-dashoffset: 0; }
