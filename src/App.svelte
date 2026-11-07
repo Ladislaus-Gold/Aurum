@@ -23,6 +23,8 @@
 
   
   let current = $derived(nav.sub ?? nav.tab);
+  // При переходе между страницами всегда показываем верх
+  $effect(() => { current; const el = document.getElementById('app'); if (el) el.scrollTop = 0; window.scrollTo(0, 0); });
 </script>
 
 {#if !auth.ready}
