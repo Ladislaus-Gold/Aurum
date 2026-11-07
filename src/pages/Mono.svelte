@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
   import { nav } from '../lib/nav.svelte.js';
@@ -56,7 +57,7 @@
   const off = () => run('off', async () => { await call({ action: 'disconnect' }); askOff = false; await load(); info = 'Monobank отключён. Все операции остались в приложении.'; });
 </script>
 
-<div class="page">
+<div class="page" use:stagger>
   <div class="nb"><button onclick={() => (nav.sub = null)}>‹ Ещё</button></div>
   <h1>Monobank</h1>
   <div class="cnt">{view === 'on' ? 'Операции приходят из банка автоматически' : 'Подключи карту: операции будут приходить сами'}</div>

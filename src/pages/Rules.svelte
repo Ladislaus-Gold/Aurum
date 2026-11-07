@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
   import { nav } from '../lib/nav.svelte.js';
@@ -69,7 +70,7 @@
   const tv = (r) => ({ action: r.action, note: r.note, icon: catOf(r)?.icon });
 </script>
 
-<div class="page">
+<div class="page" use:stagger>
   <div class="nb"><button onclick={() => (nav.sub = null)}>‹ Ещё</button><button class="pl" onclick={() => openForm(null)} aria-label="Добавить правило"><Icon name="plus" size={20} /></button></div>
   <h1>Правила</h1>
   <div class="cnt">Для таких названий категория ставится сама</div>

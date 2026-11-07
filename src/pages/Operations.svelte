@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
   import { loadRefs, enrich, opSigned, refs } from '../lib/refs.svelte.js';
@@ -112,7 +113,7 @@
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
   </button><button class="ib plus" onclick={() => (nav.newOp = true)} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
-<div class="wrap">
+<div class="wrap" use:stagger={{ skip: '.sum, .dh, .grp' }}>
   {#if searching}
     <div class="fp">
       <input class="search" placeholder="Категория, заметка или счёт" bind:value={query} />
