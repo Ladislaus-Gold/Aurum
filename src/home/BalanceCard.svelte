@@ -3,7 +3,7 @@
   let { total, series, shown, onaccounts } = $props();
   const RANGES = [['1М', 30, 'за месяц'], ['3М', 91, 'за 3 мес.'], ['6М', 182, 'за полгода'], ['1Г', 365, 'за год'], ['Всё', 1e9, 'за всё время']];
   let ri = $state(0);
-  let anim = $state(false);
+  let anim = $state(false), rs = $state(false);
   $effect(() => { if (shown) requestAnimationFrame(() => (anim = true)); else anim = false; });
 
   let pts = $derived(series.slice(-(RANGES[ri][1] + 1)));
@@ -24,10 +24,10 @@
     }
     return { d, ex: xy.at(-1)[0] - 4, ey: xy.at(-1)[1] };
   });
-  function pick(i) { ri = i; anim = false; requestAnimationFrame(() => requestAnimationFrame(() => (anim = true))); }
+  function pick(i) { ri = i; rs = true; anim = false; requestAnimationFrame(() => requestAnimationFrame(() => { rs = false; anim = true; })); }
 </script>
 
-<section class="hero">
+<section class="hero" class:rs>
   <div class="cap"><span>Общий баланс</span><button onclick={onaccounts}>Счета ›</button></div>
   <div class="sum" class:in={anim}>{money(total, 2).replace(' ₴', '')} <small>₴</small></div>
   <div class="chip" class:in={anim}>{delta >= 0 ? '▲' : '▼'} {signed(delta)} · {delta >= 0 ? '+' : '−'}{Math.abs(pct).toFixed(1).replace('.', ',')}% {RANGES[ri][2]}</div>
@@ -49,6 +49,7 @@
   .hero { margin-top: 14px; border-radius: 26px; padding: 22px 20px 18px; position: relative; overflow: hidden; color: #F6E7C1;
     background: radial-gradient(120% 90% at 100% 100%, rgba(214,160,70,.40) 0%, rgba(214,160,70,0) 55%), linear-gradient(160deg, #1c1815 0%, #0a0807 60%);
     box-shadow: 0 0 0 .5px rgba(232,194,119,.35) inset, 0 14px 34px rgba(30,20,5,.28); }
+  .hero.rs :global(*) { transition: none !important; }
   .cap { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: rgba(246,231,193,.62); text-transform: uppercase; letter-spacing: .08em; }
   .cap button { color: #E8C277; font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 14px; min-height: 28px; }
   .sum { margin-top: 6px; font-size: 38px; font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; white-space: nowrap;

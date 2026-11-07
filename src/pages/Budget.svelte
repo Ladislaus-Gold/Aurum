@@ -124,6 +124,7 @@
   {:else if !d}
     <div class="hero sk"></div>
   {:else}
+   {#key d.month}
     <div class="hero rise" class:busy={bud.loading}>
       <div class="top">
         <div><small>{d.state === 'cur' ? `Осталось из ${f(d.plan)} ₴` : d.state === 'past' ? `Потрачено из ${f(d.plan)} ₴` : 'План на месяц'}</small>
@@ -190,6 +191,7 @@
         </div>
       {/each}
     </div>
+   {/key}
   {/if}
 </div>
 
