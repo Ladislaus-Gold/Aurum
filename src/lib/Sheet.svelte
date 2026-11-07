@@ -1,10 +1,10 @@
 <script>
   import { dimBody } from './anim.js';
   // Нижний лист iOS: выезжает с пружинкой, закрывается свайпом вниз, тапом по фону или кнопкой
-  let { open = false, onclose, children } = $props();
+  let { open = false, onclose, swipe = true, children } = $props();
   let dy = $state(0), y0 = null, dragging = $state(false);
   $effect(() => { if (open) return dimBody(); });
-  function down(e) { y0 = e.clientY; dy = 0; }
+  function down(e) { if (!swipe) return; y0 = e.clientY; dy = 0; }
   function move(e) {
     if (y0 == null) return;
     dy = Math.max(0, e.clientY - y0);
@@ -21,7 +21,7 @@
 <div class="ov" class:open style:opacity={open ? Math.max(0, 1 - dy / 400) : 0} onclick={onclose} aria-hidden="true"></div>
 <div class="sheet" class:open class:dragging style:transform={open ? `translate(-50%, ${dy}px)` : undefined}
   role="dialog" tabindex="-1" aria-modal="true" onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
-  <div class="grab"></div>
+  {#if swipe}<div class="grab"></div>{/if}
   {@render children?.()}
 </div>
 

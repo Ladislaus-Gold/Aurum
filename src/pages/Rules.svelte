@@ -96,7 +96,7 @@
   {/if}
 </div>
 
-<Sheet {open} onclose={() => (open = false)}>
+<Sheet {open} onclose={() => (open = false)} swipe={false}>
   <div class="body">
     <div class="top"><b>{editing ? 'Правило' : 'Новое правило'}</b><button onclick={() => (open = false)}>Отмена</button></div>
     <div class="scroll">
