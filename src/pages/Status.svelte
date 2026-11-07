@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
   import { monoCall } from '../lib/monoapi.js';
@@ -60,7 +61,7 @@
   let detail = $derived(level === 'ok' ? `${rows.length} из ${rows.length} проверок в порядке` : [bad ? `проблем: ${bad}` : '', warn ? `замечаний: ${warn}` : ''].filter(Boolean).join(' · '));
 </script>
 
-<div class="page">
+<div class="page" use:stagger>
   <div class="nb"><button onclick={() => (nav.sub = null)}>‹ Ещё</button></div>
   <h1>Статус</h1>
 

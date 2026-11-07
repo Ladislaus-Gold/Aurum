@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { nav } from '../lib/nav.svelte.js';
   import { refs } from '../lib/refs.svelte.js';
@@ -45,7 +46,7 @@
   }
 </script>
 
-<div class="page">
+<div class="page" use:stagger>
   <div class="nb"><button onclick={() => (nav.sub = null)}>‹ Ещё</button></div>
   <h1>Аналитика</h1>
 

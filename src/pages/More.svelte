@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { moreItems, nav } from '../lib/nav.svelte.js';
   import { auth, signOut } from '../lib/auth.svelte.js';
   import Icon from '../lib/Icon.svelte';
@@ -12,7 +13,7 @@
   let bad = $state(false);
 </script>
 
-<div class="page">
+<div class="page" use:stagger>
   <h1>Ещё</h1>
   <div class="pr">
     <div class="av">{#if photo && !bad}<img src={photo} alt="" referrerpolicy="no-referrer" onerror={() => (bad = true)} />{:else}{name.slice(0, 1).toUpperCase()}{/if}</div>

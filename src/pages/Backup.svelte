@@ -1,4 +1,5 @@
 <script>
+  import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
   import { nav } from '../lib/nav.svelte.js';
@@ -51,7 +52,7 @@
   const stats = $derived(counts ? [['Операций', counts[0]], ['Счетов', counts[1]], ['Категорий', counts[2]], ['Правил', counts[3]]] : []);
 </script>
 
-<div class="page">
+<div class="page" use:stagger>
   <div class="nb"><button onclick={() => (nav.sub = null)}>‹ Ещё</button></div>
   <h1>Резервная копия</h1>
 
