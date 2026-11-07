@@ -23,3 +23,15 @@ export function stagger(node, o = {}) {
   mo.observe(node, { childList: true, subtree: true });
   return { destroy() { mo.disconnect(); } };
 }
+
+// Затемнение полос статус-бара под открытым окном (счётчик, чтобы вложенные окна не мешали друг другу)
+export function dimBody() {
+  const b = document.body;
+  b.dataset.sheets = Number(b.dataset.sheets || 0) + 1; b.classList.add('dim');
+  let done = false;
+  return () => {
+    if (done) return; done = true;
+    const k = Number(b.dataset.sheets || 1) - 1; b.dataset.sheets = k; if (k <= 0) b.classList.remove('dim');
+  };
+}
+export function dim() { const off = dimBody(); return { destroy: off }; }

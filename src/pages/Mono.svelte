@@ -1,4 +1,5 @@
 <script>
+  import { dim } from '../lib/anim.js';
   import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
@@ -123,7 +124,7 @@
 </div>
 
 {#if askOff}
-  <div class="dim" onclick={() => (askOff = false)} aria-hidden="true"></div>
+  <div class="dim" use:dim onclick={() => (askOff = false)} aria-hidden="true"></div>
   <div class="al" role="alertdialog"><b>Отключить Monobank?</b><p>Новые операции перестанут приходить. Все уже загруженные останутся.</p>
     <div class="bt"><button onclick={() => (askOff = false)}>Отмена</button><button class="dg" disabled={!!busy} onclick={off}>Отключить</button></div></div>
 {/if}

@@ -1,4 +1,5 @@
 <script>
+  import { dim } from '../lib/anim.js';
   import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
@@ -122,7 +123,7 @@
     <button class="go" disabled={busy} onclick={save}>{busy ? 'Сохраняю…' : 'Сохранить'}</button>
     {#if editing}<button class="del" disabled={busy} onclick={() => (askDel = true)}>Удалить правило</button>{/if}
     {#if askDel}
-      <div class="dim" onclick={() => (askDel = false)} aria-hidden="true"></div>
+      <div class="dim" use:dim onclick={() => (askDel = false)} aria-hidden="true"></div>
       <div class="al" role="alertdialog"><b>Удалить правило?</b><p>«{editing.note}» перестанет ставить категорию сама.</p>
         <div class="bt"><button onclick={() => (askDel = false)}>Отмена</button><button class="dg" onclick={del}>Удалить</button></div></div>
     {/if}
