@@ -66,3 +66,7 @@ body.dim #edge-bottom { background: var(--card); }
 .num { animation: rise .45s cubic-bezier(.2,.8,.2,1) .05s both; }
 @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes area { from { transform: scaleY(0); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Нажатие кнопок в стиле iOS: лёгкое вдавливание с пружинкой */
+:is(.go, .done, .gh, .ab, .new, .retry) { transition: transform .18s cubic-bezier(.3,.7,.4,1); }
+:is(.go, .done, .gh, .ab, .new, .retry):active:not(:disabled) { transform: scale(.96); }
