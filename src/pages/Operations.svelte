@@ -102,11 +102,11 @@
 <div class="head">
   <h1>Операции</h1>
   <div class="hb"><button class="ib" class:on={searching} onclick={toggleSearch} aria-label="Поиск и фильтры">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
+    <span class="c"><svg class="s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg><svg class="x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" /></svg></span>
   </button><button class="ib plus" onclick={openNewOp} aria-label="Новая операция"><Icon name="plus" size={20} /></button></div>
 </div>
-<div class="wrap" use:stagger={{ skip: '.sum, .dh, .grp' }}>
-  {#if searching}
+<div class="wrap" use:stagger={{ skip: '.sum, .dh, .grp, .fpw' }}>
+  <div class="fpw" class:on={searching} inert={!searching}>
     <div class="fp">
       <input class="search" placeholder="Категория, заметка или счёт" bind:value={query} />
       <div class="tags">
@@ -114,7 +114,7 @@
         <button class="add" onclick={() => (fsheet = true)}>+ Фильтр</button>
       </div>
     </div>
-  {/if}
+  </div>
   {#if period === 'month'}<div class="chips" bind:this={chipsEl}>
     {#each months as mo, i}<button class:on={mi === i} onclick={() => pick(i)}>{mo.label}</button>{/each}
   </div>{/if}
@@ -139,7 +139,7 @@
 </div>
 <OpSheet {picked} onclose={() => (picked = null)} />
 
-<Sheet open={fsheet} onclose={() => (fsheet = false)}>
+<Sheet open={fsheet} onclose={() => (fsheet = false)} quick>
   <div class="ft"><b>Фильтры</b><button onclick={() => (fsheet = false)}>Готово</button></div>
   <div class="fs">
     <div class="fl">По дате</div>
@@ -162,10 +162,23 @@
   .hb { display: flex; }
   .ib.plus { color: #fff; } .ib.plus :global(svg) { width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: linear-gradient(160deg, #EBC77A, #B8862C); box-sizing: border-box; stroke: #fff; width: 36px !important; height: 36px !important; }
   .ib { width: 44px; height: 44px; display: grid; place-items: center; }
-  .ib svg { width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--fill); stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; box-sizing: border-box; }
-  .ib.on svg { background: var(--gold); stroke: var(--bg); }
+  .ib .c { position: relative; width: 36px; height: 36px; border-radius: 50%; background: var(--fill); display: block; transition: background .3s; }
+  .ib .c svg { position: absolute; left: 9px; top: 9px; width: 18px; height: 18px; stroke: var(--gold); fill: none; stroke-width: 2; stroke-linecap: round; transition: opacity .2s, transform .45s cubic-bezier(.32,.72,0,1), stroke .3s; }
+  .ib .c .x { opacity: 0; transform: rotate(-90deg) scale(.5); }
+  .ib.on .c { background: var(--gold); }
+  .ib.on .c svg { stroke: var(--bg); }
+  .ib.on .c .s { opacity: 0; transform: rotate(90deg) scale(.5); }
+  .ib.on .c .x { opacity: 1; transform: none; }
   .wrap { padding: 0 var(--pad); }
-  .fp { margin-top: 10px; }
+  .fpw { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .42s cubic-bezier(.32,.72,0,1), opacity .25s; }
+  .fpw.on { grid-template-rows: 1fr; opacity: 1; }
+  .fp { margin-top: 10px; overflow: hidden; min-height: 0; }
+  .fpw .search { width: 44px; padding-left: 0; padding-right: 0; transition: width .45s cubic-bezier(.32,.72,0,1), padding .3s; }
+  .fpw .search::placeholder { opacity: 0; transition: opacity .2s; }
+  .fpw.on .search { width: 100%; padding: 0 12px; }
+  .fpw.on .search::placeholder { opacity: 1; transition-delay: .25s; }
+  .fpw .tags { opacity: 0; transform: translateY(-6px); transition: opacity .35s .12s, transform .4s cubic-bezier(.32,.72,0,1) .12s; }
+  .fpw.on .tags { opacity: 1; transform: none; }
   .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .tg { display: flex; align-items: center; gap: 6px; background: var(--gold-soft); color: var(--gold); padding: 6px 8px 6px 12px; border-radius: 99px; font-size: 13px; font-weight: 500; min-height: 32px; }
   .tg i { font-style: normal; width: 18px; height: 18px; border-radius: 50%; background: rgba(184,137,43,.22); display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; }
