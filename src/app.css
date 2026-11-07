@@ -51,3 +51,10 @@ input, select, textarea { font: inherit; font-size: 16px; }
 @media (prefers-color-scheme: dark) {
   .ic:not(.re):not(.warn):not(.bad):not(.out .ic) { background: linear-gradient(160deg, #E8C277, #A8741F) !important; }
 }
+
+/* появление: плавный подъём со стаггером (--i — порядковый номер) и рост полос (--w — итоговая ширина) */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes grow { from { width: 0; } to { width: var(--w); } }
+.rise { animation: rise .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.grow { width: var(--w); animation: grow 1s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 45ms + 150ms); }
+@media (prefers-reduced-motion: reduce) { .rise, .grow { animation: none; } }

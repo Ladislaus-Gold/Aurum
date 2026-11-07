@@ -7,6 +7,7 @@
   import PlanSheet from './PlanSheet.svelte';
   import TxList from '../lib/TxList.svelte';
   import { txByCategory } from '../lib/txq.js';
+  import { count } from '../lib/anim.js';
   import DistSheet from './DistSheet.svelte';
 
   const now = new Date();
@@ -124,30 +125,30 @@
   {:else if !d}
     <div class="hero sk"></div>
   {:else}
-    <div class="hero" class:busy={bud.loading}>
+    <div class="hero rise" class:busy={bud.loading}>
       <div class="top">
         <div><small>{d.state === 'cur' ? `Осталось из ${f(d.plan)} ₴` : d.state === 'past' ? `Потрачено из ${f(d.plan)} ₴` : 'План на месяц'}</small>
-          <div class="n">{f(d.state === 'cur' ? d.remaining : d.state === 'past' ? d.spent : d.plan)} ₴</div></div>
+          <div class="n" use:count={{ v: d.state === 'cur' ? d.remaining : d.state === 'past' ? d.spent : d.plan, fmt: (x) => `${f(x)} ₴` }}>{f(d.state === 'cur' ? d.remaining : d.state === 'past' ? d.spent : d.plan)} ₴</div></div>
         {#if d.state === 'cur' && d.perDay > 0}<div class="day"><small>можно в день</small><b>≈ {f(d.perDay)} ₴</b></div>{/if}
       </div>
       {#if chart}
         <svg class="sp" viewBox="0 0 {W} {H}" fill="none"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8C277" stop-opacity=".35" /><stop offset="1" stop-color="#E8C277" stop-opacity="0" /></linearGradient></defs>
           <line x1="0" y1={H - 4} x2={W} y2={H - 4} stroke="rgba(232,194,119,.18)" stroke-dasharray="2 5" />
-          <path d={chart.area} fill="url(#bg)" /><path d={chart.s} stroke="#E8C277" stroke-width="2.2" stroke-linecap="round" />
+          <path d={chart.area} fill="url(#bg)" class="fadein" /><path d={chart.s} class="ln" pathLength="1" stroke="#E8C277" stroke-width="2.2" stroke-linecap="round" />
           {#if chart.norm}<circle cx={chart.norm[0]} cy={chart.norm[1]} r="4" stroke="#fff" stroke-opacity=".75" stroke-width="1.3" />{/if}
           <circle cx={chart.L[0]} cy={chart.L[1]} r="4" fill="#F4DDA6" stroke="#0a0807" stroke-width="2" /></svg>
         <em><span>{d.state === 'cur' ? `плавные траты: ${f(d.pacedFact)} из нормы ${f(d.norm)}` : `плавные траты: ${f(d.pacedFact)}`}</span><span>{dateStr}</span></em>
       {/if}
     </div>
 
-    <div class="acts">
+    <div class="acts rise" style:--i="2">
       <button class="ab p" onclick={() => (planOpen = true)}><Icon name="scale" size={18} />План расходов</button>
       <button class="ab" onclick={() => (distOpen = true)}><Icon name="coin" size={18} />Разложить деньги{#if d.badge > 0}<span class="bd">{f(d.badge)}</span>{/if}</button>
     </div>
     {#if note}<div class="note">{note}</div>{/if}
 
     {#if out.length}
-      <div class="card one">
+      <div class="card one rise" style:--i="3">
         {#each out as x (x.id)}
           <button class="r" onclick={() => open(x)}><div class="ic re"><Icon name={x.icon} size={17} /></div>
             <div class="m"><b>{x.name}<span class="tg">вне плана</span></b></div><div class="rt re">−{f(x.fact)} ₴</div></button>
@@ -155,15 +156,15 @@
       </div>
     {/if}
 
-    {#each [['Обязательные', mand], ['Копилки', sav], ['Остальные', rest]] as [h, list]}
+    {#each [['Обязательные', mand], ['Копилки', sav], ['Остальные', rest]] as [h, list], g}
       {#if list.length}
-        <h2>{h}<span><b>{f(sum(list, 'fact'))}</b> из {f(sum(list, 'plan'))} ₴</span></h2>
+        <h2 class="rise" style:--i={4 + g * 3}>{h}<span><b>{f(sum(list, 'fact'))}</b> из {f(sum(list, 'plan'))} ₴</span></h2>
         <div class="card">
-          {#each list as { c: x, i } (x.id)}
-            <button class="r" onclick={() => open(x)}>
+          {#each list as { c: x, i }, k (x.id)}
+            <button class="r rise" style:--i={5 + g * 3 + k} onclick={() => open(x)}>
               <div class="ic"><Icon name={x.icon} size={17} /></div>
               <div class="m"><b>{x.name}</b>{#if i.cap}<small class={i.tone}>{i.cap}</small>{/if}
-                <div class="bar"><i class={i.tone} style:width="{i.w}%"></i>{#each i.ticks as t}<s class:f={t.strong === false} style:left="{t.at}%"></s>{/each}</div></div>
+                <div class="bar"><i class="{i.tone} grow" style:--w="{i.w}%" style:--i={5 + g * 3 + k}></i>{#each i.ticks as t}<s class:f={t.strong === false} style:left="{t.at}%"></s>{/each}</div></div>
               <div class="rt">{f(Math.max(0, x.plan - x.fact))} ₴<small>из {f(x.plan)}</small></div>
             </button>
           {/each}
@@ -242,13 +243,18 @@
   .m small.w { color: var(--ws); } .m small.o { color: var(--ns); }
   .tg { font-size: 11.5px; color: var(--neg); font-weight: 500; margin-left: 6px; }
   .bar { height: 4px; border-radius: 2px; background: var(--bar); margin-top: 6px; position: relative; }
-  .bar i { display: block; height: 100%; background: var(--gold); border-radius: 2px; transition: width .6s cubic-bezier(.32,.72,0,1); }
+  .bar i { display: block; height: 100%; background: var(--gold); border-radius: 2px; }
   .bar i.w { background: var(--ws); } .bar i.o { background: var(--ns); }
   .bar s { position: absolute; top: -3px; bottom: -3px; width: 2px; border-radius: 1px; background: var(--text); opacity: .7; }
   .bar s.f { opacity: .22; }
   .rt { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; } .rt.re { color: var(--neg); }
   .rt small { display: block; font-weight: 400; font-size: 11.5px; color: var(--muted); }
   .ok { color: var(--pos); font-weight: 500; } .mu { color: var(--muted); font-weight: 400; }
+  .sp .ln { stroke-dasharray: 1; animation: dr 1.3s cubic-bezier(.2,.8,.2,1) .15s both; }
+  .sp .fadein { animation: fi 1s ease .6s both; }
+  @keyframes dr { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes fi { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .sp .ln, .sp .fadein { animation: none; } }
   .chev { color: var(--muted); opacity: .6; display: flex; transition: transform .2s; } .chev.up { transform: rotate(90deg); }
   .err { color: var(--neg); } .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; }
   h3 { margin: 0; font-size: 17px; font-weight: 700; text-align: center; }

@@ -1,45 +1,59 @@
 <script>
-  import { fmt, money } from '../lib/format.js';
-  import Icon from '../lib/Icon.svelte';
+  import { money } from '../lib/format.js';
+  import { count } from '../lib/anim.js';
   let { budget, cats, shown } = $props();
   let anim = $state(false);
   $effect(() => { if (shown) requestAnimationFrame(() => (anim = true)); else anim = false; });
-  const pct = (a, b) => (b > 0 ? Math.min(100, Math.max(0, (a / b) * 100)) : 0);
+  const C = 2 * Math.PI * 26;
   let remaining = $derived(budget.plan - budget.spent);
+  let over = $derived(remaining < 0);
+  let ratio = $derived(budget.plan > 0 ? Math.max(0, budget.spent / budget.plan) : 0);
+  let pct = $derived(Math.round(ratio * 100));
+  let off = $derived(C * (1 - Math.min(1, ratio)));
 </script>
 
 <div class="grp">
-  <div class="big">
-    {#if budget.plan > 0}
-      <div class="l">Осталось из {money(budget.plan)}</div>
-      <div class="n" class:in={anim}>{money(remaining)}<small>· потрачено {Math.round(pct(budget.spent, budget.plan))}%</small></div>
-      <div class="bar thick"><i class:over={remaining < 0} style:width={anim ? pct(budget.spent, budget.plan) + '%' : '0'}></i></div>
-    {:else}
-      <div class="l">Бюджет на этот месяц не задан</div>
-      <div class="n in">{money(budget.spent)}<small>· потрачено</small></div>
-    {/if}
-  </div>
+  {#if budget.plan > 0}
+    <div class="box">
+      <div class="ring">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="26" class="tr" />
+          <circle cx="32" cy="32" r="26" class="arc" class:over stroke-dasharray={C} stroke-dashoffset={anim ? off : C} />
+        </svg>
+        <b class:over>{anim ? pct : 0}%</b>
+      </div>
+      <div class="tx" class:in={anim}>
+        <div class="l">{over ? 'Перерасход' : `Осталось из ${money(budget.plan)}`}</div>
+        <div class="n" class:over>{#if shown}<span use:count={{ v: over ? -remaining : remaining, fmt: (x) => money(Math.round(x)) }}>{money(over ? -remaining : remaining)}</span>{:else}{money(over ? -remaining : remaining)}{/if}</div>
+        <div class="s">{over ? `лимит ${money(budget.plan)}` : `потрачено ${money(budget.spent)}`}</div>
+      </div>
+    </div>
+  {:else}
+    <div class="box">
+      <div class="tx in">
+        <div class="l">Бюджет на этот месяц не задан</div>
+        <div class="n">{money(budget.spent)}</div>
+        <div class="s">потрачено</div>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
   .grp { background: var(--card); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
-  .big { padding: 18px 16px 14px; }
+  .box { display: flex; align-items: center; gap: 14px; padding: 14px 16px; }
+  .ring { width: 64px; height: 64px; flex: none; position: relative; }
+  .ring svg { width: 64px; height: 64px; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 7; }
+  .tr { stroke: var(--bar); }
+  .arc { stroke: #C9973A; stroke-linecap: round; transition: stroke-dashoffset 1.3s cubic-bezier(.2,.8,.2,1); }
+  .arc.over { stroke: var(--neg); }
+  .ring b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ring b.over { color: var(--neg); }
+  .tx { min-width: 0; opacity: 0; transform: translateY(6px); transition: opacity .7s .15s, transform .7s .15s; }
+  .tx.in { opacity: 1; transform: none; }
   .l { font-size: 12px; color: var(--muted); }
-  .n { font-size: 28px; font-weight: 700; letter-spacing: .3px; font-variant-numeric: tabular-nums; margin-top: 2px; opacity: 0; transform: translateY(8px); transition: opacity .7s, transform .7s; }
-  .n.in { opacity: 1; transform: none; }
-  .n small { font-size: 15px; font-weight: 500; color: var(--muted); margin-left: 6px; letter-spacing: 0; }
-  .bar { height: 5px; border-radius: 99px; background: var(--bar); margin-top: 6px; overflow: hidden; }
-  .bar.thick { height: 8px; margin-top: 12px; }
-  .bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #B07A1E, #E8C277); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
-  .bar i.over { background: var(--neg); }
-  .row { display: flex; align-items: center; gap: 12px; padding: 11px 16px; position: relative; }
-  .row::before { content: ""; position: absolute; top: 0; left: 58px; right: 0; height: .5px; background: var(--line); }
-  .ic { color: #fff; width: 32px; height: 32px; border-radius: 8px; flex: none; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(160deg, #EBC77A, #B8862C); box-shadow: 0 1px 2px rgba(120,80,10,.3); }
-  @media (prefers-color-scheme: dark) { .ic { background: linear-gradient(160deg, #E8C277, #A8741F); } }
-  .mid { flex: 1; min-width: 0; }
-  .top { display: flex; justify-content: space-between; gap: 8px; }
-  .t { font-size: 15px; line-height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .s { font-size: 12px; color: var(--muted); line-height: 22px; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .7s, transform .7s; }
-  .s.in { opacity: 1; transform: none; }
+  .n { font-size: 24px; font-weight: 700; letter-spacing: .2px; font-variant-numeric: tabular-nums; margin-top: 1px; }
+  .n.over { color: var(--neg); }
+  .s { font-size: 12px; color: var(--muted); margin-top: 1px; }
 </style>

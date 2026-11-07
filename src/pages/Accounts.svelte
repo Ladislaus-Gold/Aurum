@@ -7,6 +7,7 @@
   import TxList from '../lib/TxList.svelte';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
+  import { count } from '../lib/anim.js';
 
   let rows = $state([]);
   let loading = $state(true);
@@ -59,18 +60,18 @@
   {:else if loading}
     <div class="hero sk"></div>
   {:else}
-    <div class="hero">
+    <div class="hero rise">
       <small>Всего на счетах</small>
-      <b>{money(total, 2)}</b>
-      <i><u style:width="{bankPct}%"></u></i>
+      <b use:count={{ v: total, fmt: (x) => money(x, 2) }}>{money(total, 2)}</b>
+      <i><u class="grow" style:--w="{bankPct}%"></u></i>
       <em>Основные {bankPct}% · Конверты {100 - bankPct}%</em>
     </div>
-    {#each [['Основные', main], ['Конверты', rest]] as [title, list]}
+    {#each [['Основные', main], ['Конверты', rest]] as [title, list], g}
       {#if list.length}
-        <h2>{title}</h2>
+        <h2 class="rise" style:--i={2 + g * 4}>{title}</h2>
         <div class="card">
-          {#each list as r (r.id)}
-            <button class="r" onclick={() => open(r)}>
+          {#each list as r, k (r.id)}
+            <button class="r rise" style:--i={3 + g * 4 + k} onclick={() => open(r)}>
               <div class="ic"><Icon name={r.icon} size={19} /></div>
               <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && limit > 0}<small>кредитный лимит {money(limit)}</small>{/if}</div>
               <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
@@ -101,7 +102,7 @@
   .hero small { color: #b9a27a; font-size: 12px; }
   .hero b { display: block; font-size: 28px; color: #F4DDA6; margin: 2px 0 10px; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
   .hero i { display: block; height: 6px; border-radius: 3px; background: rgba(232,194,119,.18); overflow: hidden; }
-  .hero u { display: block; height: 100%; background: #E8C277; border-radius: 3px; transition: width .9s cubic-bezier(.32,.72,0,1); }
+  .hero u { display: block; height: 100%; background: #E8C277; border-radius: 3px; }
   .hero em { font-style: normal; font-size: 11.5px; color: #b9a27a; display: block; margin-top: 6px; }
   h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
   .card { background: var(--card); border-radius: 14px; margin-bottom: 18px; overflow: hidden; box-shadow: var(--shadow); }
