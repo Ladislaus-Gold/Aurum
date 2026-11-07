@@ -139,9 +139,9 @@
   const money2 = (n) => fmt(n, Math.round(n * 100) % 100 ? 2 : 0);
 </script>
 
-<Sheet {open} {onclose} swipe={false} fly={!isEdit}>
+<Sheet {open} {onclose} fly={!isEdit}>
   <div class="body">
-    <div class="top"><b>{isEdit ? 'Изменить операцию' : 'Новая операция'}</b><button onclick={onclose}>Отмена</button></div>
+    <div class="top"><b>{isEdit ? 'Изменить операцию' : 'Новая операция'}</b></div>
     <div class="scroll">
       <div class="hero">
         <div class="seg">{#each KINDS as [k, l]}<button class:on={action === k} disabled={isEdit && action !== k} class:off={isEdit && action !== k} onclick={() => setAction(k)}>{l}</button>{/each}</div>

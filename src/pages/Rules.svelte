@@ -96,9 +96,9 @@
   {/if}
 </div>
 
-<Sheet {open} onclose={() => (open = false)} swipe={false}>
+<Sheet {open} onclose={() => (open = false)}>
   <div class="body">
-    <div class="top"><b>{editing ? 'Правило' : 'Новое правило'}</b><button onclick={() => (open = false)}>Отмена</button></div>
+    <div class="top"><b>{editing ? 'Правило' : 'Новое правило'}</b></div>
     <div class="scroll">
       <div class="hero">
         <div class="seg">{#each KINDS as [k, l]}<button class:on={action === k} onclick={() => { action = k; cat = 0; }}>{l}</button>{/each}</div>
