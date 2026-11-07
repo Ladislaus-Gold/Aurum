@@ -32,7 +32,7 @@
   const cap = (r) => r.mandatory ? (r.noMin ? `порог не задан · среднее ${money(r.avg)}` : `порог ${money(r.min)}`) : `${r.order + 1}-я в очереди · ${lastText(r)}`;
 </script>
 
-<Sheet {open} {onclose}>
+<Sheet {open} {onclose} swipe={false}>
   <div class="body">
     <div class="top"><b>План расходов</b><button onclick={onclose}>Отмена</button></div>
     <div class="sub">{monthName} · плановый доход {money(income)}</div>

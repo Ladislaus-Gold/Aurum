@@ -32,7 +32,7 @@
   const skip = (c) => run(() => dismissRecurring(c));
 </script>
 
-<Sheet {open} {onclose}>
+<Sheet {open} {onclose} swipe={false}>
   {#if cur}
     <div class="top"><button onclick={() => (edit ? onclose?.() : (cur = null))}>{edit ? 'Закрыть' : 'Назад'}</button><b>{cur.id ? 'Платёж' : 'Новый платёж'}</b><span></span></div>
     {#if cur.manual}

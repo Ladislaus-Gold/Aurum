@@ -139,7 +139,7 @@
   const money2 = (n) => fmt(n, Math.round(n * 100) % 100 ? 2 : 0);
 </script>
 
-<Sheet {open} {onclose}>
+<Sheet {open} {onclose} swipe={false}>
   <div class="body">
     <div class="top"><b>{isEdit ? 'Изменить операцию' : 'Новая операция'}</b><button onclick={onclose}>Отмена</button></div>
     <div class="scroll">

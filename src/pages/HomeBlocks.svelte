@@ -34,7 +34,7 @@
   const off = (i) => (drag && drag.id === hb.list[i].id ? drag.dy - (drag.idx - drag.start) * RH : 0);
 </script>
 
-<Sheet {open} {onclose}>
+<Sheet {open} {onclose} swipe={false}>
   <div class="top"><b>Блоки главной</b><button onclick={onclose}>Готово</button></div>
   <div class="list">
     {#each hb.list as b, i (b.id)}
