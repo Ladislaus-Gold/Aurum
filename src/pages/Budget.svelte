@@ -254,7 +254,6 @@
   .sp .fadein { animation: fi 1s ease .6s both; }
   @keyframes dr { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
   @keyframes fi { from { opacity: 0; } to { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .sp .ln, .sp .fadein { animation: none; } }
   .chev { color: var(--muted); opacity: .6; display: flex; transition: transform .2s; } .chev.up { transform: rotate(90deg); }
   .err { color: var(--neg); } .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; }
   h3 { margin: 0; font-size: 17px; font-weight: 700; text-align: center; }

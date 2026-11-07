@@ -1,11 +1,10 @@
 // Анимации появления: счётчик чисел (action `count`) и стаггер строк (CSS-класс .rise, см. app.css)
-const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export function count(node, o) {
   let raf = 0;
   const run = (v, fmt) => {
     cancelAnimationFrame(raf);
-    if (reduced() || !Number.isFinite(v)) { node.textContent = fmt(v); return; }
+    if (!Number.isFinite(v)) { node.textContent = fmt(v); return; }
     const t0 = performance.now(), D = 800;
     const step = (t) => {
       const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
