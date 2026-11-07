@@ -1,7 +1,9 @@
 <script>
+  import { dimBody } from './anim.js';
   // Нижний лист iOS: выезжает с пружинкой, закрывается свайпом вниз, тапом по фону или кнопкой
   let { open = false, onclose, children } = $props();
   let dy = $state(0), y0 = null, dragging = $state(false);
+  $effect(() => { if (open) return dimBody(); });
   function down(e) { y0 = e.clientY; dy = 0; }
   function move(e) {
     if (y0 == null) return;

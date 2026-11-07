@@ -1,4 +1,5 @@
 <script>
+  import { dim } from './anim.js';
   import { untrack } from 'svelte';
   import Sheet from './Sheet.svelte';
   import Icon from './Icon.svelte';
@@ -199,7 +200,7 @@
     <button class="go" disabled={busy} onclick={save}>{busy ? 'Сохраняю…' : 'Сохранить'}</button>
     {#if isEdit && !bank}<button class="del" disabled={busy} onclick={() => (askDel = true)}>Удалить операцию</button>{/if}
     {#if askDel}
-      <div class="dim" onclick={() => (askDel = false)} aria-hidden="true"></div>
+      <div class="dim" use:dim onclick={() => (askDel = false)} aria-hidden="true"></div>
       <div class="al" role="alertdialog"><b>Удалить операцию?</b><p>{[name || 'Без названия', `${edit.action === 'EXPENSE' ? '−' : ''}${money2(num(amount))} ₴`].join(' · ')}.<br />Это действие нельзя отменить.</p>
         <div class="bt"><button onclick={() => (askDel = false)}>Отмена</button><button class="dg" onclick={del}>Удалить</button></div></div>
     {/if}
