@@ -7,7 +7,6 @@
   import PlanSheet from './PlanSheet.svelte';
   import TxList from '../lib/TxList.svelte';
   import { txByCategory } from '../lib/txq.js';
-  import { count } from '../lib/anim.js';
   import DistSheet from './DistSheet.svelte';
 
   const now = new Date();
@@ -128,15 +127,15 @@
     <div class="hero rise" class:busy={bud.loading}>
       <div class="top">
         <div><small>{d.state === 'cur' ? `Осталось из ${f(d.plan)} ₴` : d.state === 'past' ? `Потрачено из ${f(d.plan)} ₴` : 'План на месяц'}</small>
-          <div class="n" use:count={{ v: d.state === 'cur' ? d.remaining : d.state === 'past' ? d.spent : d.plan, fmt: (x) => `${f(x)} ₴` }}>{f(d.state === 'cur' ? d.remaining : d.state === 'past' ? d.spent : d.plan)} ₴</div></div>
+          <div class="n num">{f(d.state === 'cur' ? d.remaining : d.state === 'past' ? d.spent : d.plan)} ₴</div></div>
         {#if d.state === 'cur' && d.perDay > 0}<div class="day"><small>можно в день</small><b>≈ {f(d.perDay)} ₴</b></div>{/if}
       </div>
       {#if chart}
         <svg class="sp" viewBox="0 0 {W} {H}" fill="none"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8C277" stop-opacity=".35" /><stop offset="1" stop-color="#E8C277" stop-opacity="0" /></linearGradient></defs>
           <line x1="0" y1={H - 4} x2={W} y2={H - 4} stroke="rgba(232,194,119,.18)" stroke-dasharray="2 5" />
-          <path d={chart.area} fill="url(#bg)" class="fadein" /><path d={chart.s} class="ln" pathLength="1" stroke="#E8C277" stroke-width="2.2" stroke-linecap="round" />
-          {#if chart.norm}<circle cx={chart.norm[0]} cy={chart.norm[1]} r="4" stroke="#fff" stroke-opacity=".75" stroke-width="1.3" />{/if}
-          <circle cx={chart.L[0]} cy={chart.L[1]} r="4" fill="#F4DDA6" stroke="#0a0807" stroke-width="2" /></svg>
+          <path d={chart.area} fill="url(#bg)" class="ar" /><path d={chart.s} class="ln" pathLength="1" stroke="#E8C277" stroke-width="2.2" stroke-linecap="round" />
+          {#if chart.norm}<circle class="pp" cx={chart.norm[0]} cy={chart.norm[1]} r="4" stroke="#fff" stroke-opacity=".75" stroke-width="1.3" />{/if}
+          <circle class="pp" cx={chart.L[0]} cy={chart.L[1]} r="4" fill="#F4DDA6" stroke="#0a0807" stroke-width="2" /></svg>
         <em><span>{d.state === 'cur' ? `плавные траты: ${f(d.pacedFact)} из нормы ${f(d.norm)}` : `плавные траты: ${f(d.pacedFact)}`}</span><span>{dateStr}</span></em>
       {/if}
     </div>
@@ -251,7 +250,8 @@
   .rt small { display: block; font-weight: 400; font-size: 11.5px; color: var(--muted); }
   .ok { color: var(--pos); font-weight: 500; } .mu { color: var(--muted); font-weight: 400; }
   .sp .ln { stroke-dasharray: 1; animation: dr 1.3s cubic-bezier(.2,.8,.2,1) .15s both; }
-  .sp .fadein { animation: fi 1s ease .6s both; }
+  .sp .ar { transform-box: fill-box; transform-origin: 50% 100%; animation: area 1.1s cubic-bezier(.2,.8,.2,1) .15s both; }
+  .sp .pp { transform-box: fill-box; transform-origin: center; animation: pop .5s cubic-bezier(.3,1.6,.5,1) 1.1s both; }
   @keyframes dr { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
   @keyframes fi { from { opacity: 0; } to { opacity: 1; } }
   .chev { color: var(--muted); opacity: .6; display: flex; transition: transform .2s; } .chev.up { transform: rotate(90deg); }

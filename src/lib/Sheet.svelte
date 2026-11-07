@@ -25,9 +25,9 @@
 
 <style>
   .ov { position: fixed; inset: 0; background: rgba(0,0,0,.4); opacity: 0; pointer-events: none;
-    transition: opacity .45s cubic-bezier(.32,.72,0,1); z-index: 50; }
+    transition: opacity .45s cubic-bezier(.32,.72,0,1); z-index: 70; }
   .ov.open { pointer-events: auto; }
-  .sheet { position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 430px; z-index: 51;
+  .sheet { position: fixed; left: 50%; bottom: 0; width: 100%; max-width: 430px; z-index: 71;
     background: var(--card); color: var(--text); border-radius: 26px 26px 0 0;
     padding: 8px var(--pad) calc(24px + var(--safe-b)); box-shadow: 0 -10px 40px rgba(0,0,0,.25);
     transform: translate(-50%, 105%); transition: transform .5s cubic-bezier(.32,.72,0,1); touch-action: none; }

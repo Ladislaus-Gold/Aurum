@@ -1,6 +1,5 @@
 <script>
   import { money } from '../lib/format.js';
-  import { count } from '../lib/anim.js';
   let { budget, cats, shown } = $props();
   let anim = $state(false);
   $effect(() => { if (shown) requestAnimationFrame(() => (anim = true)); else anim = false; });
@@ -24,7 +23,7 @@
       </div>
       <div class="tx" class:in={anim}>
         <div class="l">{over ? 'Перерасход' : `Осталось из ${money(budget.plan)}`}</div>
-        <div class="n" class:over>{#if shown}<span use:count={{ v: over ? -remaining : remaining, fmt: (x) => money(Math.round(x)) }}>{money(over ? -remaining : remaining)}</span>{:else}{money(over ? -remaining : remaining)}{/if}</div>
+        <div class="n" class:over class:in={anim}>{money(over ? -remaining : remaining)}</div>
         <div class="s">{over ? `лимит ${money(budget.plan)}` : `потрачено ${money(budget.spent)}`}</div>
       </div>
     </div>

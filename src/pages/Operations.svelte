@@ -1,3 +1,7 @@
+<script module>
+  const cache = new Map();
+</script>
+
 <script>
   import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
@@ -55,10 +59,13 @@
   let chipsEl;
 
   async function load() {
-    loading = true; error = ''; shown = false;
+    const [a, b] = rangeOf();
+    const ck = a.getTime() + '_' + b.getTime();
+    const hit = cache.get(ck);
+    if (hit) { rows = hit; loading = false; shown = true; } else { loading = true; shown = false; }
+    error = '';
     try {
       await loadRefs();
-      const [a, b] = rangeOf();
       if (!(a < b)) throw new Error('Дата «с» позже даты «по».');
       const all = [];
       for (let off = 0; off < 10000; off += 1000) {
@@ -71,6 +78,7 @@
         if (data.length < 1000) break;
       }
       rows = all.map(enrich);
+      cache.set(ck, rows);
       requestAnimationFrame(() => requestAnimationFrame(() => (shown = true)));
     } catch (e) { error = e?.message ?? String(e); }
     loading = false;
