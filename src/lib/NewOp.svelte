@@ -254,8 +254,8 @@
   .seg button.off { opacity: .35; }
   .lock { display: flex; gap: 8px; align-items: center; background: rgba(232,194,119,.14); color: #E8C277; border-radius: 10px; padding: 7px 10px; font-size: 11.5px; margin-top: 10px; }
   .del { width: 100%; height: 46px; margin-top: 8px; border-radius: 14px; background: rgba(215,0,21,.1); color: var(--neg); font-weight: 600; }
-  .dim { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 60; }
-  .al { position: fixed; left: 50%; top: 40%; transform: translateX(-50%); width: min(300px, 80vw); background: var(--card); border-radius: 18px; padding: 20px 16px 0; text-align: center; overflow: hidden; z-index: 61; }
+  .dim { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 80; }
+  .al { position: fixed; left: 50%; top: 40%; transform: translateX(-50%); width: min(300px, 80vw); background: var(--card); border-radius: 18px; padding: 20px 16px 0; text-align: center; overflow: hidden; z-index: 81; }
   .al b { font-size: 15px; display: block; } .al p { color: var(--muted); font-size: 12px; margin: 6px 0 16px; }
   .bt { display: flex; border-top: .5px solid var(--line); margin: 0 -16px; }
   .bt button { flex: 1; padding: 13px 0; font-size: 15px; color: var(--gold); } .bt button + button { border-left: .5px solid var(--line); }
