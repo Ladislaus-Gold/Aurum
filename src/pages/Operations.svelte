@@ -50,7 +50,8 @@
     searching = opening;
     await tick();
     const hh = opening ? (fpwEl?.offsetHeight ?? 0) : h;
-    const below = Array.from(wrapEl?.children ?? []).filter((el) => el !== fpwEl);
+    const vh = window.innerHeight + 80;
+    const below = Array.from(wrapEl?.children ?? []).filter((el) => el !== fpwEl && el.getBoundingClientRect().top < vh);
     const from = opening ? -hh : hh;
     below.forEach((el) => el.animate?.([{ transform: `translateY(${from}px)` }, { transform: 'translateY(0)' }], { duration: 420, easing: 'cubic-bezier(.32,.72,0,1)' }));
     if (!opening) setTimeout(() => (closing = false), 260);
@@ -193,11 +194,11 @@
   .fpw.on { display: block; animation: fpin .3s ease both; }
   .fpw.closing:not(.on) { display: block; position: absolute; width: calc(100% - var(--pad) * 2); pointer-events: none; animation: fpout .22s ease both; }
   .fp { margin-top: 10px; }
-  .fpw.on .search { animation: sx .45s cubic-bezier(.32,.72,0,1) both; }
+  .fpw.on .search { transform-origin: right center; animation: sx .45s cubic-bezier(.32,.72,0,1) both; }
   .fpw.on .tags { animation: tgin .4s cubic-bezier(.32,.72,0,1) .1s both; }
   @keyframes fpin { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fpout { from { opacity: 1; } to { opacity: 0; } }
-  @keyframes sx { from { clip-path: inset(0 0 0 86% round 10px); } to { clip-path: inset(0 0 0 0 round 10px); } }
+  @keyframes sx { from { transform: scaleX(.14); } to { transform: none; } }
   @keyframes tgin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
   .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   .tg { display: flex; align-items: center; gap: 6px; background: var(--gold-soft); color: var(--gold); padding: 6px 8px 6px 12px; border-radius: 99px; font-size: 13px; font-weight: 500; min-height: 32px; }
