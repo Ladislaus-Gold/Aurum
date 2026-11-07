@@ -37,7 +37,10 @@
   let rest = $derived(rows.filter((r) => !r.main).sort(byBalance));
   let total = $derived(rows.reduce((s, r) => s + r.balance, 0));
   let bank = $derived(main.reduce((s, r) => s + r.balance, 0));
-  let bankPct = $derived(total > 0 ? Math.round((bank / total) * 100) : 0);
+  let env = $derived(total - bank);
+  let top = $derived(rest.filter((r) => r.balance > 0).slice(0, 5));
+  let topMax = $derived(Math.max(1, ...top.map((r) => r.balance)));
+  const shades = ['#F4DDA6', '#d6bd7a', '#b39c5e', '#8d7945', '#6e5a2c'];
 </script>
 
 <div class="page">
@@ -49,13 +52,22 @@
     <div class="hero sk"></div>
   {:else}
     <div class="hero rise">
-      <small>Всего на счетах</small>
-      <b class="num">{money(total, 2)}</b>
-      <i><u class="grow" style:--w="{bankPct}%"></u><s></s></i>
-      <div class="cols">
-        <div><span><span class="dot"></span>Карта и наличные · {bankPct}%</span><strong>{money(bank, 2)}</strong></div>
-        <div><span><span class="dot d2"></span>Конверты · {100 - bankPct}%</span><strong>{money(total - bank, 2)}</strong></div>
+      <div class="top">
+        <div><small>Карта и наличные</small><b class="num" class:neg={bank < 0}>{money(bank, 2)}</b></div>
+        <Icon name="card" size={22} />
       </div>
+      <p class="brk">{#each main as r, k}{k ? ' · ' : ''}<span class="it">{r.name} <span class:neg={r.balance < 0}>{r.balance < 0 ? '−' : ''}{money(Math.abs(r.balance), 2).replace(' ₴', '')}</span></span>{/each}</p>
+      {#if rest.length}
+        <div class="eh"><small>Конверты</small><small class="ev">{money(env, 2)}</small></div>
+        {#if top.length}
+          <div class="bars">
+            {#each top as e, k (e.id)}
+              <div class="c"><u class="bar" style:--h="{Math.max(10, Math.round((e.balance / topMax) * 72))}px" style:--i={k} style:background={shades[k]}></u><span>{e.name}</span></div>
+            {/each}
+          </div>
+        {/if}
+        <p class="foot">Всего с конвертами {money(total, 2)}</p>
+      {/if}
     </div>
     {#each [['Карта и наличные', main], ['Конверты', rest]] as [title, list], g}
       {#if list.length}
@@ -91,15 +103,18 @@
     background: linear-gradient(150deg, #1a1410, #0a0807); box-shadow: var(--shadow); }
   .hero.sk { height: 168px; opacity: .5; }
   .hero small { color: #b9a27a; font-size: 12px; }
-  .hero b { display: block; font-size: 32px; color: #F4DDA6; margin: 2px 0 14px; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
-  .hero i { display: flex; gap: 3px; height: 10px; }
-  .hero u { display: block; height: 100%; background: #F4DDA6; border-radius: 5px; min-width: 6px; flex: none; }
-  .hero s { display: block; height: 100%; background: #6e5a2c; border-radius: 5px; flex: 1; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-  .cols span { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #b9a27a; white-space: nowrap; }
-  .cols strong { display: block; font-size: 16px; font-weight: 600; color: #F4DDA6; margin-top: 3px; font-variant-numeric: tabular-nums; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: #F4DDA6; flex: none; }
-  .dot.d2 { background: #6e5a2c; }
+  .top { display: flex; justify-content: space-between; align-items: flex-start; color: #b9a27a; }
+  .hero b { display: block; font-size: 32px; color: #F4DDA6; margin: 2px 0 0; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+  .hero b.neg, .brk .neg { color: #F0A090; }
+  .it { white-space: nowrap; }
+  .brk { margin: 8px 0 0; font-size: 12px; line-height: 1.4; color: #b9a27a; font-variant-numeric: tabular-nums; }
+  .eh { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: .5px solid #3a3020; }
+  .ev { color: #F4DDA6 !important; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; align-items: flex-end; gap: 8px; margin-top: 10px; height: 106px; }
+  .c { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
+  .c span { font-size: 11px; line-height: 1.15; color: #b9a27a; text-align: center; overflow-wrap: anywhere; }
+  .bar { display: block; width: 100%; height: var(--h); border-radius: 6px 6px 3px 3px; transform-origin: bottom; animation: bup .7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 60ms + 150ms); }
+  .foot { margin: 12px 0 0; padding-top: 10px; border-top: .5px solid #3a3020; font-size: 12px; color: #b9a27a; font-variant-numeric: tabular-nums; }
   h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
   .card { background: var(--card); border-radius: 14px; margin-bottom: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .r { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 56px; position: relative; }
