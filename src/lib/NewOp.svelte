@@ -14,7 +14,7 @@
   let cats = $state([]), accs = $state([]);
   let action = $state('EXPENSE'), name = $state(''), amount = $state(''), acc = $state(0), from = $state(0), to = $state(0);
   let cat = $state(0), date = $state(today()), split = $state(false), parts = $state([{ c: 0, a: '' }, { c: 0, a: '' }]), rule = $state(false);
-  let busy = $state(false), err = $state(''), ready = $state(false), askDel = $state(false);
+  let busy = $state(false), done = $state(false), err = $state(''), ready = $state(false), askDel = $state(false);
   let isEdit = $derived(!!edit), bank = $derived(!!edit?.mono_op_id);
   const ymd = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
@@ -123,7 +123,10 @@
         const r = await supabase.from('rules').upsert({ action, category_id: cat, note: row.note }, { onConflict: 'action,note' });
         if (r.error) throw r.error;
       }
+      done = true;
+      await new Promise((r) => setTimeout(r, 850));
       onclose?.(); await onsaved?.();
+      setTimeout(() => (done = false), 500);
     } catch (e) { err = e?.message ?? String(e); }
     busy = false;
   }
@@ -197,7 +200,7 @@
       </div>
       {#if err}<p class="err">{err}</p>{/if}
     </div>
-    <button class="go" disabled={busy} onclick={save}>{busy ? 'Сохраняю…' : 'Сохранить'}</button>
+    <div class="gw"><button class="go" class:ok={done} disabled={busy && !done} onclick={save}><span class="t">{busy && !done ? 'Сохраняю…' : 'Сохранить'}</span><span class="ck"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg></span></button>{#if done}<i class="rg"></i>{/if}</div>
     {#if isEdit && !bank}<button class="del" disabled={busy} onclick={() => (askDel = true)}>Удалить операцию</button>{/if}
     {#if askDel}
       <div class="dim" use:dim onclick={() => (askDel = false)} aria-hidden="true"></div>
@@ -250,8 +253,22 @@
   .add { width: 100%; text-align: left; padding: 11px 14px; color: var(--gold); border-top: .5px solid var(--line); }
   .tt { text-align: center; font-size: 11.5px; color: var(--muted); padding: 0 0 10px; } .tt.okc { color: var(--pos); } .tt.bad { color: var(--neg); }
   .err { color: var(--neg); font-size: 12px; text-align: center; margin: 4px 0; }
-  .go { height: 50px; width: 100%; margin-top: 10px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; font-size: 15px; }
-  .go:disabled { opacity: .6; }
+  .gw { position: relative; display: flex; justify-content: center; margin-top: 10px; }
+  .go { position: relative; height: 50px; width: 100%; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: width .5s cubic-bezier(.32,.72,0,1), border-radius .5s cubic-bezier(.32,.72,0,1), transform .15s cubic-bezier(.3,.7,.4,1), opacity .2s; }
+  .go .t { display: inline-block; white-space: nowrap; transition: transform .4s cubic-bezier(.5,0,.8,.4), opacity .25s .05s; }
+  .go .ck { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .go .ck svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: rotate(-90deg) scale(.4);
+    transition: transform .55s cubic-bezier(.2,.9,.3,1.15) .2s, opacity .15s .2s; }
+  .go .ck path { stroke-dasharray: 26; stroke-dashoffset: 26; transition: stroke-dashoffset .38s cubic-bezier(.4,0,.2,1) .38s; }
+  .go.ok { width: 50px; border-radius: 25px; opacity: 1; }
+  .go.ok .t { transform: rotate(90deg) scale(0); opacity: 0; }
+  .go.ok .ck svg { opacity: 1; transform: none; }
+  .go.ok .ck path { stroke-dashoffset: 0; }
+  .rg { position: absolute; left: 50%; top: 50%; width: 50px; height: 50px; margin: -25px 0 0 -25px; border-radius: 50%; border: 2px solid #E3B95E; pointer-events: none; animation: ring .7s ease-out .6s both; }
+  @keyframes ring { from { transform: scale(1); opacity: .8; } to { transform: scale(2.1); opacity: 0; } }
+  .go:disabled:not(.ok) { opacity: .6; }
   .seg button.off { opacity: .35; }
   .lock { display: flex; gap: 8px; align-items: center; background: rgba(232,194,119,.14); color: #E8C277; border-radius: 10px; padding: 7px 10px; font-size: 11.5px; margin-top: 10px; }
   .del { width: 100%; height: 46px; margin-top: 8px; border-radius: 14px; background: rgba(215,0,21,.1); color: var(--neg); font-weight: 600; }
