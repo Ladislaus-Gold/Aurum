@@ -139,7 +139,7 @@
 </div>
 <OpSheet {picked} onclose={() => (picked = null)} />
 
-<Sheet open={fsheet} onclose={() => (fsheet = false)} swipe={false}>
+<Sheet open={fsheet} onclose={() => (fsheet = false)}>
   <div class="ft"><b>Фильтры</b><button onclick={() => (fsheet = false)}>Готово</button></div>
   <div class="fs">
     <div class="fl">По дате</div>

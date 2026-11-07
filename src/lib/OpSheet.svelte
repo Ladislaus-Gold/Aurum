@@ -12,7 +12,7 @@
   let t = $derived(picked ?? last);
 </script>
 
-<Sheet open={!!picked} {onclose} swipe={false}>
+<Sheet open={!!picked} {onclose}>
   {#if t}
     <div class="av"><OpAvatar {t} size={56} /></div>
     <h3>{opTitle(t)}</h3>

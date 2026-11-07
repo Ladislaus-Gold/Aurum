@@ -58,7 +58,7 @@
   const month = $derived(d ? new Date(d.y, d.m, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '').replace(/^./, (c) => c.toUpperCase()) : '');
 </script>
 
-<Sheet {open} onclose={close} swipe={false}>
+<Sheet {open} onclose={close}>
   <div class="body">
     {#if !confirm}
       <div class="top"><b>Разложить деньги</b><button onclick={close}>Готово</button></div>
