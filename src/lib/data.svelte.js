@@ -65,7 +65,7 @@ export async function loadHome() {
       supabase.from('transactions')
         .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id,to_amount,rate')
         .order('date', { ascending: false }).limit(4),
-      supabase.from('accounts').select('id,name,is_foreign,currency'),
+      supabase.from('accounts').select('id,name,is_foreign,currency,mono_account_id,mono_mask'),
       allTransactions()
     ]);
     const balRows = ok(bal);
@@ -91,7 +91,9 @@ export async function loadHome() {
 
     const catById = new Map(ok(cats).map((c) => [c.id, c]));
     const curById = new Map(ok(accs).map((a) => [a.id, a.is_foreign ? a.currency || 'UAH' : cfg.base]));
-    const accById = new Map(ok(accs).map((a) => [a.id, a.name]));
+    // подпись счёта: все карты Monobank — «Monobank», валютные — «Fund · USD»
+    const accById = new Map(ok(accs).map((a) => [a.id, a.mono_account_id ? 'Monobank' : a.is_foreign ? `${a.name} · ${a.currency || 'UAH'}` : a.name]));
+    const cardById = new Map(ok(accs).filter((a) => a.mono_account_id).map((a) => [a.id, { name: noEmoji(a.name), mask: a.mono_mask || '' }]));
     const spent = new Map();
     for (const r of ok(totals)) {
       const c = catById.get(r.category_id);
@@ -105,7 +107,7 @@ export async function loadHome() {
     home.recent = ok(recent).map((t) => ({
       ...t, amount: Number(t.amount),
       category: noEmoji(catById.get(t.category_id)?.name ?? ''), icon: catById.get(t.category_id)?.icon ?? '',
-      account: noEmoji(accById.get(t.account_id) ?? ''),
+      account: noEmoji(accById.get(t.account_id) ?? ''), card: cardById.get(t.account_id) ?? cardById.get(t.from_account_id) ?? null,
       from: noEmoji(accById.get(t.from_account_id) ?? ''), to: noEmoji(accById.get(t.to_account_id) ?? ''),
       to_amount: t.to_amount == null ? null : Number(t.to_amount),
       accCur: curById.get(t.account_id) ?? cfg.base, fromCur: curById.get(t.from_account_id) ?? cfg.base, toCur: curById.get(t.to_account_id) ?? cfg.base

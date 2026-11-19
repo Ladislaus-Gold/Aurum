@@ -9,6 +9,7 @@
   import SwipeRow from '../lib/SwipeRow.svelte';
   import NewAccount from '../lib/NewAccount.svelte';
   import DeleteAccount from '../lib/DeleteAccount.svelte';
+  import Exchange from '../lib/Exchange.svelte';
   import { loadHome } from '../lib/data.svelte.js';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
@@ -45,11 +46,20 @@
   const byBalance = (a, b) => (b.mono - a.mono) || (b.balance - a.balance);
   let main = $derived(rows.filter((r) => r.main && !r.hide).sort(byBalance));
   let rest = $derived(rows.filter((r) => !r.main && !r.foreign && !r.hide).sort(byBalance));
-  let groups = $derived.by(() => {
+  // Валютные строки: если есть обычный счёт с тем же именем (Wallet), строка показывается под ним; иначе одна карточка на имя (Fund · USD, EUR)
+  let baseNames = $derived(new Set(rows.filter((r) => !r.foreign).map((r) => r.name)));
+  let subOf = $derived.by(() => {
     const m = new Map();
-    for (const r of rows.filter((x) => x.foreign && !x.hide).sort((a, b) => b.balance - a.balance)) m.set(r.cur, [...(m.get(r.cur) ?? []), r]);
-    return [...m].map(([cur, list]) => ({ cur, list, sum: list.reduce((s, r) => s + r.balance, 0) }));
+    for (const r of rows.filter((x) => x.foreign && baseNames.has(x.name) && !(x.balance === 0))) m.set(r.name, [...(m.get(r.name) ?? []), r]);
+    return m;
   });
+  let fgroups = $derived.by(() => {
+    const m = new Map();
+    for (const r of rows.filter((x) => x.foreign && !x.hide && !baseNames.has(x.name)).sort((a, b) => a.name.localeCompare(b.name, 'ru') || a.cur.localeCompare(b.cur))) m.set(r.name, [...(m.get(r.name) ?? []), r]);
+    return [...m].map(([name, list]) => ({ name, list, sum: list.reduce((s, r) => s + (approxBase(r.balance, r.cur) ?? 0), 0) }));
+  });
+  let exch = $state(null), exchOpen = $state(false);
+  const askExch = (f, e) => { e.stopPropagation(); exch = { line: f, base: rows.find((x) => !x.foreign && x.name === f.name) }; exchOpen = true; };
   const approx = (n, cur) => { fx.rows; const v = approxBase(n, cur); return v == null ? '' : '≈ ' + money(v); };
   let total = $derived(rows.filter((r) => !r.foreign).reduce((s, r) => s + r.balance, 0));
   let monoRows = $derived(main.filter((r) => r.mono));
@@ -119,23 +129,28 @@
                 <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
               </button>
             </SwipeRow>
+            {#each subOf.get(r.name) ?? [] as f (f.id)}
+              <SwipeRow enabled onremove={() => askDel(f)}>
+                <button class="r nf sub fl" onclick={() => open(f)}>
+                  <div class="t">{f.cur}<span class="tag">вне бюджета</span></div>
+                  <span class="ex" role="button" tabindex="0" onclick={(e) => askExch(f, e)} onkeydown={(e) => e.key === 'Enter' && askExch(f, e)}>Обменять</span>
+                  <div class="a">{moneyC(f.balance, f.cur, 2)}</div>
+                </button>
+              </SwipeRow>
+            {/each}
           {/each}
         </div>
       {/if}
     {/each}
-    {#if groups.length}
+    {#if fgroups.length}
       <h2 class="rise" style:--i={10}>Валютные счета <span class="tag">вне бюджета</span></h2>
-      {#each groups as g, gi (g.cur)}
+      {#each fgroups as g, gi (g.name)}
         <div class="card fc rise" style:--i={11 + gi}>
-          <div class="fh"><div><b class="num">{moneyC(g.sum, g.cur, 2)}</b><small>{approx(g.sum, g.cur)}</small></div></div>
-          {#if g.list.filter((r) => r.balance > 0).length > 1}
-            <div class="fb">{#each g.list.filter((r) => r.balance > 0) as r, k (r.id)}<u style:flex={r.balance} style:background={shades[k % shades.length]}></u>{/each}</div>
-          {/if}
+          <div class="fh"><div class="fn"><div class="ic"><Icon name="wallet" size={19} /></div><b>{g.name}</b>{#if g.sum}<small>≈ {money(g.sum)}</small>{/if}</div></div>
           {#each g.list as r, k (r.id)}
             <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
-              <button class="r" class:nf={k > 0} onclick={() => open(r)}>
-                <div class="ic"><span class="cg" class:wide={sym(r.cur).length > 1}>{sym(r.cur)}</span></div>
-                <div class="t">{r.name}</div>
+              <button class="r nf sub" onclick={() => open(r)}>
+                <div class="t">{r.cur}</div>
                 <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
               </button>
             </SwipeRow>
@@ -146,6 +161,7 @@
   {/if}
 </div>
 
+<Exchange open={exchOpen} line={exch?.line} base={exch?.base} onclose={() => (exchOpen = false)} ondone={refresh} />
 <NewAccount open={addOpen} onclose={() => { addOpen = false; landBack(); }} onsaved={refresh} />
 <DeleteAccount open={delOpen} acc={delAcc} all={rows} onclose={() => (delOpen = false)} ondone={refresh} />
 
@@ -200,7 +216,9 @@
   .tag { font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 6px; margin-left: 6px; font-weight: 500; }
   .a { font-weight: 600; font-variant-numeric: tabular-nums; }
   .a.z { color: var(--muted); font-weight: 400; }
-  .fh { padding: 12px 14px 4px; } .fh b { font-size: 22px; font-weight: 700; } .fh small { display: block; font-size: 12px; color: var(--muted); }
+  .fh { padding: 12px 14px 6px; } .fn { display: flex; align-items: center; gap: 12px; } .fn b { flex: 1; font-size: 16px; font-weight: 600; } .fn small { font-size: 13px; color: var(--muted); }
+  .fl .t { flex: 0 1 auto; margin-right: auto; }
+  .ex { font-size: 12px; font-weight: 600; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; border-radius: 8px; padding: 4px 10px; }
   .fb { display: flex; gap: 3px; height: 8px; margin: 6px 14px 8px; border-radius: 4px; overflow: hidden; } .fb u { display: block; min-width: 4px; }
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }

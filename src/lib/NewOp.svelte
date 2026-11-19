@@ -28,11 +28,18 @@
         await loadRefs();
         const [c, a] = await Promise.all([
           supabase.from('categories').select('id,name,type,icon,sort_order').order('sort_order'),
-          supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source,currency,is_foreign').order('id')
+          supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source,currency,is_foreign,block').order('id')
         ]);
         if (c.error) throw c.error; if (a.error) throw a.error;
         cats = c.data.map((x) => ({ id: x.id, name: noEmoji(x.name), type: x.type, icon: x.icon || 'tag' }));
-        accs = a.data.map((x) => ({ id: x.id, name: noEmoji(x.name), mono: x.is_monobank, src: x.is_budget_source, cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign, main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet' || x.icon === 'card') }));
+        accs = a.data.map((x) => ({ id: x.id, name: noEmoji(x.name), mono: x.is_monobank, src: x.is_budget_source, cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign, main: !x.is_foreign && (x.block ? x.block === 'card' : x.is_monobank || x.is_budget_source || x.icon === 'wallet' || x.icon === 'card') }));
+        // «Wallet · USD» и т.п.: валютная строка создаётся сама при первом переводе в этой валюте
+        const used = [...new Set(['USD', 'EUR', ...accs.filter((x) => x.foreign).map((x) => x.cur)])];
+        for (const x of accs.filter((y) => y.main && !y.mono && !y.foreign)) {
+          used.forEach((c, k) => {
+            if (!accs.some((y) => y.foreign && y.name === x.name && y.cur === c)) accs.push({ id: -(x.id * 100 + k + 1), name: x.name, cur: c, foreign: true, virtual: true, main: false, mono: false, src: false });
+          });
+        }
         ready = true;
       } catch (e) { err = e?.message ?? String(e); return; }
     }
@@ -64,14 +71,14 @@
   let chosen = $derived(cats.find((c) => c.id === (split ? parts[0]?.c : cat)));
   let tv = $derived({ action, note: name, icon: chosen?.icon });
   let hasLogo = $derived(!!logoFor(name));
-  const label = (a) => (a.foreign ? `${a.cur} · ${a.name}` : a.name);
+  const label = (a) => (a.foreign ? `${a.name} · ${a.cur}` : a.name);
   const accName = (id) => { const a = accs.find((x) => x.id === id); return a ? label(a) : 'выбрать'; };
   // Разделы списка счетов: карта и наличные, конверты, валютные
-  const groupsOf = (withForeign) => [
+  const groupsOf = (withForeign, withVirtual = false) => [
     ['Карта и наличные', accs.filter((a) => a.main)], ['Конверты', accs.filter((a) => !a.main && !a.foreign)],
-    ...(withForeign ? [['Валютные счета', accs.filter((a) => a.foreign)]] : [])
+    ...(withForeign ? [['Валютные счета', accs.filter((a) => a.foreign && (withVirtual || !a.virtual))]] : [])
   ].filter(([, l]) => l.length);
-  let gAll = $derived(groupsOf(true)), gBase = $derived(groupsOf(false));
+  let gAll = $derived(groupsOf(true)), gBase = $derived(groupsOf(false)), gTr = $derived(groupsOf(true, true));
   let fromA = $derived(accs.find((a) => a.id === from)), toA = $derived(accs.find((a) => a.id === to));
   let rate = $state(''), recv = $state(''), edited = $state('rate');
   // Перевод между разными валютами: курс вводит пользователь
@@ -130,6 +137,19 @@
     if (isT) {
       if (!from || !to) { err = 'Выбери оба счёта.'; return; }
       if (from === to) { err = 'Счета перевода должны отличаться.'; return; }
+      if (from < 0 && to < 0) { err = 'Хотя бы один счёт должен уже существовать.'; return; }
+      try {
+        for (const side of ['from', 'to']) {
+          const id = side === 'from' ? from : to;
+          if (id >= 0) continue;
+          const v = accs.find((x) => x.id === id);
+          const ins = await supabase.from('accounts').insert({ name: v.name, currency: v.cur, is_foreign: true, icon: 'coin' }).select('id');
+          if (ins.error) throw ins.error;
+          const real = ins.data[0].id;
+          accs = accs.map((x) => (x.id === id ? { ...x, id: real, virtual: false } : x));
+          if (side === 'from') from = real; else to = real;
+        }
+      } catch (e) { err = e?.message ?? String(e); return; }
       if (pair) {
         const rv = num(recv), rt = num(rate);
         if (!(rt > 0) || !(rv > 0)) { err = 'Укажи курс обмена.'; return; }
@@ -205,9 +225,9 @@
         <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={amount} readonly={bank} aria-label="Сумма" style:width="{Math.max(1, amount.length)}ch" /><span>{sym(curShown)}</span></div>
         {#if isT}
           <div class="pills">
-            <label class="pill">{accName(from)} ▾<select bind:value={from}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
+            <label class="pill">{accName(from)} ▾<select bind:value={from}>{#each gTr as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
             <span class="ar">→</span>
-            <label class="pill">{accName(to)} ▾<select bind:value={to}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
+            <label class="pill">{accName(to)} ▾<select bind:value={to}>{#each gTr as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
           </div>
         {:else}
           <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)}{bank ? '' : ' ▾'}<select bind:value={acc} disabled={bank}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>

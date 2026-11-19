@@ -26,6 +26,7 @@
         {#if t.rate}<div class="r"><span>Курс</span><span>{t.rate}</span></div>{/if}
       {:else}
         <div class="r"><span>Счёт</span><span>{t.account}</span></div>
+        {#if t.card}<div class="r"><span>Карта</span><span>{t.card.name}{t.card.mask ? ` · ${t.card.mask}` : ''}</span></div>{/if}
         {#if t.category}<div class="r"><span>Категория</span><span>{t.category}</span></div>{/if}
       {/if}
       <div class="r"><span>Дата</span><span>{fullDate(t.date)}</span></div>
