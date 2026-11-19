@@ -12,11 +12,11 @@
   import { loadHome } from '../lib/data.svelte.js';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
+  import { flyOpen, landBack } from '../lib/fly.js';
 
   let rows = $state(accCache.v?.rows ?? []);
   let loading = $state(!accCache.v);
   let error = $state('');
-  let limit = $state(accCache.v?.limit ?? 0);
   let picked = $state(null), last = $state(null), tx = $state([]), txLoad = $state(false), txErr = $state('');
   $effect(() => { if (picked) last = picked; });
   let c = $derived(picked ?? last);
@@ -35,18 +35,18 @@
     error = '';
     try {
       const r = await fetchAccounts();
-      limit = r.limit; rows = r.rows;
+      rows = r.rows;
     } catch (e) { error = e?.message ?? String(e); }
     loading = false;
   }
   onMount(() => { load(); loadFx(); });
 
   const byBalance = (a, b) => (b.mono - a.mono) || (b.balance - a.balance);
-  let main = $derived(rows.filter((r) => r.main).sort(byBalance));
-  let rest = $derived(rows.filter((r) => !r.main && !r.foreign).sort(byBalance));
+  let main = $derived(rows.filter((r) => r.main && !r.hide).sort(byBalance));
+  let rest = $derived(rows.filter((r) => !r.main && !r.foreign && !r.hide).sort(byBalance));
   let groups = $derived.by(() => {
     const m = new Map();
-    for (const r of rows.filter((x) => x.foreign).sort((a, b) => b.balance - a.balance)) m.set(r.cur, [...(m.get(r.cur) ?? []), r]);
+    for (const r of rows.filter((x) => x.foreign && !x.hide).sort((a, b) => b.balance - a.balance)) m.set(r.cur, [...(m.get(r.cur) ?? []), r]);
     return [...m].map(([cur, list]) => ({ cur, list, sum: list.reduce((s, r) => s + r.balance, 0) }));
   });
   const approx = (n, cur) => { fx.rows; const v = approxBase(n, cur); return v == null ? '' : '≈ ' + money(v); };
@@ -59,7 +59,7 @@
 </script>
 
 <div class="page">
-  <div class="hd"><h1>Счета</h1><button class="plus" aria-label="Новый счёт" onclick={() => (addOpen = true)}><Icon name="plus" size={20} /></button></div>
+  <div class="hd"><h1>Счета</h1><button class="plus" aria-label="Новый счёт" onclick={(e) => flyOpen(e, () => (addOpen = true))}><Icon name="plus" size={20} /></button></div>
   {#if error}
     <p class="err">{error}</p>
     <button class="retry" onclick={load}>Повторить</button>
@@ -92,7 +92,7 @@
             <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
               <button class="r rise" class:nf={k > 0} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
                 <div class="ic"><Icon name={r.icon} size={19} /></div>
-                <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && limit > 0}<small>кредитный лимит {money(limit)}</small>{/if}</div>
+                <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && r.limit > 0}<small>кредитный лимит {money(r.limit)}</small>{/if}</div>
                 <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
               </button>
             </SwipeRow>
@@ -109,7 +109,7 @@
             <div class="fb">{#each g.list.filter((r) => r.balance > 0) as r, k (r.id)}<u style:flex={r.balance} style:background={shades[k % shades.length]}></u>{/each}</div>
           {/if}
           {#each g.list as r, k (r.id)}
-            <SwipeRow onremove={() => askDel(r)}>
+            <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
               <button class="r" class:nf={k > 0} onclick={() => open(r)}>
                 <div class="ic"><Icon name={r.icon} size={19} /></div>
                 <div class="t">{r.name}</div>
@@ -123,7 +123,7 @@
   {/if}
 </div>
 
-<NewAccount open={addOpen} onclose={() => (addOpen = false)} onsaved={refresh} />
+<NewAccount open={addOpen} onclose={() => { addOpen = false; landBack(); }} onsaved={refresh} />
 <DeleteAccount open={delOpen} acc={delAcc} all={rows} onclose={() => (delOpen = false)} ondone={refresh} />
 
 <Sheet open={!!picked} onclose={() => (picked = null)}>
@@ -131,7 +131,7 @@
     <h3>{c.name}</h3>
     <div class="bal">{moneyC(c.balance, c.cur, 2)}</div>
     {#if c.foreign}<div class="lim">{approx(c.balance, c.cur)}{approx(c.balance, c.cur) ? ' · ' : ''}вне бюджета</div>{/if}
-    {#if c.mono && limit > 0}<div class="lim">кредитный лимит {money(limit)}</div>{/if}
+    {#if c.mono && c.limit > 0}<div class="lim">кредитный лимит {money(c.limit)}</div>{/if}
     <button class="new" onclick={create}>+ Создать транзакцию</button>
     <TxList rows={tx} loading={txLoad} error={txErr} title="Все операции" />
   {/if}

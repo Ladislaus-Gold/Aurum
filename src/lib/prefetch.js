@@ -9,22 +9,26 @@ import { cfg, loadBase } from './currency.svelte.js';
 // ---- Счета
 export const accCache = { v: cget('acc') };
 export async function fetchAccounts() {
-  const [a, b, ms] = await Promise.all([
-    supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source,currency,is_foreign').order('id'),
-    supabase.from('account_balances').select('id,balance,live'),
-    supabase.from('mono_state').select('credit_limit_kop').limit(1)
+  const [a, b] = await Promise.all([
+    supabase.from('accounts').select('id,name,icon,is_monobank,mono_account_id,is_budget_source,currency,is_foreign').order('id'),
+    supabase.from('account_balances').select('id,balance,live,credit_limit')
   ]);
-  const limit = Number(ms.data?.[0]?.credit_limit_kop || 0) / 100;
   if (a.error) throw a.error;
   if (b.error) throw b.error;
   const bal = new Map(b.data.map((x) => [x.id, x]));
-  const rows = a.data.map((x) => ({
-    id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono: x.is_monobank, src: !!x.is_budget_source,
-    cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign,
-    main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet'),
-    balance: Number(bal.get(x.id)?.balance ?? 0), live: !!bal.get(x.id)?.live
-  }));
-  accCache.v = { rows, limit };
+  const rows = a.data.map((x) => {
+    const b2 = bal.get(x.id), balance = Number(b2?.balance ?? 0), limit = Number(b2?.credit_limit ?? 0);
+    const mono = !!x.mono_account_id; // карта сейчас подключена к банку: баланс живой, переносить на неё нельзя
+    return {
+      id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono, src: !!x.is_budget_source,
+      cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign,
+      main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet' || x.icon === 'card'),
+      balance, live: !!b2?.live, limit,
+      // карта без кредитного лимита и с нулём на счёте (например, зарплатная) не показывается, пока на ней нет денег
+      hide: mono && !!b2?.live && limit <= 0 && balance === 0
+    };
+  });
+  accCache.v = { rows };
   cset('acc', accCache.v);
   return accCache.v;
 }

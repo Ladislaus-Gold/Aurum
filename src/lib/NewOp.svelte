@@ -32,7 +32,7 @@
         ]);
         if (c.error) throw c.error; if (a.error) throw a.error;
         cats = c.data.map((x) => ({ id: x.id, name: noEmoji(x.name), type: x.type, icon: x.icon || 'tag' }));
-        accs = a.data.map((x) => ({ id: x.id, name: noEmoji(x.name), mono: x.is_monobank, src: x.is_budget_source, cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign, main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet') }));
+        accs = a.data.map((x) => ({ id: x.id, name: noEmoji(x.name), mono: x.is_monobank, src: x.is_budget_source, cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign, main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet' || x.icon === 'card') }));
         ready = true;
       } catch (e) { err = e?.message ?? String(e); return; }
     }

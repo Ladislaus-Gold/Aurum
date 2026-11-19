@@ -44,7 +44,7 @@
         <div class="lb">Перенести на</div>
         <label class="in">{nm}<span class="chev">▾</span><select bind:value={to}>{#each targets as r (r.id)}<option value={r.id}>{r.name}</option>{/each}</select></label>
       {:else}
-        <p class="err">Некуда перенести: сначала создайте другой счёт в той же валюте.</p>
+        <p class="err">Некуда перенести: сначала создайте ещё один счёт в {acc.cur} (кнопка «+» на экране «Счета»).</p>
       {/if}
     {:else}
       <p class="sub">Операций на счёте нет, он будет удалён.</p>
