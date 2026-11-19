@@ -5,7 +5,7 @@ import { cget, cset } from './persist.js';
 const saved = cget('home');
 export const home = $state({
   loading: true, error: '', total: 0, series: [], months: [],
-  budget: { plan: 0, spent: 0 }, cats: [], recent: [], version: 0,
+  budget: { plan: 0, spent: 0 }, foreign: [], cats: [], recent: [], version: 0,
   ...(saved ?? {}), has: !!saved
 });
 
@@ -17,7 +17,7 @@ const ok = (r) => { if (r.error) throw r.error; return r.data; };
 async function allTransactions() {
   const out = [];
   for (let from = 0; ; from += 1000) {
-    const rows = ok(await supabase.from('transactions').select('date,action,amount')
+    const rows = ok(await supabase.from('transactions').select('date,action,amount,to_amount,from_account_id,to_account_id')
       .order('date', { ascending: false }).range(from, from + 999));
     out.push(...rows);
     if (rows.length < 1000) break;
@@ -25,13 +25,15 @@ async function allTransactions() {
   return out;
 }
 
-const net = (t) => (t.action === 'INCOME' || t.action === 'RETURN' ? Number(t.amount)
-  : t.action === 'EXPENSE' ? -Number(t.amount) : 0);
+// Влияние операции на общий баланс (без валютных счетов): обмен гривны на валюту уменьшает его, обратный обмен увеличивает
+const net = (t, foreign) => (t.action === 'INCOME' || t.action === 'RETURN' ? Number(t.amount)
+  : t.action === 'EXPENSE' ? -Number(t.amount)
+  : t.action === 'TRANSFER' ? ((foreign.has(t.to_account_id) ? -Number(t.amount) : 0) + (foreign.has(t.from_account_id) ? Number(t.to_amount ?? t.amount) : 0)) : 0);
 
 // Ряд «баланс на конец дня»: от последней операции назад от текущего баланса
-function buildSeries(total, txs) {
+function buildSeries(total, txs, foreign) {
   const perDay = new Map();
-  for (const t of txs) perDay.set(dayKey(t.date), (perDay.get(dayKey(t.date)) ?? 0) + net(t));
+  for (const t of txs) perDay.set(dayKey(t.date), (perDay.get(dayKey(t.date)) ?? 0) + net(t, foreign));
   const today = new Date(); today.setHours(12, 0, 0, 0);
   const first = txs.length ? new Date(txs[txs.length - 1].date) : today;
   first.setHours(12, 0, 0, 0);
@@ -54,20 +56,25 @@ export async function loadHome() {
     const cur = firstOf(y, m);
     const monthList = Array.from({ length: 8 }, (_, i) => firstOf(y, m - 7 + i));
     const [bal, sums, cats, bud, totals, recent, accs, txs] = await Promise.all([
-      supabase.from('account_balances').select('balance'),
+      supabase.from('account_balances').select('balance,currency,is_foreign'),
       Promise.all(monthList.map((p) => supabase.rpc('month_summary', { p_month: p }))),
       supabase.from('categories').select('id,name,type,icon'),
       supabase.from('budgets').select('category_id,amount').eq('month', cur),
       supabase.rpc('month_category_totals', { p_month: cur }),
       supabase.from('transactions')
-        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
+        .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id,to_amount,rate')
         .order('date', { ascending: false }).limit(4),
-      supabase.from('accounts').select('id,name'),
+      supabase.from('accounts').select('id,name,is_foreign'),
       allTransactions()
     ]);
-    const total = ok(bal).reduce((s, r) => s + Number(r.balance), 0);
+    const balRows = ok(bal);
+    const total = balRows.filter((r) => !r.is_foreign).reduce((s, r) => s + Number(r.balance), 0);
+    const fsum = new Map();
+    for (const r of balRows) if (r.is_foreign) fsum.set(r.currency, (fsum.get(r.currency) ?? 0) + Number(r.balance));
+    home.foreign = [...fsum].map(([cur, sum]) => ({ cur, sum })).filter((x) => x.sum !== 0);
     home.total = total;
-    home.series = buildSeries(total, txs);
+    const foreignIds = new Set(ok(accs).filter((a) => a.is_foreign).map((a) => a.id));
+    home.series = buildSeries(total, txs, foreignIds);
     home.months = sums.map((r, i) => {
       const s = ok(r), d = new Date(y, m - 7 + i, 1);
       return {
@@ -101,7 +108,7 @@ export async function loadHome() {
     }));
     home.version++;
     home.has = true;
-    cset('home', { total: home.total, series: home.series, months: home.months, budget: home.budget, cats: home.cats, recent: home.recent });
+    cset('home', { total: home.total, foreign: home.foreign, series: home.series, months: home.months, budget: home.budget, cats: home.cats, recent: home.recent });
   } catch (e) {
     home.error = e?.message ?? String(e);
   } finally {

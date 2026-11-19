@@ -4,12 +4,13 @@ import { loadRefs, enrich } from './refs.svelte.js';
 import { cget, cset } from './persist.js';
 import { loadBudget } from './budget.svelte.js';
 import { loadHome } from './data.svelte.js';
+import { cfg, loadBase } from './currency.svelte.js';
 
 // ---- Счета
 export const accCache = { v: cget('acc') };
 export async function fetchAccounts() {
   const [a, b, ms] = await Promise.all([
-    supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source').order('id'),
+    supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source,currency,is_foreign').order('id'),
     supabase.from('account_balances').select('id,balance,live'),
     supabase.from('mono_state').select('credit_limit_kop').limit(1)
   ]);
@@ -19,7 +20,8 @@ export async function fetchAccounts() {
   const bal = new Map(b.data.map((x) => [x.id, x]));
   const rows = a.data.map((x) => ({
     id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono: x.is_monobank,
-    main: x.is_monobank || x.is_budget_source || x.icon === 'wallet',
+    cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign,
+    main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet'),
     balance: Number(bal.get(x.id)?.balance ?? 0), live: !!bal.get(x.id)?.live
   }));
   accCache.v = { rows, limit };
@@ -39,7 +41,7 @@ export async function fetchOps(a, b) {
   const all = [];
   for (let off = 0; off < 10000; off += 1000) {
     const { data, error: e } = await supabase.from('transactions')
-      .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id')
+      .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id,to_amount,rate')
       .gte('date', a.toISOString()).lt('date', b.toISOString())
       .order('date', { ascending: false }).range(off, off + 999);
     if (e) throw e;
@@ -56,6 +58,7 @@ export async function fetchOps(a, b) {
 // Всё, что нужно экранам, грузим сразу после входа — переходы мгновенные
 export function prefetchAll() {
   const n = new Date();
+  loadBase().catch(() => {});
   loadHome().catch(() => {});
   loadBudget(n.getFullYear(), n.getMonth()).catch(() => {});
   fetchAccounts().catch(() => {});

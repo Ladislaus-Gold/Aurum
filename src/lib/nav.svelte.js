@@ -9,6 +9,7 @@ export const moreItems = [
   { id: 'analytics', label: 'Аналитика', icon: 'chart', group: 'Умные функции' },
   { id: 'rules', label: 'Правила', icon: 'rule', group: 'Умные функции' },
   { id: 'import', label: 'Импорт', icon: 'imp', group: 'Деньги' },
+  { id: 'currency', label: 'Валюта', icon: 'coin', group: 'Деньги' },
   { id: 'mono', label: 'Monobank', icon: 'bank', group: 'Деньги' },
   { id: 'status', label: 'Статус', icon: 'stat', group: 'Система' },
   { id: 'backup', label: 'Резервная копия', icon: 'save', group: 'Деньги' }

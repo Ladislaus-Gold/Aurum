@@ -1,10 +1,12 @@
+import { cfg, sym, moneyIn } from './currency.svelte.js';
 const clean = (s) => s.replace(/[  ]/g, ' ');
 // «Transport 🚗» → «Transport»: эмодзи из названий в базе не показываем
 export const noEmoji = (s = '') => s.replace(/\s*(\p{Extended_Pictographic}|\uFE0F|\u200D|\p{Emoji_Modifier})+\s*/gu, ' ').replace(/\s+/g, ' ').trim();
 export const fmt = (n, d = 0) =>
   clean(Number(n).toLocaleString('ru-RU', { minimumFractionDigits: d, maximumFractionDigits: d })).replace('-', '−');
-export const money = (n, d = 0) => `${fmt(n, d)} ₴`;
-export const signed = (n, d = 0) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), d) + ' ₴';
+export const money = (n, d = 0) => `${fmt(n, d)} ${sym(cfg.base)}`;
+export const moneyC = (n, cur, d = 0) => moneyIn(n, cur, fmt, d);
+export const signed = (n, d = 0) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), d) + ' ' + sym(cfg.base);
 const sameDay = (a, b) => a.toDateString() === b.toDateString();
 export function dayLabel(iso) {
   const d = new Date(iso), now = new Date();

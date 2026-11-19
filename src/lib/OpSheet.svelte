@@ -1,12 +1,12 @@
 <script>
   import Sheet from './Sheet.svelte';
   import OpAvatar from './OpAvatar.svelte';
-  import { money, fullDate } from './format.js';
+  import { moneyC, fullDate } from './format.js';
   import { opTitle } from './refs.svelte.js';
   import { nav } from './nav.svelte.js';
   let { picked, onclose } = $props();
   const kind = { EXPENSE: 'Расход', INCOME: 'Доход', RETURN: 'Возврат', TRANSFER: 'Перевод' };
-  let amount = $derived(picked ? (picked.action === 'EXPENSE' ? '−' : picked.action === 'TRANSFER' ? '' : '+') + money(picked.amount, 2) : '');
+  let amount = $derived(picked ? (picked.action === 'EXPENSE' ? '−' : picked.action === 'TRANSFER' ? '' : '+') + moneyC(picked.amount, picked.action === 'TRANSFER' ? picked.fromCur : picked.toCur || picked.fromCur, 2) : '');
   let last = $state(null);
   $effect(() => { if (picked) last = picked; });
   let t = $derived(picked ?? last);
@@ -22,6 +22,8 @@
       {#if t.action === 'TRANSFER'}
         <div class="r"><span>Откуда</span><span>{t.from}</span></div>
         <div class="r"><span>Куда</span><span>{t.to}</span></div>
+        {#if t.to_amount}<div class="r"><span>Зачислено</span><span>{moneyC(t.to_amount, t.toCur, 2)}</span></div>{/if}
+        {#if t.rate}<div class="r"><span>Курс</span><span>{t.rate}</span></div>{/if}
       {:else}
         <div class="r"><span>Счёт</span><span>{t.account}</span></div>
         {#if t.category}<div class="r"><span>Категория</span><span>{t.category}</span></div>{/if}
