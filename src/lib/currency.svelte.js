@@ -29,7 +29,6 @@ export function sym(c) {
   try { s = new Intl.NumberFormat('ru', { style: 'currency', currency: c, currencyDisplay: 'narrowSymbol' }).formatToParts(0).find((x) => x.type === 'currency')?.value ?? c; } catch {}
   return (symbols[c] = s);
 }
-const PREFIX = new Set(['$', '€', '£']);
 
 // Основная валюта приложения (в ней бюджет, итоги и обычные операции)
 export const cfg = $state({ base: cget('base')?.v ?? 'UAH' });
@@ -46,10 +45,10 @@ export async function saveBase(code) {
   cset('base', { v: code });
 }
 
-// Сумма со знаком валюты: «14 000 ₴», «$1 250,00», «12 zł»
+// Сумма со знаком валюты: всегда число, затем символ: «14 000 ₴», «1 250,00 $», «12 zł»
 export function moneyIn(n, cur, fmt, d = 0) {
   const s = sym(cur), v = fmt(Math.abs(n), d), neg = n < 0 ? '−' : '';
-  return PREFIX.has(s) ? `${neg}${s}${v}` : `${neg}${v} ${s}`;
+  return `${neg}${v} ${s}`;
 }
 
 // Курсы Monobank к гривне (открытый список, без токена). Банк отдаёт его не чаще раза в минуту, поэтому кэш на 5 минут.
