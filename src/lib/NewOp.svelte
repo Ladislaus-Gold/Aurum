@@ -23,7 +23,7 @@
   async function init() {
     loadFx(); rate = ''; recv = ''; edited = 'rate';
     askDel = false; err = ''; name = ''; amount = ''; cat = 0; split = false; rule = false; date = today(); action = 'EXPENSE'; parts = [{ c: 0, a: '' }, { c: 0, a: '' }];
-    if (!ready) {
+    {
       try {
         await loadRefs();
         const [c, a] = await Promise.all([
