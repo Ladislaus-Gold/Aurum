@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js';
 import { noEmoji } from './format.js';
+import { cfg } from './currency.svelte.js';
 import { cget, cset } from './persist.js';
 
 const saved = cget('home');
@@ -64,7 +65,7 @@ export async function loadHome() {
       supabase.from('transactions')
         .select('id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id,to_amount,rate')
         .order('date', { ascending: false }).limit(4),
-      supabase.from('accounts').select('id,name,is_foreign'),
+      supabase.from('accounts').select('id,name,is_foreign,currency'),
       allTransactions()
     ]);
     const balRows = ok(bal);
@@ -89,6 +90,7 @@ export async function loadHome() {
     home.budget = { plan: last.budget, spent: last.expense, month: last.name };
 
     const catById = new Map(ok(cats).map((c) => [c.id, c]));
+    const curById = new Map(ok(accs).map((a) => [a.id, a.is_foreign ? a.currency || 'UAH' : cfg.base]));
     const accById = new Map(ok(accs).map((a) => [a.id, a.name]));
     const spent = new Map();
     for (const r of ok(totals)) {
@@ -104,7 +106,9 @@ export async function loadHome() {
       ...t, amount: Number(t.amount),
       category: noEmoji(catById.get(t.category_id)?.name ?? ''), icon: catById.get(t.category_id)?.icon ?? '',
       account: noEmoji(accById.get(t.account_id) ?? ''),
-      from: noEmoji(accById.get(t.from_account_id) ?? ''), to: noEmoji(accById.get(t.to_account_id) ?? '')
+      from: noEmoji(accById.get(t.from_account_id) ?? ''), to: noEmoji(accById.get(t.to_account_id) ?? ''),
+      to_amount: t.to_amount == null ? null : Number(t.to_amount),
+      accCur: curById.get(t.account_id) ?? cfg.base, fromCur: curById.get(t.from_account_id) ?? cfg.base, toCur: curById.get(t.to_account_id) ?? cfg.base
     }));
     home.version++;
     home.has = true;
