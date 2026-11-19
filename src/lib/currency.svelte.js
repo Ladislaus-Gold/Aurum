@@ -7,7 +7,28 @@ export const CURS = {
   PLN: { s: 'zł', n: 'Злотый', iso: 985 }, GBP: { s: '£', n: 'Фунт', iso: 826 }, CHF: { s: 'Fr', n: 'Франк', iso: 756 },
   CZK: { s: 'Kč', n: 'Крона', iso: 203 }
 };
-export const sym = (c) => CURS[c]?.s ?? c;
+// Числовые коды ISO 4217 → буквенные: Monobank отдаёт курсы с числовыми кодами
+export const ISO = {
+  980: 'UAH', 840: 'USD', 978: 'EUR', 985: 'PLN', 826: 'GBP', 756: 'CHF', 203: 'CZK', 784: 'AED', 36: 'AUD', 944: 'AZN', 975: 'BGN',
+  986: 'BRL', 933: 'BYN', 124: 'CAD', 156: 'CNY', 208: 'DKK', 818: 'EGP', 981: 'GEL', 344: 'HKD', 348: 'HUF', 360: 'IDR', 376: 'ILS',
+  356: 'INR', 392: 'JPY', 410: 'KRW', 398: 'KZT', 498: 'MDL', 484: 'MXN', 578: 'NOK', 554: 'NZD', 946: 'RON', 941: 'RSD', 752: 'SEK',
+  702: 'SGD', 764: 'THB', 949: 'TRY', 710: 'ZAR', 51: 'AMD', 977: 'BAM', 152: 'CLP', 170: 'COP', 352: 'ISK', 458: 'MYR', 608: 'PHP',
+  682: 'SAR', 901: 'TWD', 704: 'VND', 860: 'UZS', 144: 'LKR', 504: 'MAD', 12: 'DZD', 400: 'JOD', 414: 'KWD', 634: 'QAR', 512: 'OMR',
+  48: 'BHD', 422: 'LBP', 788: 'TND', 586: 'PKR', 50: 'BDT', 566: 'NGN', 404: 'KES', 32: 'ARS', 604: 'PEN', 858: 'UYU', 643: 'RUB'
+};
+let names, symbols = {};
+// Название валюты по-русски и знак (для тех, что не в списке CURS)
+export function curName(c) {
+  if (CURS[c]) return CURS[c].n;
+  try { names ??= new Intl.DisplayNames(['ru'], { type: 'currency' }); const n = names.of(c); return n ? n[0].toUpperCase() + n.slice(1) : c; } catch { return c; }
+}
+export function sym(c) {
+  if (CURS[c]) return CURS[c].s;
+  if (symbols[c]) return symbols[c];
+  let s = c;
+  try { s = new Intl.NumberFormat('ru', { style: 'currency', currency: c, currencyDisplay: 'narrowSymbol' }).formatToParts(0).find((x) => x.type === 'currency')?.value ?? c; } catch {}
+  return (symbols[c] = s);
+}
 const PREFIX = new Set(['$', '€', '£']);
 
 // Основная валюта приложения (в ней бюджет, итоги и обычные операции)
@@ -40,12 +61,11 @@ export async function loadFx(force = false) {
     const r = await fetch('https://api.monobank.ua/bank/currency');
     if (!r.ok) throw new Error('fx ' + r.status);
     const list = await r.json();
-    const byIso = Object.fromEntries(Object.entries(CURS).map(([k, v]) => [v.iso, k]));
     const rows = {};
     for (const x of list) {
-      if (x.currencyCodeB !== 980 || !byIso[x.currencyCodeA]) continue;
+      if (x.currencyCodeB !== 980 || !ISO[x.currencyCodeA]) continue;
       const buy = Number(x.rateBuy || x.rateCross), sell = Number(x.rateSell || x.rateCross);
-      if (buy > 0 && sell > 0) rows[byIso[x.currencyCodeA]] = { buy, sell };
+      if (buy > 0 && sell > 0) rows[ISO[x.currencyCodeA]] = { buy, sell };
     }
     fx.rows = rows; fx.at = Date.now(); fx.ready = true;
     cset('fx', { rows, at: fx.at });
