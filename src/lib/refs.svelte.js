@@ -40,6 +40,7 @@ export const enrich = (t) => ({
   from: refs.accs[t.from_account_id] ?? '', to: refs.accs[t.to_account_id] ?? '',
   to_amount: t.to_amount == null ? null : Number(t.to_amount), rate: t.rate == null ? null : Number(t.rate),
   fromCur: refs.cur[t.from_account_id] || cfg.base, toCur: refs.cur[t.to_account_id] || cfg.base,
+  accCur: refs.cur[t.account_id] || cfg.base,
   outside: !!(refs.foreign[t.from_account_id] || refs.foreign[t.to_account_id])
 });
 

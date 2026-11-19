@@ -3,6 +3,7 @@
   import { stagger } from '../lib/anim.js';
   import { onMount, tick } from 'svelte';
   import { opsCache as cache, opsKey, fetchOps, curMonthRange } from '../lib/prefetch.js';
+  import { cfg } from '../lib/currency.svelte.js';
   import { loadRefs, enrich, opSigned, refs } from '../lib/refs.svelte.js';
   import { signed, noEmoji } from '../lib/format.js';
   import OpRow from '../lib/OpRow.svelte';
@@ -110,12 +111,12 @@
       let g = out.at(-1);
       if (!g || g.k !== k) out.push((g = { k, title: head(t.date), sum: 0, items: [] }));
       g.items.push(t);
-      g.sum += opSigned(t);
+      if (t.accCur === cfg.base) g.sum += opSigned(t);
     }
     return out;
   });
-  let expense = $derived(filtered.reduce((s, t) => s + (t.action === 'EXPENSE' ? t.amount : t.action === 'RETURN' ? -t.amount : 0), 0));
-  let income = $derived(filtered.reduce((s, t) => s + (t.action === 'INCOME' ? t.amount : 0), 0));
+  let expense = $derived(filtered.reduce((s, t) => s + (t.accCur !== cfg.base ? 0 : t.action === 'EXPENSE' ? t.amount : t.action === 'RETURN' ? -t.amount : 0), 0));
+  let income = $derived(filtered.reduce((s, t) => s + (t.accCur !== cfg.base ? 0 : t.action === 'INCOME' ? t.amount : 0), 0));
 </script>
 
 <div class="head">

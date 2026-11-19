@@ -13,7 +13,6 @@
   import { rec, loadRecurring, syncRecurring, detect, blankPlan } from '../lib/recurring.svelte.js';
   import { hb } from '../lib/homeblocks.svelte.js';
   import BalanceCard from '../home/BalanceCard.svelte';
-  import ForeignLine from '../home/ForeignLine.svelte';
   import BudgetCard from '../home/BudgetCard.svelte';
   import FlowCard from '../home/FlowCard.svelte';
   import RecentOps from '../home/RecentOps.svelte';
@@ -60,7 +59,6 @@
     {#each hb.list as b (b.id)}{#if b.on}
       {#if b.id === 'balance'}
         <BalanceCard total={home.total} series={home.series} {shown} onaccounts={() => (nav.tab = 'accounts')} />
-        {#if home.foreign?.length}<ForeignLine list={home.foreign} onopen={() => (nav.tab = 'accounts')} />{/if}
       {:else if b.id === 'budget'}
         <div class="sh"><h2>Бюджет на {home.budget.month}</h2></div>
         <button class="bt" onclick={() => (nav.tab = 'budget')} aria-label="Открыть бюджет"><BudgetCard budget={home.budget} cats={home.cats} {shown} /></button>
