@@ -19,7 +19,7 @@ export async function fetchAccounts() {
   if (b.error) throw b.error;
   const bal = new Map(b.data.map((x) => [x.id, x]));
   const rows = a.data.map((x) => ({
-    id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono: x.is_monobank,
+    id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono: x.is_monobank, src: !!x.is_budget_source,
     cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign,
     main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet'),
     balance: Number(bal.get(x.id)?.balance ?? 0), live: !!bal.get(x.id)?.live

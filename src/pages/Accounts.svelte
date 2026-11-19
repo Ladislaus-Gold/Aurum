@@ -6,6 +6,10 @@
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
   import TxList from '../lib/TxList.svelte';
+  import SwipeRow from '../lib/SwipeRow.svelte';
+  import NewAccount from '../lib/NewAccount.svelte';
+  import DeleteAccount from '../lib/DeleteAccount.svelte';
+  import { loadHome } from '../lib/data.svelte.js';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
 
@@ -21,6 +25,10 @@
     txByAccount(r.id).then((x) => { if (picked?.id === r.id) tx = x; }).catch((e) => (txErr = e?.message ?? String(e))).finally(() => (txLoad = false));
   }
   function create() { const id = picked.id; picked = null; nav.preAcc = id; nav.newOp = true; }
+
+  let addOpen = $state(false), delAcc = $state(null), delOpen = $state(false);
+  const askDel = (r) => { delAcc = r; delOpen = true; };
+  const refresh = () => { load(); loadHome().catch(() => {}); nav.rev++; };
 
   async function load() {
     if (!accCache.v) loading = true;
@@ -51,7 +59,7 @@
 </script>
 
 <div class="page">
-  <h1>Счета</h1>
+  <div class="hd"><h1>Счета</h1><button class="plus" aria-label="Новый счёт" onclick={() => (addOpen = true)}><Icon name="plus" size={20} /></button></div>
   {#if error}
     <p class="err">{error}</p>
     <button class="retry" onclick={load}>Повторить</button>
@@ -81,11 +89,13 @@
         <h2 class="rise" style:--i={2 + g * 4}>{title}</h2>
         <div class="card">
           {#each list as r, k (r.id)}
-            <button class="r rise" style:--i={3 + g * 4 + k} onclick={() => open(r)}>
-              <div class="ic"><Icon name={r.icon} size={19} /></div>
-              <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && limit > 0}<small>кредитный лимит {money(limit)}</small>{/if}</div>
-              <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
-            </button>
+            <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
+              <button class="r rise" class:nf={k > 0} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
+                <div class="ic"><Icon name={r.icon} size={19} /></div>
+                <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && limit > 0}<small>кредитный лимит {money(limit)}</small>{/if}</div>
+                <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
+              </button>
+            </SwipeRow>
           {/each}
         </div>
       {/if}
@@ -98,18 +108,23 @@
           {#if g.list.filter((r) => r.balance > 0).length > 1}
             <div class="fb">{#each g.list.filter((r) => r.balance > 0) as r, k (r.id)}<u style:flex={r.balance} style:background={shades[k % shades.length]}></u>{/each}</div>
           {/if}
-          {#each g.list as r (r.id)}
-            <button class="r" onclick={() => open(r)}>
-              <div class="ic"><Icon name={r.icon} size={19} /></div>
-              <div class="t">{r.name}</div>
-              <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
-            </button>
+          {#each g.list as r, k (r.id)}
+            <SwipeRow onremove={() => askDel(r)}>
+              <button class="r" class:nf={k > 0} onclick={() => open(r)}>
+                <div class="ic"><Icon name={r.icon} size={19} /></div>
+                <div class="t">{r.name}</div>
+                <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
+              </button>
+            </SwipeRow>
           {/each}
         </div>
       {/each}
     {/if}
   {/if}
 </div>
+
+<NewAccount open={addOpen} onclose={() => (addOpen = false)} onsaved={refresh} />
+<DeleteAccount open={delOpen} acc={delAcc} all={rows} onclose={() => (delOpen = false)} ondone={refresh} />
 
 <Sheet open={!!picked} onclose={() => (picked = null)}>
   {#if c}
@@ -124,7 +139,9 @@
 
 <style>
   .page { padding: 0 var(--pad); }
-  h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin: 0; padding: calc(var(--safe-t) + 18px) 0 14px; }
+  .hd { display: flex; align-items: center; justify-content: space-between; padding: calc(var(--safe-t) + 18px) 0 14px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin: 0; }
+  .plus { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; background: linear-gradient(160deg, #EBC77A, #B8862C); }
   .hero { border-radius: 22px; padding: 18px 20px; margin-bottom: 18px; color: #E8C277;
     background: linear-gradient(150deg, #1a1410, #0a0807); box-shadow: var(--shadow); }
   .hero.sk { height: 168px; opacity: .5; }
@@ -144,7 +161,7 @@
   h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 0 0 6px 16px; font-weight: 600; }
   .card { background: var(--card); border-radius: 14px; margin-bottom: 18px; overflow: hidden; box-shadow: var(--shadow); }
   .r { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 56px; position: relative; }
-  .r + .r::before { content: ""; position: absolute; left: 62px; right: 0; top: 0; height: .5px; background: var(--line); }
+  .r.nf::before { content: ""; position: absolute; left: 62px; right: 0; top: 0; height: .5px; background: var(--line); }
   .ic { width: 36px; height: 36px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; background: var(--gold-soft); color: var(--gold); }
   .t { flex: 1; font-weight: 500; min-width: 0; text-align: left; }
   .t small { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); }
@@ -158,7 +175,6 @@
   .a.z { color: var(--muted); font-weight: 400; }
   .fh { padding: 12px 14px 4px; } .fh b { font-size: 22px; font-weight: 700; } .fh small { display: block; font-size: 12px; color: var(--muted); }
   .fb { display: flex; gap: 3px; height: 8px; margin: 6px 14px 8px; border-radius: 4px; overflow: hidden; } .fb u { display: block; min-width: 4px; }
-  .fc .r::before { left: 62px; }
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }
   .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; font: inherit; }

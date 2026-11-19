@@ -4,7 +4,7 @@
   import { auth, signOut } from '../lib/auth.svelte.js';
   import Icon from '../lib/Icon.svelte';
   const version = __APP_VERSION__;
-  const order = { 'Деньги': ['currency', 'mono', 'import', 'backup'], 'Умные функции': ['analytics', 'rules'], 'Система': ['status'] };
+  const order = { 'Деньги': ['accset', 'import', 'backup'], 'Умные функции': ['analytics', 'rules'], 'Система': ['status'] };
   const groups = Object.entries(order).map(([h, ids]) => [h, ids.map((id) => moreItems.find((x) => x.id === id))]);
   let u = $derived(auth.session?.user);
   let meta = $derived(u?.user_metadata ?? {});
@@ -23,7 +23,7 @@
     <h2>{h}</h2>
     <div class="card">
       {#each list as it (it.id)}
-        <button class="r" onclick={() => (nav.sub = it.id)}>
+        <button class="r" onclick={() => { nav.parent = null; nav.sub = it.id; }}>
           <div class="ic"><Icon name={it.icon} size={17} /></div>
           <div class="m"><b>{it.label}</b></div>
           <span class="chev"><Icon name="chev" size={16} /></span>

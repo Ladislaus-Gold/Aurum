@@ -3,7 +3,7 @@
   import { stagger } from '../lib/anim.js';
   import { onMount } from 'svelte';
   import { supabase } from '../lib/supabase.js';
-  import { nav } from '../lib/nav.svelte.js';
+  import { nav, goBack } from '../lib/nav.svelte.js';
   import { fmt } from '../lib/format.js';
   import Icon from '../lib/Icon.svelte';
 
@@ -59,7 +59,7 @@
 </script>
 
 <div class="page" use:stagger>
-  <div class="nb"><button onclick={() => (nav.sub = null)}>‹ Ещё</button></div>
+  <div class="nb"><button onclick={goBack}>‹ {nav.parent ? 'Назад' : 'Ещё'}</button></div>
   <h1>Monobank</h1>
   <div class="cnt">{view === 'on' ? 'Операции приходят из банка автоматически' : 'Подключи карту: операции будут приходить сами'}</div>
 

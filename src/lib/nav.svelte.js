@@ -11,9 +11,13 @@ export const moreItems = [
   { id: 'import', label: 'Импорт', icon: 'imp', group: 'Деньги' },
   { id: 'currency', label: 'Валюта', icon: 'coin', group: 'Деньги' },
   { id: 'mono', label: 'Monobank', icon: 'bank', group: 'Деньги' },
+  { id: 'accset', label: 'Счета и работа с ними', icon: 'wallet', group: 'Деньги' },
   { id: 'status', label: 'Статус', icon: 'stat', group: 'Система' },
   { id: 'backup', label: 'Резервная копия', icon: 'save', group: 'Деньги' }
 ];
-export const nav = $state({ tab: 'home', sub: null, newOp: false, edit: null, preAcc: 0, rev: 0 });
+export const nav = $state({ tab: 'home', sub: null, parent: null, newOp: false, edit: null, preAcc: 0, rev: 0 });
 export const titleOf = (id) =>
   [...tabs, ...moreItems].find((x) => x.id === id)?.label ?? '';
+
+// «Назад» из вложенной страницы: на родителя (например, Счета и работа с ними), иначе в «Ещё»
+export const goBack = () => { nav.sub = nav.parent ?? null; nav.parent = null; };
