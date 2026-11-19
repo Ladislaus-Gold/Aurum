@@ -90,6 +90,24 @@
     const id = cat.id;
     txByCategory(id, ym.y, ym.m).then((r) => { if (picked?.id === id) ctx = r; }).catch((e) => { ctxErr = e?.message ?? String(e); }).finally(() => (ctxLoad = false));
   }
+  // доходы: плановая сумма на месяц
+  let ipick = $state(null), ilist = $state(null), ilast = $state(null), iplan = $state(0), itxt = $state(''), iedit = $state(false), isave = $state(false), ierr = $state('');
+  $effect(() => { if (ipick) ilast = ipick; });
+  let ic = $derived(ipick ?? ilast);
+  function openInc(cat) { ilist = null; ipick = cat; iplan = cat.plan; itxt = String(Math.round(cat.plan)); iedit = false; ierr = ''; }
+  function tapBucket(b) {
+    const cs = b.cats.filter((x) => !/balanc/i.test(x.name));
+    if (cs.length === 1) openInc(cs[0]); else if (cs.length > 1) ilist = { name: b.name, cats: cs };
+  }
+  const foc = (n) => { n.focus(); n.select(); };
+  function ibump(dv) { iplan = Math.max(0, iplan + dv); itxt = String(iplan); }
+  function itype(e) { const n = Number(String(e.currentTarget.value).replace(/[^\d]/g, '')); iplan = n; itxt = String(n); }
+  async function isaveFn() {
+    isave = true; ierr = '';
+    try { await savePlan(ic.id, d.month, iplan); ipick = null; await load(); }
+    catch (e) { ierr = e?.message ?? String(e); }
+    isave = false;
+  }
   const minOk = (cat, v) => cat.mandatory ? v >= cat.min : (v === 0 || v >= cat.min);
   function bump(dv) { plan = Math.max(0, plan + dv); }
   async function save() {
@@ -183,12 +201,12 @@
     <h2>Доходы<span>{f(d.incFact)} из {f(d.incPlan)} ₴</span></h2>
     <div class="card">
       {#each d.buckets as b (b.key)}
-        <div class="r">
+        <button class="r" onclick={() => tapBucket(b)}>
           <div class="ic"><Icon name={b.icon} size={17} /></div>
           <div class="m"><b>{b.name}</b>{#if b.undist > 0}<small>не распределено {f(b.undist)}</small>{:else if b.names}<small>{b.names}</small>{/if}</div>
           <div class="rt">{#if b.plan > 0 && b.fact >= b.plan || (b.plan === 0 && b.fact > 0)}<span class="ok">✓ {f(b.fact)} ₴</span>
             {:else if b.plan > 0}<span class="mu">{f(b.plan)} ₴</span><small>ожидается</small>{:else}<span class="mu">—</span>{/if}</div>
-        </div>
+        </button>
       {/each}
     </div>
    {/key}
@@ -197,6 +215,32 @@
 
 <DistSheet open={distOpen} {d} onclose={() => (distOpen = false)} ondone={load} />
 <PlanSheet open={planOpen} {d} onclose={() => (planOpen = false)} ondone={load} />
+
+<Sheet open={!!ilist} onclose={() => (ilist = null)}>
+  {#if ilist}
+    <h3>{ilist.name}</h3>
+    <div class="ml">Плановый доход по категориям</div>
+    <div class="list">
+      {#each ilist.cats as x (x.id)}
+        <button class="r" onclick={() => openInc(x)}><div class="ic"><Icon name={x.icon || 'tag'} size={17} /></div><div class="m"><b>{x.name}</b></div><div class="rt">{#if x.plan > 0}{f(x.plan)} ₴{:else}<span class="mu">—</span>{/if}</div></button>
+      {/each}
+    </div>
+  {/if}
+</Sheet>
+
+<Sheet open={!!ipick} onclose={() => (ipick = null)}>
+  {#if ic}
+    <h3>{ic.name}</h3>
+    <div class="ml">Плановый доход на месяц</div>
+    <div class="step"><button onclick={() => ibump(-500)} aria-label="Минус 500">−500</button>
+      {#if iedit}<input class="pv pin" use:foc inputmode="numeric" value={itxt} oninput={itype} onblur={() => (iedit = false)} />
+      {:else}<button class="pv pb" onclick={() => (iedit = true)}>{f(iplan)} ₴</button>{/if}
+      <button onclick={() => ibump(500)} aria-label="Плюс 500">+500</button></div>
+    <div class="list"><div class="dr"><span>Получено в этом месяце</span><span>{money(ic.fact)}</span></div></div>
+    {#if ierr}<p class="err">{ierr}</p>{/if}
+    <button class="save" disabled={isave} onclick={isaveFn}>{isave ? 'Сохраняю…' : 'Сохранить'}</button>
+  {/if}
+</Sheet>
 
 <Sheet open={!!picked} onclose={() => (picked = null)}>
   {#if c && d}
@@ -262,6 +306,7 @@
   .ml { text-align: center; color: var(--muted); font-size: 12px; margin: 2px 0 10px; }
   .step { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .step button { width: 72px; height: 40px; border-radius: 12px; background: var(--fill); color: var(--gold); font-weight: 600; }
+  .pin { width: 120px; text-align: center; background: var(--fill); border-radius: 12px; padding: 4px 0; } .pb { background: none; }
   .pv { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .list { background: var(--bg); border-radius: 14px; overflow: hidden; }
   .dr { display: flex; justify-content: space-between; gap: 12px; padding: 11px 16px; font-size: 14px; position: relative; }
