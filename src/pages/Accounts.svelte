@@ -12,6 +12,7 @@
   import { loadHome } from '../lib/data.svelte.js';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
+  import { cget, cset } from '../lib/persist.js';
   import { flyOpen, landBack } from '../lib/fly.js';
 
   let rows = $state(accCache.v?.rows ?? []);
@@ -51,6 +52,12 @@
   });
   const approx = (n, cur) => { fx.rows; const v = approxBase(n, cur); return v == null ? '' : '≈ ' + money(v); };
   let total = $derived(rows.filter((r) => !r.foreign).reduce((s, r) => s + r.balance, 0));
+  let monoRows = $derived(main.filter((r) => r.mono));
+  let monoSum = $derived(monoRows.reduce((s, r) => s + r.balance, 0));
+  let monoOpen = $state(cget('monoOpen') === true);
+  const toggleMono = () => { monoOpen = !monoOpen; cset('monoOpen', monoOpen); };
+  let grouped = $derived(monoRows.length > 1);
+  let heroItems = $derived(grouped ? [{ name: 'Monobank', balance: monoSum }, ...main.filter((r) => !r.mono)] : main);
   let bank = $derived(main.reduce((s, r) => s + r.balance, 0));
   let env = $derived(total - bank);
   let top = $derived(rest.filter((r) => r.balance > 0).slice(0, 5));
@@ -71,7 +78,7 @@
         <div><small>Карта и наличные</small><b class="num" class:neg={bank < 0}>{money(bank, 2)}</b></div>
         <Icon name="card" size={22} />
       </div>
-      <p class="brk">{#each main as r, k}{k ? ' · ' : ''}<span class="it">{r.name} <span class:neg={r.balance < 0}>{r.balance < 0 ? '−' : ''}{money(Math.abs(r.balance), 2).replace(' ₴', '')}</span></span>{/each}</p>
+      <p class="brk">{#each heroItems as r, k}{k ? ' · ' : ''}<span class="it">{r.name} <span class:neg={r.balance < 0}>{r.balance < 0 ? '−' : ''}{money(Math.abs(r.balance), 2).replace(' ₴', '')}</span></span>{/each}</p>
       {#if rest.length}
         <div class="eh"><small>Конверты</small><small class="ev">{money(env, 2)}</small></div>
         {#if top.length}
@@ -88,9 +95,25 @@
       {#if list.length}
         <h2 class="rise" style:--i={2 + g * 4}>{title}</h2>
         <div class="card">
-          {#each list as r, k (r.id)}
+          {#if g === 0 && grouped}
+            <button class="r gh" onclick={toggleMono} aria-expanded={monoOpen}>
+              <div class="ic"><Icon name="card" size={19} /></div>
+              <div class="t">Monobank{#if monoRows.some((r) => r.live)}<span class="tag">live</span>{/if}<small>{monoRows.length} {monoRows.length < 5 ? 'карты' : 'карт'}</small></div>
+              <div class="a" class:z={monoSum === 0}>{money(monoSum, 2)}</div>
+              <i class="chv" class:up={monoOpen}><Icon name="chev" size={16} /></i>
+            </button>
+            {#if monoOpen}
+              {#each monoRows as r (r.id)}
+                <button class="r nf sub" onclick={() => open(r)}>
+                  <div class="t">{r.name}{#if r.limit > 0}<small>кредитный лимит {money(r.limit)}</small>{/if}</div>
+                  <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
+                </button>
+              {/each}
+            {/if}
+          {/if}
+          {#each (g === 0 && grouped ? list.filter((r) => !r.mono) : list) as r, k (r.id)}
             <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
-              <button class="r rise" class:nf={k > 0} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
+              <button class="r rise" class:nf={k > 0 || (g === 0 && grouped)} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
                 <div class="ic"><Icon name={r.icon} size={19} /></div>
                 <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && r.limit > 0}<small>кредитный лимит {money(r.limit)}</small>{/if}</div>
                 <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
@@ -170,6 +193,10 @@
   .bal { text-align: center; font-size: 26px; font-weight: 700; margin: 4px 0; font-variant-numeric: tabular-nums; }
   .lim { text-align: center; color: var(--muted); font-size: 12px; }
   .new { width: 100%; height: 48px; margin-top: 12px; border-radius: 14px; font-weight: 600; font-size: 15px; color: #fff; background: linear-gradient(160deg, #EBC77A, #B8862C); }
+  .gh .chv { display: inline-flex; color: var(--muted); transform: rotate(90deg); transition: transform .25s; margin-left: 2px; }
+  .gh .chv.up { transform: rotate(-90deg); }
+  .sub { padding-left: 62px; min-height: 48px; }
+  .sub::before { left: 62px !important; }
   .tag { font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 6px; margin-left: 6px; font-weight: 500; }
   .a { font-weight: 600; font-variant-numeric: tabular-nums; }
   .a.z { color: var(--muted); font-weight: 400; }
