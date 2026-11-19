@@ -9,7 +9,7 @@
   };
   // Переключаем сразу при касании (pointerdown) и пока палец скользит по панели — не нужно «попадать» тапом
   let navEl;
-  function pick(id) { if (nav.tab !== id || nav.sub) { nav.tab = id; nav.sub = null; } }
+  function pick(id) { if (nav.tab !== id || nav.sub) { nav.tab = id; nav.sub = null; nav.parent = null; } }
   function at(e) {
     const r = navEl.getBoundingClientRect();
     const i = Math.min(tabs.length - 1, Math.max(0, Math.floor(((e.clientX - r.left) / r.width) * tabs.length)));

@@ -62,9 +62,9 @@
   <div class="body">
     {#if !confirm}
       <div class="top"><b>Разложить деньги</b><button onclick={close}>Готово</button></div>
-      <div class="sub">{month} · из Cash по категориям</div>
+      <div class="sub">{month} · из «{g?.src?.name ?? 'счёта'}» по категориям</div>
       {#if loading}<p class="msg">Загружаю…</p>
-      {:else if !g.src}<p class="msg">Не выбран счёт-источник. Отметь Cash как источник бюджета.</p>
+      {:else if !g.src}<p class="msg">Не выбран счёт для распределения. Выбери его в Ещё → Счета и работа с ними.</p>
       {:else if !rows.length}<p class="msg">Сначала задай план расходов.</p>
       {:else}
         <div class="seg">{#each names as n, i}<button class:on={tab === i} onclick={() => (tab = i)}>{n}<small>{f(totals[i])}</small></button>{/each}</div>

@@ -89,7 +89,7 @@
         <h2 class="rise" style:--i={2 + g * 4}>{title}</h2>
         <div class="card">
           {#each list as r, k (r.id)}
-            <SwipeRow enabled={!r.mono && !r.src} onremove={() => askDel(r)}>
+            <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
               <button class="r rise" class:nf={k > 0} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
                 <div class="ic"><Icon name={r.icon} size={19} /></div>
                 <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && limit > 0}<small>кредитный лимит {money(limit)}</small>{/if}</div>

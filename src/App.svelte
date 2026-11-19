@@ -1,6 +1,6 @@
 <script>
   import { auth } from './lib/auth.svelte.js';
-  import { nav, titleOf, moreItems } from './lib/nav.svelte.js';
+  import { nav, titleOf, moreItems, goBack } from './lib/nav.svelte.js';
   import NavBar from './lib/NavBar.svelte';
   import TabBar from './lib/TabBar.svelte';
   import Login from './pages/Login.svelte';
@@ -16,6 +16,7 @@
   import Status from './pages/Status.svelte';
   import Backup from './pages/Backup.svelte';
   import Currency from './pages/Currency.svelte';
+  import AccSettings from './pages/AccSettings.svelte';
   import NewOp from './lib/NewOp.svelte';
   import { landBack } from './lib/fly.js';
   import { prefetchAll } from './lib/prefetch.js';
@@ -34,7 +35,7 @@
   <Login />
 {:else}
   {#if current !== 'home' && current !== 'ops' && current !== 'accounts' && current !== 'budget' && current !== 'more' && current !== 'rules' && current !== 'mono' && current !== 'analytics' && current !== 'status' && current !== 'backup'}
-    <NavBar title={titleOf(current)} onback={nav.sub ? () => (nav.sub = null) : null} />
+    <NavBar title={titleOf(current)} onback={nav.sub ? goBack : null} />
   {/if}
   <div class="content">
    {#key nav.rev}
@@ -56,6 +57,8 @@
       <Backup />
     {:else if current === 'currency'}
       <Currency />
+    {:else if current === 'accset'}
+      <AccSettings />
     {:else if current === 'rules'}
       <Rules />
     {:else if current === 'more'}
