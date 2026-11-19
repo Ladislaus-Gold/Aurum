@@ -9,6 +9,9 @@
   import Sheet from '../lib/Sheet.svelte';
 
   let accs = $state([]), err = $state(''), open = $state(false), busy = $state(false);
+  let mopen = $state(false), target = $state('env'), mv = $state(null), msg = $state(''), mt;
+  const BN = { card: 'Карта и наличные', env: 'Конверты' };
+  let movable = $derived(accs.filter((a) => a.blk !== target));
   let cur = $derived(accs.find((a) => a.src));
 
   async function load() {
@@ -23,7 +26,16 @@
     const old = a.blk; a.blk = blk; err = '';
     const r = await supabase.from('accounts').update({ block: blk }).eq('id', a.id);
     if (r.error) { a.blk = old; err = r.error.message; return; }
-    fetchAccounts().catch(() => {}); loadHome().catch(() => {}); nav.rev++;
+    fetchAccounts().catch(() => {}); loadHome().catch(() => {});
+  }
+  async function doMove() {
+    const a = accs.find((x) => x.id === mv);
+    if (!a) return;
+    await setBlock(a, target);
+    if (err) return;
+    mopen = false; mv = null;
+    msg = `Счёт «${a.name}» перенесён в блок «${BN[target]}»`;
+    clearTimeout(mt); mt = setTimeout(() => (msg = ''), 3500);
   }
   const go = (id) => { nav.parent = 'accset'; nav.sub = id; };
   async function pick(a) {
@@ -56,19 +68,15 @@
   </div>
   <p class="foot">С этого счёта деньги раскладываются по конвертам при распределении аванса и зарплаты. Выбрать можно любой счёт и поменять в любой момент.</p>
 
-  <h2>Счета по блокам</h2>
+  <h2>Блоки на экране «Счета»</h2>
   <div class="card">
-    {#each accs as a (a.id)}
-      <div class="bk">
-        <div class="bn">{a.name}</div>
-        <div class="sg">
-          <button class:on={a.blk === 'card'} onclick={() => setBlock(a, 'card')}>Карта и наличные</button>
-          <button class:on={a.blk === 'env'} onclick={() => setBlock(a, 'env')}>Конверты</button>
-        </div>
-      </div>
-    {/each}
+    <button class="r" onclick={() => { mv = null; mopen = true; }}>
+      <div class="ic"><Icon name="swap" size={17} /></div>
+      <div class="m"><b>Перенести счёт в другой блок</b></div>
+      <span class="chev"><Icon name="chev" size={16} /></span>
+    </button>
   </div>
-  <p class="foot">Куда относить счёт на экране «Счета». Валютные счета определяются автоматически по валюте.</p>
+  <p class="foot">Валютные счета определяются по валюте автоматически.</p>
   {#if err}<p class="err">{err}</p>{/if}
 </div>
 
@@ -85,6 +93,30 @@
   </div>
 </Sheet>
 
+<Sheet open={mopen} onclose={() => (mopen = false)}>
+  <h3>Перенести счёт</h3>
+  <div class="tg">В блок</div>
+  <div class="sg">
+    <button class:on={target === 'card'} onclick={() => { target = 'card'; mv = null; }}>Карта и наличные</button>
+    <button class:on={target === 'env'} onclick={() => { target = 'env'; mv = null; }}>Конверты</button>
+  </div>
+  <div class="tg">Счёт</div>
+  <div class="list">
+    {#each movable as a (a.id)}
+      <button class="r" onclick={() => (mv = a.id)}>
+        <div class="ic"><Icon name={a.icon} size={17} /></div>
+        <div class="m"><b>{a.name}</b><small>сейчас: {BN[a.blk]}</small></div>
+        {#if mv === a.id}<span class="ck"><Icon name="check" size={17} /></span>{/if}
+      </button>
+    {:else}
+      <p class="foot">Все счета уже в этом блоке.</p>
+    {/each}
+  </div>
+  <button class="go" disabled={!mv} onclick={doMove}>Перенести</button>
+</Sheet>
+
+{#if msg}<div class="toast">{msg}</div>{/if}
+
 <style>
   .page { padding: 8px var(--pad) 0; }
   h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 18px 0 6px 16px; font-weight: 600; }
@@ -95,10 +127,12 @@
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; } .m small { display: block; font-size: 12px; color: var(--muted); }
   .chev { color: var(--muted); opacity: .5; display: flex; }
   .ck { color: var(--gold); display: flex; }
-  .bk { padding: 10px 14px; position: relative; } .bk + .bk::before { content: ""; position: absolute; left: 14px; right: 0; top: 0; border-top: .5px solid var(--line); }
-  .bn { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
   .sg { display: flex; gap: 6px; } .sg button { flex: 1; padding: 7px 0; border-radius: 10px; background: var(--fill); font-size: 13px; color: var(--muted); }
   .sg button.on { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; }
+  .tg { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 10px 4px 6px; font-weight: 600; }
+  .go { width: 100%; margin-top: 12px; padding: 13px 0; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; font-size: 16px; }
+  .go:disabled { opacity: .4; }
+  .toast { position: fixed; left: 16px; right: 16px; bottom: calc(var(--safe-b, 0px) + 84px); z-index: 60; background: rgba(28,28,30,.94); color: #fff; padding: 12px 16px; border-radius: 14px; font-size: 14px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
   .foot { color: var(--muted); font-size: 12px; margin: 6px 16px 0; }
   .err { color: var(--neg); font-size: 12px; margin: 10px 16px 0; }
   h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; text-align: center; }
