@@ -9,9 +9,11 @@
   import SwipeRow from '../lib/SwipeRow.svelte';
   import NewAccount from '../lib/NewAccount.svelte';
   import DeleteAccount from '../lib/DeleteAccount.svelte';
+  import Exchange from '../lib/Exchange.svelte';
   import { loadHome } from '../lib/data.svelte.js';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
+  import { cget, cset } from '../lib/persist.js';
   import { flyOpen, landBack } from '../lib/fly.js';
 
   let rows = $state(accCache.v?.rows ?? []);
@@ -44,13 +46,28 @@
   const byBalance = (a, b) => (b.mono - a.mono) || (b.balance - a.balance);
   let main = $derived(rows.filter((r) => r.main && !r.hide).sort(byBalance));
   let rest = $derived(rows.filter((r) => !r.main && !r.foreign && !r.hide).sort(byBalance));
-  let groups = $derived.by(() => {
+  // Валютные строки: если есть обычный счёт с тем же именем (Wallet), строка показывается под ним; иначе одна карточка на имя (Fund · USD, EUR)
+  let baseNames = $derived(new Set(rows.filter((r) => !r.foreign).map((r) => r.name)));
+  let subOf = $derived.by(() => {
     const m = new Map();
-    for (const r of rows.filter((x) => x.foreign && !x.hide).sort((a, b) => b.balance - a.balance)) m.set(r.cur, [...(m.get(r.cur) ?? []), r]);
-    return [...m].map(([cur, list]) => ({ cur, list, sum: list.reduce((s, r) => s + r.balance, 0) }));
+    for (const r of rows.filter((x) => x.foreign && baseNames.has(x.name) && !(x.balance === 0))) m.set(r.name, [...(m.get(r.name) ?? []), r]);
+    return m;
   });
+  let fgroups = $derived.by(() => {
+    const m = new Map();
+    for (const r of rows.filter((x) => x.foreign && !x.hide && !baseNames.has(x.name)).sort((a, b) => a.name.localeCompare(b.name, 'ru') || a.cur.localeCompare(b.cur))) m.set(r.name, [...(m.get(r.name) ?? []), r]);
+    return [...m].map(([name, list]) => ({ name, list, sum: list.reduce((s, r) => s + (approxBase(r.balance, r.cur) ?? 0), 0) }));
+  });
+  let exch = $state(null), exchOpen = $state(false);
+  const askExch = (f, e) => { e.stopPropagation(); exch = { line: f, base: rows.find((x) => !x.foreign && x.name === f.name) }; exchOpen = true; };
   const approx = (n, cur) => { fx.rows; const v = approxBase(n, cur); return v == null ? '' : '≈ ' + money(v); };
   let total = $derived(rows.filter((r) => !r.foreign).reduce((s, r) => s + r.balance, 0));
+  let monoRows = $derived(main.filter((r) => r.mono));
+  let monoSum = $derived(monoRows.reduce((s, r) => s + r.balance, 0));
+  let monoOpen = $state(cget('monoOpen') === true);
+  const toggleMono = () => { monoOpen = !monoOpen; cset('monoOpen', monoOpen); };
+  let grouped = $derived(monoRows.length > 1);
+  let heroItems = $derived(grouped ? [{ name: 'Monobank', balance: monoSum }, ...main.filter((r) => !r.mono)] : main);
   let bank = $derived(main.reduce((s, r) => s + r.balance, 0));
   let env = $derived(total - bank);
   let top = $derived(rest.filter((r) => r.balance > 0).slice(0, 5));
@@ -71,7 +88,7 @@
         <div><small>Карта и наличные</small><b class="num" class:neg={bank < 0}>{money(bank, 2)}</b></div>
         <Icon name="card" size={22} />
       </div>
-      <p class="brk">{#each main as r, k}{k ? ' · ' : ''}<span class="it">{r.name} <span class:neg={r.balance < 0}>{r.balance < 0 ? '−' : ''}{money(Math.abs(r.balance), 2).replace(' ₴', '')}</span></span>{/each}</p>
+      <p class="brk">{#each heroItems as r, k}{k ? ' · ' : ''}<span class="it">{r.name} <span class:neg={r.balance < 0}>{r.balance < 0 ? '−' : ''}{money(Math.abs(r.balance), 2).replace(' ₴', '')}</span></span>{/each}</p>
       {#if rest.length}
         <div class="eh"><small>Конверты</small><small class="ev">{money(env, 2)}</small></div>
         {#if top.length}
@@ -88,31 +105,52 @@
       {#if list.length}
         <h2 class="rise" style:--i={2 + g * 4}>{title}</h2>
         <div class="card">
-          {#each list as r, k (r.id)}
+          {#if g === 0 && grouped}
+            <button class="r gh" onclick={toggleMono} aria-expanded={monoOpen}>
+              <div class="ic"><Icon name="card" size={19} /></div>
+              <div class="t">Monobank{#if monoRows.some((r) => r.live)}<span class="tag">live</span>{/if}<small>{monoRows.length} {monoRows.length < 5 ? 'карты' : 'карт'}</small></div>
+              <div class="a" class:z={monoSum === 0}>{money(monoSum, 2)}</div>
+              <i class="chv" class:up={monoOpen}><Icon name="chev" size={16} /></i>
+            </button>
+            {#if monoOpen}
+              {#each monoRows as r (r.id)}
+                <button class="r nf sub" onclick={() => open(r)}>
+                  <div class="t">{r.name}{#if r.limit > 0}<small>кредитный лимит {money(r.limit)}</small>{/if}</div>
+                  <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
+                </button>
+              {/each}
+            {/if}
+          {/if}
+          {#each (g === 0 && grouped ? list.filter((r) => !r.mono) : list) as r, k (r.id)}
             <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
-              <button class="r rise" class:nf={k > 0} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
+              <button class="r rise" class:nf={k > 0 || (g === 0 && grouped)} style:--i={3 + g * 4 + k} onclick={() => open(r)}>
                 <div class="ic"><Icon name={r.icon} size={19} /></div>
                 <div class="t">{r.name}{#if r.mono && r.live}<span class="tag">live</span>{/if}{#if r.mono && r.limit > 0}<small>кредитный лимит {money(r.limit)}</small>{/if}</div>
                 <div class="a" class:z={r.balance === 0}>{money(r.balance, 2)}</div>
               </button>
             </SwipeRow>
+            {#each subOf.get(r.name) ?? [] as f (f.id)}
+              <SwipeRow enabled onremove={() => askDel(f)}>
+                <button class="r nf sub fl" onclick={() => open(f)}>
+                  <div class="t">{f.cur}<span class="tag">вне бюджета</span></div>
+                  <span class="ex" role="button" tabindex="0" onclick={(e) => askExch(f, e)} onkeydown={(e) => e.key === 'Enter' && askExch(f, e)}>Обменять</span>
+                  <div class="a">{moneyC(f.balance, f.cur, 2)}</div>
+                </button>
+              </SwipeRow>
+            {/each}
           {/each}
         </div>
       {/if}
     {/each}
-    {#if groups.length}
+    {#if fgroups.length}
       <h2 class="rise" style:--i={10}>Валютные счета <span class="tag">вне бюджета</span></h2>
-      {#each groups as g, gi (g.cur)}
+      {#each fgroups as g, gi (g.name)}
         <div class="card fc rise" style:--i={11 + gi}>
-          <div class="fh"><div><b class="num">{moneyC(g.sum, g.cur, 2)}</b><small>{approx(g.sum, g.cur)}</small></div></div>
-          {#if g.list.filter((r) => r.balance > 0).length > 1}
-            <div class="fb">{#each g.list.filter((r) => r.balance > 0) as r, k (r.id)}<u style:flex={r.balance} style:background={shades[k % shades.length]}></u>{/each}</div>
-          {/if}
+          <div class="fh"><div class="fn"><div class="ic"><Icon name="wallet" size={19} /></div><b>{g.name}</b>{#if g.sum}<small>≈ {money(g.sum)}</small>{/if}</div></div>
           {#each g.list as r, k (r.id)}
             <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
-              <button class="r" class:nf={k > 0} onclick={() => open(r)}>
-                <div class="ic"><span class="cg" class:wide={sym(r.cur).length > 1}>{sym(r.cur)}</span></div>
-                <div class="t">{r.name}</div>
+              <button class="r nf sub" onclick={() => open(r)}>
+                <div class="t">{r.cur}</div>
                 <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
               </button>
             </SwipeRow>
@@ -123,6 +161,7 @@
   {/if}
 </div>
 
+<Exchange open={exchOpen} line={exch?.line} base={exch?.base} onclose={() => (exchOpen = false)} ondone={refresh} />
 <NewAccount open={addOpen} onclose={() => { addOpen = false; landBack(); }} onsaved={refresh} />
 <DeleteAccount open={delOpen} acc={delAcc} all={rows} onclose={() => (delOpen = false)} ondone={refresh} />
 
@@ -170,10 +209,17 @@
   .bal { text-align: center; font-size: 26px; font-weight: 700; margin: 4px 0; font-variant-numeric: tabular-nums; }
   .lim { text-align: center; color: var(--muted); font-size: 12px; }
   .new { width: 100%; height: 48px; margin-top: 12px; border-radius: 14px; font-weight: 600; font-size: 15px; color: #fff; background: linear-gradient(160deg, #EBC77A, #B8862C); }
+  .gh .chv { display: inline-flex; color: var(--muted); transform: rotate(90deg); transition: transform .25s; margin-left: 2px; }
+  .gh .chv.up { transform: rotate(-90deg); }
+  .sub { padding-left: 62px; min-height: 48px; }
+  .sub::before { left: 62px !important; }
   .tag { font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 6px; margin-left: 6px; font-weight: 500; }
   .a { font-weight: 600; font-variant-numeric: tabular-nums; }
   .a.z { color: var(--muted); font-weight: 400; }
-  .fh { padding: 12px 14px 4px; } .fh b { font-size: 22px; font-weight: 700; } .fh small { display: block; font-size: 12px; color: var(--muted); }
+  .fh { padding: 12px 14px 6px; } .fn { display: flex; align-items: center; gap: 12px; } .fn b { flex: 1; font-size: 16px; font-weight: 600; } .fn small { font-size: 13px; color: var(--muted); }
+  .fl .t { flex: 0 1 auto; margin-right: auto; white-space: nowrap; } .fl .tag { font-size: 10.5px; }
+  .a { white-space: nowrap; }
+  .ex { font-size: 12px; font-weight: 600; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; border-radius: 8px; padding: 4px 10px; }
   .fb { display: flex; gap: 3px; height: 8px; margin: 6px 14px 8px; border-radius: 4px; overflow: hidden; } .fb u { display: block; min-width: 4px; }
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }

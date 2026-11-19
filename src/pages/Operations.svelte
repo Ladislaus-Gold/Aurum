@@ -3,9 +3,9 @@
   import { stagger } from '../lib/anim.js';
   import { onMount, tick } from 'svelte';
   import { opsCache as cache, opsKey, fetchOps, curMonthRange } from '../lib/prefetch.js';
-  import { cfg } from '../lib/currency.svelte.js';
+  import { cfg, sym } from '../lib/currency.svelte.js';
   import { loadRefs, enrich, opSigned, refs } from '../lib/refs.svelte.js';
-  import { signed, noEmoji } from '../lib/format.js';
+  import { signed, noEmoji, moneyC } from '../lib/format.js';
   import OpRow from '../lib/OpRow.svelte';
   import OpSheet from '../lib/OpSheet.svelte';
   import Icon from '../lib/Icon.svelte';
@@ -115,8 +115,20 @@
     }
     return out;
   });
-  let expense = $derived(filtered.reduce((s, t) => s + (t.accCur !== cfg.base ? 0 : t.action === 'EXPENSE' ? t.amount : t.action === 'RETURN' ? -t.amount : 0), 0));
-  let income = $derived(filtered.reduce((s, t) => s + (t.accCur !== cfg.base ? 0 : t.action === 'INCOME' ? t.amount : 0), 0));
+  // Итоги по валютам: гривна и каждая валюта, по которой в списке есть операции (без пересчёта)
+  let tot = $derived.by(() => {
+    const m = new Map(); const get = (c) => m.get(c) ?? m.set(c, { exp: 0, inc: 0 }).get(c);
+    get(cfg.base);
+    for (const t of filtered) {
+      if (t.action === 'TRANSFER') continue;
+      const x = get(t.accCur || cfg.base);
+      if (t.action === 'EXPENSE') x.exp += t.amount; else if (t.action === 'RETURN') x.exp -= t.amount; else if (t.action === 'INCOME') x.inc += t.amount;
+    }
+    return [...m].map(([cur, v]) => ({ cur, ...v }));
+  });
+  let sc = $state('ALL');
+  let scEff = $derived(tot.some((x) => x.cur === sc) ? sc : 'ALL');
+  let one = $derived(scEff === 'ALL' ? null : tot.find((x) => x.cur === scEff));
 </script>
 
 <div class="head">
@@ -143,10 +155,34 @@
   {:else if loading}
     <div class="msg dim">Загрузка…</div>
   {:else}
-    <div class="sum" class:in={shown}>
-      <div><span>Расходы</span><b>{signed(-expense)}</b></div>
-      <div><span>Доходы</span><b class="pos">{signed(income)}</b></div>
-    </div>
+    {#if tot.length < 2}
+      <div class="sum" class:in={shown}>
+        <div><span>Расходы</span><b>{signed(-tot[0].exp)}</b></div>
+        <div><span>Доходы</span><b class="pos">{signed(tot[0].inc)}</b></div>
+      </div>
+    {:else}
+      <div class="tc" class:in={shown}>
+        <div class="tseg">
+          <button class:on={scEff === 'ALL'} onclick={() => (sc = 'ALL')}>Все</button>
+          {#each tot as x (x.cur)}<button class:on={scEff === x.cur} onclick={() => (sc = x.cur)}>{sym(x.cur)}</button>{/each}
+        </div>
+        {#if one}
+          <div class="tiles">
+            <div><span>Расходы</span><b>{one.exp > 0 ? '−' : ''}{moneyC(one.exp, one.cur, 0)}</b></div>
+            <div><span>Доходы</span><b class:pos={one.inc > 0}>{one.inc > 0 ? '+' : ''}{moneyC(one.inc, one.cur, 0)}</b></div>
+          </div>
+          <div class="net"><span>Итого за период</span><b class:pos={one.inc - one.exp >= 0}>{one.inc - one.exp >= 0 ? '+' : '−'}{moneyC(Math.abs(one.inc - one.exp), one.cur, 0)}</b></div>
+        {:else}
+          {#each tot as x (x.cur)}
+            <div class="cr">
+              <i>{sym(x.cur)}</i>
+              <div><span>Расходы</span><b>{x.exp > 0 ? '−' : ''}{moneyC(x.exp, x.cur, 0)}</b></div>
+              <div class="rt"><span>Доходы</span><b class:pos={x.inc > 0}>{x.inc > 0 ? '+' : ''}{moneyC(x.inc, x.cur, 0)}</b></div>
+            </div>
+          {/each}
+        {/if}
+      </div>
+    {/if}
     {#each groups as g (g.k)}
       <div class="dh" class:in={shown}><span>{g.title}</span><b>{g.sum ? signed(g.sum, 2) : ''}</b></div>
       <div class="grp" class:in={shown}>
@@ -218,6 +254,16 @@
   .chips::-webkit-scrollbar { display: none; }
   .chips button { padding: 7px 14px; border-radius: 99px; background: var(--fill); font-size: 14px; font-weight: 600; white-space: nowrap; text-transform: capitalize; min-height: 36px; }
   .chips .on { background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; }
+  .tc { margin: 12px 0 0; background: var(--card); border-radius: 16px; padding: 10px 14px 6px; box-shadow: var(--shadow); opacity: 0; transform: translateY(8px); transition: opacity .6s, transform .6s; } .tc.in { opacity: 1; transform: none; }
+  .tseg { display: flex; gap: 4px; background: var(--fill); border-radius: 12px; padding: 3px; margin-bottom: 6px; }
+  .tseg button { flex: 1; padding: 7px 0; border-radius: 10px; font-size: 14px; color: var(--muted); }
+  .tseg button.on { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; }
+  .tc span { display: block; font-size: 12px; color: var(--muted); } .tc b { font-size: 16px; font-variant-numeric: tabular-nums; font-weight: 600; } .tc b.pos { color: var(--pos); }
+  .cr { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: .5px solid var(--line); }
+  .cr:first-of-type { border-top: 0; } .cr i { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; display: grid; place-items: center; font-style: normal; font-weight: 600; font-size: 15px; flex: none; }
+  .cr > div { flex: 1; } .cr .rt { text-align: right; }
+  .tiles { display: flex; gap: 10px; padding: 6px 0; } .tiles > div { flex: 1; background: var(--fill); border-radius: 12px; padding: 9px 12px; } .tiles b { font-size: 20px; }
+  .net { display: flex; justify-content: space-between; align-items: center; padding: 8px 2px 4px; } .net span { display: inline; font-size: 13px; }
   .sum { display: flex; gap: 24px; margin: 14px 4px 0; opacity: 0; transform: translateY(8px); transition: opacity .6s, transform .6s; }
   .sum.in { opacity: 1; transform: none; }
   .sum span { display: block; font-size: 12px; color: var(--muted); }

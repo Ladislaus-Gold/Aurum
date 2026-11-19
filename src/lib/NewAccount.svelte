@@ -10,6 +10,11 @@
   const BASIC = ['USD', 'EUR'];
   let curs = $derived([...new Set([cfg.base, ...BASIC, ...(extra ? [extra] : [])])]);
   let foreign = $derived(cur !== cfg.base);
+  let existing = $state([]);
+  const key = (v) => v.trim().toLowerCase();
+  let same = $derived(name.trim() ? existing.filter((a) => key(a.name) === key(name)) : []);
+  let others = $derived(same.filter((a) => a.cur !== cur));
+  let dup = $derived(same.some((a) => a.cur === cur));
   // все валюты, по которым Monobank отдаёт курс
   let all = $derived.by(() => {
     fx.rows;
@@ -19,17 +24,18 @@
       .filter((x) => !t || x.c.toLowerCase().includes(t) || x.n.toLowerCase().includes(t))
       .sort((a, b) => a.n.localeCompare(b.n, 'ru'));
   });
-  $effect(() => { if (open) { name = ''; kind = 'main'; cur = cfg.base; err = ''; busy = false; pick = false; q = ''; extra = ''; loadFx(); } });
+  $effect(() => { if (open) { name = ''; kind = 'main'; cur = cfg.base; err = ''; busy = false; pick = false; q = ''; extra = ''; loadFx(); supabase.from('accounts').select('name,currency,is_foreign').then((r) => { existing = (r.data ?? []).map((a) => ({ name: a.name, cur: a.is_foreign ? a.currency || 'UAH' : cfg.base })); }); } });
   const choose = (c) => { extra = c; cur = c; pick = false; q = ''; };
 
   async function save() {
     err = '';
     const n = name.trim();
     if (!n) { err = 'Введите название счёта.'; return; }
+    if (dup) { err = foreign ? `${n} в ${cur} уже есть. Просто пополните его доходом.` : 'Счёт с таким названием уже есть.'; return; }
     busy = true;
     const row = foreign
       ? { name: n, currency: cur, is_foreign: true, icon: 'coin' }
-      : { name: n, currency: cfg.base, is_foreign: false, icon: kind === 'main' ? 'wallet' : 'basket' };
+      : { name: n, currency: cfg.base, is_foreign: false, icon: kind === 'main' ? 'wallet' : 'basket', block: kind === 'main' ? 'card' : 'env' };
     const r = await supabase.from('accounts').insert(row);
     busy = false;
     if (r.error) { err = r.error.message.includes('duplicate') ? 'Счёт с таким названием уже есть.' : r.error.message; return; }
@@ -61,6 +67,11 @@
     {#each curs as c (c)}<button class:on={cur === c} onclick={() => (cur = c)}>{sym(c)} {c}</button>{/each}
     <button class="more" aria-label="Другая валюта" onclick={() => (pick = true)}>+</button>
   </div>
+  {#if others.length && !dup}
+    <p class="note">«{name.trim()}» уже есть в {others.map((a) => a.cur).join(', ')}. Добавим к нему {cur}.</p>
+  {:else if dup}
+    <p class="err">{name.trim()} в {cur} уже есть. Просто пополните его доходом.</p>
+  {/if}
   {#if foreign}
     <p class="hint">Валютный счёт вне бюджета: не входит в итоги, доходы и расходы.</p>
   {:else}
@@ -90,6 +101,7 @@
   .cn small { color: var(--muted); font-size: 12px; }
   .cr { color: var(--muted); font-size: 13px; }
   .back { width: 100%; padding: 12px; margin-top: 4px; color: var(--gold); font-weight: 500; }
+  .note { background: var(--gold-soft); color: var(--gold); border-radius: 10px; padding: 9px 12px; font-size: 13px; margin: 10px 0 0; }
   .hint { color: var(--muted); font-size: 12px; margin: 10px 4px 0; }
   .err { color: var(--neg); font-size: 12px; margin: 10px 4px 0; }
   .go { width: 100%; height: 48px; margin-top: 14px; border-radius: 14px; font-weight: 600; font-size: 15px; color: #fff; background: linear-gradient(160deg, #EBC77A, #B8862C); }

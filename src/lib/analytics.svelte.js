@@ -89,10 +89,24 @@ const catName = (id) => (id == null ? 'Без категории' : noEmoji(refs
 function aggregate(rows, start, end) {
   const days = Math.max(1, Math.round((end - start) / 864e5));
   const gran = days <= 35 ? 'day' : days <= 140 ? 'week' : 'month';
-  const out = { income: 0, expense: 0, returns: 0, count: 0, gran, cat: { EXPENSE: {}, INCOME: {}, RETURN: {} }, merch: {}, dayMap: {}, wd: [0, 0, 0, 0, 0, 0, 0], top: [], buckets: buckets(start, end, gran) };
+  const out = { income: 0, expense: 0, returns: 0, count: 0, gran, cat: { EXPENSE: {}, INCOME: {}, RETURN: {} }, merch: {}, dayMap: {}, wd: [0, 0, 0, 0, 0, 0, 0], top: [], buckets: buckets(start, end, gran), fx: {}, fxCount: 0 };
+  const F = (c) => (out.fx[c] ??= { in: 0, out: 0, sold: 0, soldBase: 0, bought: 0, boughtBase: 0 });
   const addTo = (m, k, n) => { m[k] = (m[k] || 0) + n; };
   for (const r of rows) {
-    if (r.action === 'TRANSFER' || refs.foreign[r.account_id]) continue; // валютные счета вне бюджета
+    // валютные счета вне бюджета: считаем отдельно, в самой валюте
+    if (r.action === 'TRANSFER') {
+      const ff = refs.foreign[r.from_account_id], tf = refs.foreign[r.to_account_id];
+      const fc = refs.cur[r.from_account_id], tc = refs.cur[r.to_account_id], n2 = Math.abs(Number(r.amount || 0)), g = Number(r.to_amount || 0);
+      if (ff && !tf && g) { F(fc).sold += n2; F(fc).soldBase += g; out.fxCount++; }
+      else if (!ff && tf && g) { F(tc).bought += g; F(tc).boughtBase += n2; out.fxCount++; }
+      else if (ff && tf) { out.fxCount++; if (fc === tc) { F(fc).out += 0; } }
+      continue;
+    }
+    if (refs.foreign[r.account_id]) {
+      const c = refs.cur[r.account_id], n3 = Math.abs(Number(r.amount || 0));
+      if (r.action === 'INCOME') F(c).in += n3; else if (r.action === 'EXPENSE') F(c).out += n3; else if (r.action === 'RETURN') F(c).in += n3;
+      out.fxCount++; continue;
+    }
     const d = new Date(r.date); if (isNaN(d)) continue;
     const n = Math.abs(Number(r.amount || 0));
     const t = d.getTime();
@@ -140,7 +154,7 @@ export async function loadAnalytics(mode, offset, acc) {
     earliest = e[0] ? new Date(e[0].date) : null;
   }
   const r = range(mode, offset, earliest);
-  const cols = 'date,action,amount,category_id,account_id,note,transaction_splits(category_id,amount)';
+  const cols = 'date,action,amount,category_id,account_id,from_account_id,to_account_id,to_amount,note,transaction_splits(category_id,amount)';
   const [cur, prev] = await Promise.all([
     fetchRows(r.start, r.end, acc, cols, false),
     r.prevStart ? fetchRows(r.prevStart, r.prevEnd, acc, cols, false) : Promise.resolve(null)

@@ -10,7 +10,7 @@ import { cfg, loadBase } from './currency.svelte.js';
 export const accCache = { v: cget('acc') };
 export async function fetchAccounts() {
   const [a, b] = await Promise.all([
-    supabase.from('accounts').select('id,name,icon,is_monobank,mono_account_id,is_budget_source,currency,is_foreign').order('id'),
+    supabase.from('accounts').select('id,name,icon,is_monobank,mono_account_id,is_budget_source,currency,is_foreign,block').order('id'),
     supabase.from('account_balances').select('id,balance,live,credit_limit')
   ]);
   if (a.error) throw a.error;
@@ -22,7 +22,8 @@ export async function fetchAccounts() {
     return {
       id: x.id, name: noEmoji(x.name), icon: x.icon || 'tag', mono, src: !!x.is_budget_source,
       cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign,
-      main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet' || x.icon === 'card'),
+      block: x.block || null,
+      main: !x.is_foreign && (x.block ? x.block === 'card' : x.is_monobank || x.is_budget_source || x.icon === 'wallet' || x.icon === 'card'),
       balance, live: !!b2?.live, limit,
       // карта без кредитного лимита и с нулём на счёте (например, зарплатная) не показывается, пока на ней нет денег
       hide: mono && !!b2?.live && limit <= 0 && balance === 0

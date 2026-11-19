@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { nav } from '../lib/nav.svelte.js';
   import { refs } from '../lib/refs.svelte.js';
-  import { money, signed } from '../lib/format.js';
+  import { money, signed, moneyC } from '../lib/format.js';
   import Icon from '../lib/Icon.svelte';
   import { MODES, PREV, dayLong, catItems, weekdayInfo, loadAnalytics, exportExcel } from '../lib/analytics.svelte.js';
 
@@ -33,6 +33,11 @@
     }
     return { result: cur.income - cur.net, avg: cur.net / elapsed, cmp };
   });
+  import { cfg } from '../lib/currency.svelte.js';
+  const cfgBase = cfg.base;
+  let more = $state(false);
+  let fxl = $derived(D ? Object.entries(D.cur.fx).filter(([, v]) => v.in || v.out || v.sold || v.bought) : []);
+  let merch = $derived(D ? Object.values(D.cur.merch).sort((a, b) => b.sum - a.sum).slice(0, 5) : []);
   let items = $derived(D ? catItems(D.cur, 'EXPENSE') : []);
   let total = $derived(items.reduce((s, x) => s + x.amount, 0));
   let wd = $derived(D ? weekdayInfo(D.cur) : null);
@@ -75,7 +80,18 @@
       <option value="ALL">Все счета</option>{#each accList as [id, name] (id)}<option value={id}>{name}</option>{/each}
     </select>
 
-    {#if !D.count}<div class="card"><p class="note">За этот период операций нет.<br>Выбери другой период или счёт.</p></div>
+    {#if fxl.length}
+      <h2>Валютные счета <span class="tg">вне бюджета</span></h2>
+      <div class="card">{#each fxl as [c, v] (c)}
+        <div class="fx">
+          <div class="fh">{c}</div>
+          {#if v.in}<div class="r2"><span>Пополнения</span><b class="gr2">+{moneyC(v.in, c, 2)}</b></div>{/if}
+          {#if v.out}<div class="r2"><span>Расходы</span><b>−{moneyC(v.out, c, 2)}</b></div>{/if}
+          {#if v.sold}<div class="r2"><span>Обмен в {cfgBase}</span><b>{moneyC(v.sold, c, 2)} → {money(v.soldBase, 2)}</b></div>{/if}
+          {#if v.bought}<div class="r2"><span>Покупка</span><b>{money(v.boughtBase, 2)} → {moneyC(v.bought, c, 2)}</b></div>{/if}
+        </div>{/each}</div>
+    {/if}
+    {#if !D.count && !D.cur.fxCount}<div class="card"><p class="note">За этот период операций нет.<br>Выбери другой период или счёт.</p></div>
     {:else}
       {#if items.length}
         <h2>Что важно</h2>
@@ -93,6 +109,31 @@
           <div class="r"><div class="ic"><Icon name={x.icon} size={17} /></div>
             <div class="m"><b>{x.name}</b><div class="bar"><i style="width:{(x.amount / items[0].amount) * 100}%"></i></div></div>
             <div class="am">{money(x.amount)}</div></div>{/each}</div>
+      {/if}
+
+      {#if items.length > 3 || D.cur.top.length}
+        <button class="more" onclick={() => (more = !more)} aria-expanded={more}>{more ? 'Скрыть' : 'Подробнее'}<i class:up={more}><Icon name="chev" size={15} /></i></button>
+        {#if more}
+          {#if items.length > 3}
+            <h2>Все категории</h2>
+            <div class="card">{#each items as x (x.key)}
+              <div class="r"><div class="ic"><Icon name={x.icon} size={17} /></div>
+                <div class="m"><b>{x.name}</b><div class="bar"><i style="width:{(x.amount / items[0].amount) * 100}%"></i></div></div>
+                <div class="am">{money(x.amount)}<small>{Math.round((x.amount / total) * 100)}%</small></div></div>{/each}</div>
+          {/if}
+          {#if D.cur.top.length}
+            <h2>Самые крупные траты</h2>
+            <div class="card">{#each D.cur.top as x}
+              <div class="r"><div class="ic"><Icon name={x.icon} size={17} /></div>
+                <div class="m"><b>{x.name}</b><small class="sm">{x.cat} · {dayLong(x.date)}</small></div>
+                <div class="am">{money(x.amount)}</div></div>{/each}</div>
+          {/if}
+          {#if merch.length}
+            <h2>Где тратишь чаще всего</h2>
+            <div class="card">{#each merch as x}
+              <div class="r"><div class="m"><b>{x.name}</b><small class="sm">{x.count} раз</small></div><div class="am">{money(x.sum)}</div></div>{/each}</div>
+          {/if}
+        {/if}
       {/if}
 
       <button class="btn" disabled={exporting} onclick={excel}><Icon name="imp" size={18} />{exporting ? 'Готовлю отчёт…' : 'Скачать отчёт в Excel'}</button>
@@ -130,6 +171,12 @@
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; overflow-wrap: anywhere; }
   .bar { height: 5px; border-radius: 3px; background: var(--fill); margin-top: 6px; } .bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #B8862C, #E8C277); }
   .am { font-weight: 600; font-variant-numeric: tabular-nums; flex: none; }
+  .more { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 10px; color: var(--gold); font-weight: 500; font-size: 14px; }
+  .more i { display: inline-flex; transform: rotate(90deg); transition: transform .25s; } .more i.up { transform: rotate(-90deg); }
+  .am small, .sm { display: block; font-size: 11.5px; font-weight: 400; color: var(--muted); text-align: right; } .sm { text-align: left; }
+  .tg { font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 6px; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+  .fx { padding: 10px 14px 6px; position: relative; } .fx + .fx::before { content: ""; position: absolute; left: 14px; right: 0; top: 0; border-top: .5px solid var(--line); }
+  .fh { font-weight: 600; margin-bottom: 4px; } .r2 { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; } .r2 span { color: var(--muted); } .r2 b { font-weight: 500; font-variant-numeric: tabular-nums; } .gr2 { color: var(--pos); }
   .btn { width: 100%; height: 48px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; margin: 4px 0 8px; } .btn:disabled { opacity: .6; }
   .note { color: var(--muted); font-size: 12px; text-align: center; line-height: 1.45; margin: 8px 0; padding: 0 14px; } .err { color: var(--neg); font-size: 12px; text-align: center; }
 </style>
