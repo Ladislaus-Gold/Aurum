@@ -1,9 +1,11 @@
 // Кнопка «+» улетает вверх, а окно новой операции поднимается снизу — будто кнопка облетела телефон
 import { nav } from './nav.svelte.js';
 let last = null, anim = null;
-export function openNewOp(e) {
+export const openNewOp = (e) => flyOpen(e, () => { nav.newOp = true; }, nav.newOp);
+// Общий вариант: после взлёта кнопки вызывает show() — открыть своё окно
+export function flyOpen(e, show, already = false) {
   const b = e?.currentTarget;
-  if (!b || !b.animate || nav.newOp) { nav.newOp = true; return; }
+  if (!b || !b.animate || already) { show(); return; }
   last = b;
   anim = b.animate([
     { transform: 'scale(1)', offset: 0, easing: 'ease-out' },
@@ -11,7 +13,7 @@ export function openNewOp(e) {
     { transform: 'translate(-4px,-110px) scale(.6,1.6)', opacity: 1, offset: .85 },
     { transform: 'translate(-6px,-130px) scale(.5,1.8)', opacity: 0, offset: 1 }
   ], { duration: 240, fill: 'forwards' });
-  setTimeout(() => { nav.newOp = true; }, 150);
+  setTimeout(show, 150);
 }
 // Окно закрылось — кнопка падает на место сверху
 export function landBack() {

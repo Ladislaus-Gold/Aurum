@@ -12,6 +12,7 @@
   import { loadHome } from '../lib/data.svelte.js';
   import { txByAccount } from '../lib/txq.js';
   import { nav } from '../lib/nav.svelte.js';
+  import { flyOpen, landBack } from '../lib/fly.js';
 
   let rows = $state(accCache.v?.rows ?? []);
   let loading = $state(!accCache.v);
@@ -59,7 +60,7 @@
 </script>
 
 <div class="page">
-  <div class="hd"><h1>Счета</h1><button class="plus" aria-label="Новый счёт" onclick={() => (addOpen = true)}><Icon name="plus" size={20} /></button></div>
+  <div class="hd"><h1>Счета</h1><button class="plus" aria-label="Новый счёт" onclick={(e) => flyOpen(e, () => (addOpen = true))}><Icon name="plus" size={20} /></button></div>
   {#if error}
     <p class="err">{error}</p>
     <button class="retry" onclick={load}>Повторить</button>
@@ -123,7 +124,7 @@
   {/if}
 </div>
 
-<NewAccount open={addOpen} onclose={() => (addOpen = false)} onsaved={refresh} />
+<NewAccount open={addOpen} onclose={() => { addOpen = false; landBack(); }} onsaved={refresh} />
 <DeleteAccount open={delOpen} acc={delAcc} all={rows} onclose={() => (delOpen = false)} ondone={refresh} />
 
 <Sheet open={!!picked} onclose={() => (picked = null)}>

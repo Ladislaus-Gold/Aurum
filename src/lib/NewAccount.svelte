@@ -38,7 +38,7 @@
   }
 </script>
 
-<Sheet {open} {onclose}>
+<Sheet {open} {onclose} fly>
   {#if pick}
   <h3>Валюта</h3>
   <input class="in" placeholder="Поиск: название или код" bind:value={q} autocomplete="off" enterkeyhint="search" />
@@ -59,7 +59,7 @@
   <div class="lb">Валюта</div>
   <div class="seg">
     {#each curs as c (c)}<button class:on={cur === c} onclick={() => (cur = c)}>{sym(c)} {c}</button>{/each}
-    <button class="more" onclick={() => (pick = true)}>+ Другая валюта</button>
+    <button class="more" aria-label="Другая валюта" onclick={() => (pick = true)}>+</button>
   </div>
   {#if foreign}
     <p class="hint">Валютный счёт вне бюджета: не входит в итоги, доходы и расходы.</p>
@@ -80,9 +80,9 @@
   .lb { font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); font-weight: 600; margin: 14px 4px 6px; }
   .in { width: 100%; background: var(--fill); border: 0; border-radius: 12px; padding: 12px 14px; outline: none; color: var(--text); }
   .seg { display: flex; flex-wrap: wrap; gap: 6px; }
-  .seg button { flex: 1 1 auto; min-width: 72px; min-height: 40px; padding: 8px 10px; border-radius: 12px; background: var(--fill); font-size: 14px; font-weight: 500; text-align: center; }
+  .seg button { flex: 1 1 auto; min-width: 60px; min-height: 36px; padding: 6px 8px; border-radius: 12px; background: var(--fill); font-size: 14px; font-weight: 500; text-align: center; }
   .seg button.on { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; }
-  .seg button.more { flex-basis: 100%; background: transparent; border: 1px dashed var(--gold); color: var(--gold); }
+  .seg button.more { flex: 0 0 auto; min-width: 0; width: 40px; padding: 0; background: transparent; border: 1px dashed var(--gold); color: var(--gold); font-size: 20px; }
   .cl { max-height: 46vh; overflow-y: auto; margin-top: 10px; touch-action: pan-y; overscroll-behavior: contain; }
   .ci { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 4px; text-align: left; border-bottom: .5px solid var(--sep, rgba(0,0,0,.08)); }
   .cs { width: 34px; height: 34px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; font-size: 14px; font-weight: 600; flex: none; }
