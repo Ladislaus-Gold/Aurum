@@ -18,6 +18,7 @@
   import Currency from './pages/Currency.svelte';
   import AccSettings from './pages/AccSettings.svelte';
   import NewOp from './lib/NewOp.svelte';
+  import OpDelete from './lib/OpDelete.svelte';
   import { landBack } from './lib/fly.js';
   import { prefetchAll } from './lib/prefetch.js';
   let pf = false;
@@ -69,6 +70,7 @@
    {/key}
   </div>
   <NewOp open={nav.newOp || !!nav.edit} edit={nav.edit} preAcc={nav.preAcc} onclose={() => { nav.newOp = false; nav.edit = null; nav.preAcc = 0; landBack(); }} onsaved={() => nav.rev++} />
+  <OpDelete t={nav.del} onclose={() => (nav.del = null)} ondone={() => nav.rev++} />
   <TabBar />
 {/if}
 
