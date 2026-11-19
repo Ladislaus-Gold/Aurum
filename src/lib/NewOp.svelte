@@ -44,7 +44,7 @@
         if (lt && accs.some((x) => x.id === lt.from) && accs.some((x) => x.id === lt.to) && lt.from !== lt.to) { from = lt.from; to = lt.to; }
       } catch {}
       if (preAcc && accs.find((x) => x.id === preAcc)?.foreign) {
-        action = 'TRANSFER'; from = preAcc; to = accs.find((x) => x.id !== preAcc && x.foreign)?.id ?? accs.find((x) => x.id !== preAcc)?.id ?? 0;
+        action = 'TRANSFER'; acc = preAcc; from = preAcc; to = accs.find((x) => x.id !== preAcc && x.foreign)?.id ?? accs.find((x) => x.id !== preAcc)?.id ?? 0;
       } else if (preAcc && accs.some((x) => x.id === preAcc)) {
         acc = preAcc;
         if (from !== preAcc) { if (to === preAcc) to = from; from = preAcc; }
@@ -81,7 +81,10 @@
     if (toA.cur === cfg.base) return { mode: 'sell', f: fromA.cur };
     return { mode: 'cross', f: fromA.cur };
   });
-  let curShown = $derived(isT && fromA ? fromA.cur : cfg.base);
+  let accA = $derived(accs.find((a) => a.id === acc));
+  // операция на валютном счёте: вне бюджета, без категории, в валюте счёта
+  let outside = $derived(!isT && !!accA?.foreign);
+  let curShown = $derived(isT ? (fromA?.cur ?? cfg.base) : (accA?.cur ?? cfg.base));
   const r2 = (v) => Math.round(v * 100) / 100;
   function fromRate() {
     const a = total, r = num(rate);
@@ -116,13 +119,13 @@
     else if (parts[0]?.c) cat = parts[0].c;
   }
   const setAction = (a) => { action = a; cat = 0; split = false; parts = [{ c: 0, a: '' }, { c: 0, a: '' }]; };
-  const sub = $derived(isT ? 'между своими счетами' : [hasLogo ? 'Магазин' : '', chosen?.name].filter(Boolean).join(' · ') || 'выбери категорию');
+  const sub = $derived(isT ? 'между своими счетами' : outside ? 'валютный счёт · вне бюджета' : [hasLogo ? 'Магазин' : '', chosen?.name].filter(Boolean).join(' · ') || 'выбери категорию');
 
   async function save() {
     err = '';
     const amt = Math.round(total * 100) / 100;
     if (!(amt > 0)) { err = 'Введи сумму больше нуля.'; return; }
-    const row = { action, amount: amt, currency: isT ? (fromA?.cur ?? cfg.base) : cfg.base, to_amount: null, rate: null, note: name.trim() || null, date: new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`).toISOString() };
+    const row = { action, amount: amt, currency: isT ? (fromA?.cur ?? cfg.base) : (accA?.cur ?? cfg.base), to_amount: null, rate: null, note: name.trim() || null, date: new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`).toISOString() };
     let sp = null;
     if (isT) {
       if (!from || !to) { err = 'Выбери оба счёта.'; return; }
@@ -135,13 +138,15 @@
       Object.assign(row, { from_account_id: from, to_account_id: to, account_id: null, category_id: null });
     } else {
       if (!acc) { err = 'Выбери счёт.'; return; }
-      if (split) {
+      if (outside) {
+        cat = 0;
+      } else if (split) {
         sp = parts.filter((p) => p.c && num(p.a) > 0).map((p) => ({ category_id: p.c, amount: Math.round(num(p.a) * 100) / 100 }));
         if (sp.length < 2) { err = 'Добавь минимум две категории с суммами.'; return; }
         if (Math.abs(splitSum - amt) > 0.005) { err = 'Сумма частей не равна сумме операции.'; return; }
         cat = sp.slice().sort((a, b) => b.amount - a.amount)[0].category_id;
       } else if (!cat) { err = 'Выбери категорию.'; return; }
-      Object.assign(row, { account_id: acc, category_id: cat, from_account_id: null, to_account_id: null });
+      Object.assign(row, { account_id: acc, category_id: cat || null, from_account_id: null, to_account_id: null });
     }
     busy = true;
     try {
@@ -207,7 +212,7 @@
             <label class="pill">{accName(to)} ▾<select bind:value={to}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
           </div>
         {:else}
-          <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)}{bank ? '' : ' ▾'}<select bind:value={acc} disabled={bank}>{#each gBase as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
+          <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)}{bank ? '' : ' ▾'}<select bind:value={acc} disabled={bank}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
         {/if}
         {#if bank}<div class="lock"><Icon name="lock" size={15} />Операция из Monobank: сумму, счёт и дату менять нельзя</div>{/if}
       </div>
@@ -222,7 +227,7 @@
         </div>
       {/if}
 
-      {#if !isT}
+      {#if !isT && !outside}
         {#if !split}
           <div class="lbl">Категория</div>
           <div class="card ribbon"><div class="scrl">
@@ -250,7 +255,7 @@
 
       <div class="card">
         <label class="r"><div class="ic"><Icon name="card" size={17} /></div><div class="l">Дата</div><input class="dt" type="date" bind:value={date} disabled={bank} /></label>
-        {#if !isT}
+        {#if !isT && !outside}
           <label class="r"><div class="ic"><Icon name="swap" size={17} /></div><div class="l">Разделить на категории</div><input class="sw" type="checkbox" checked={split} onchange={toggleSplit} /></label>
           {#if name.trim() && !split}<label class="r"><div class="ic"><Icon name="rule" size={17} /></div><div class="l">Запомнить для «{name.trim()}»</div><input class="sw" type="checkbox" bind:checked={rule} /></label>{/if}
         {/if}
