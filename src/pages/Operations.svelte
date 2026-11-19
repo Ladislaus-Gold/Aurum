@@ -168,16 +168,16 @@
         </div>
         {#if one}
           <div class="tiles">
-            <div><span>Расходы</span><b>−{moneyC(one.exp, one.cur, 0)}</b></div>
-            <div><span>Доходы</span><b class="pos">+{moneyC(one.inc, one.cur, 0)}</b></div>
+            <div><span>Расходы</span><b>{one.exp > 0 ? '−' : ''}{moneyC(one.exp, one.cur, 0)}</b></div>
+            <div><span>Доходы</span><b class:pos={one.inc > 0}>{one.inc > 0 ? '+' : ''}{moneyC(one.inc, one.cur, 0)}</b></div>
           </div>
           <div class="net"><span>Итого за период</span><b class:pos={one.inc - one.exp >= 0}>{one.inc - one.exp >= 0 ? '+' : '−'}{moneyC(Math.abs(one.inc - one.exp), one.cur, 0)}</b></div>
         {:else}
           {#each tot as x (x.cur)}
             <div class="cr">
               <i>{sym(x.cur)}</i>
-              <div><span>Расходы</span><b>−{moneyC(x.exp, x.cur, 0)}</b></div>
-              <div class="rt"><span>Доходы</span><b class="pos">+{moneyC(x.inc, x.cur, 0)}</b></div>
+              <div><span>Расходы</span><b>{x.exp > 0 ? '−' : ''}{moneyC(x.exp, x.cur, 0)}</b></div>
+              <div class="rt"><span>Доходы</span><b class:pos={x.inc > 0}>{x.inc > 0 ? '+' : ''}{moneyC(x.inc, x.cur, 0)}</b></div>
             </div>
           {/each}
         {/if}

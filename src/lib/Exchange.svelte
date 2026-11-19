@@ -44,7 +44,7 @@
     <h3>Обмен</h3>
     <div class="hero">
       <div class="row"><span>Отдаю · {ln.name}</span><button class="all" onclick={all}>Всё {fmt(ln.balance, 2)} {sym(ln.cur)}</button></div>
-      <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={give} oninput={() => (edited = 'rate')} aria-label="Сумма" style:width="{Math.max(2, give.length)}ch" /><span>{sym(ln.cur)}</span></div>
+      <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={give} oninput={() => (edited = 'rate')} aria-label="Сумма" style:width="{Math.max(1, give.length)}ch" /><span>{sym(ln.cur)}</span></div>
       <div class="mid"><i></i>
         {#if editRate}
           <label class="chip">1 {sym(ln.cur)} = <input type="text" inputmode="decimal" bind:value={rate} oninput={() => (edited = 'rate')} onblur={() => (editRate = false)} aria-label="Курс" /> {sym(cfg.base)}</label>
@@ -53,7 +53,7 @@
         {/if}
       <i></i></div>
       <div class="row"><span>Получаю · {base?.name}</span></div>
-      <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={recv} oninput={() => (edited = 'recv')} aria-label="Получаю" style:width="{Math.max(2, recv.length)}ch" /><span>{sym(cfg.base)}</span></div>
+      <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={recv} oninput={() => (edited = 'recv')} aria-label="Получаю" style:width="{Math.max(1, recv.length)}ch" /><span>{sym(cfg.base)}</span></div>
     </div>
     {#if err}<p class="err">{err}</p>{/if}
     <button class="go" disabled={busy} onclick={save}>{busy ? 'Обмениваю…' : 'Обменять'}</button>
@@ -66,7 +66,7 @@
   .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
   .all { font-size: 12px; color: #E8C277; background: #2a2312; border-radius: 8px; padding: 3px 9px; }
   .big { display: flex; align-items: baseline; gap: 6px; margin: 2px 0 12px; color: #F3DFA8; font-size: 38px; font-weight: 500; }
-  .big input { background: none; border: 0; outline: 0; color: inherit; font: inherit; padding: 0; min-width: 2ch; max-width: 100%; }
+  .big input { background: none; border: 0; outline: 0; color: inherit; font: inherit; padding: 0; min-width: 1ch; max-width: 100%; }
   .big span { font-size: 30px; }
   .mid { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
   .mid i { flex: 1; height: .5px; background: #3a3320; }

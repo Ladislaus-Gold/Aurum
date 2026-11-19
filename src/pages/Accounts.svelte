@@ -217,7 +217,8 @@
   .a { font-weight: 600; font-variant-numeric: tabular-nums; }
   .a.z { color: var(--muted); font-weight: 400; }
   .fh { padding: 12px 14px 6px; } .fn { display: flex; align-items: center; gap: 12px; } .fn b { flex: 1; font-size: 16px; font-weight: 600; } .fn small { font-size: 13px; color: var(--muted); }
-  .fl .t { flex: 0 1 auto; margin-right: auto; }
+  .fl .t { flex: 0 1 auto; margin-right: auto; white-space: nowrap; } .fl .tag { font-size: 10.5px; }
+  .a { white-space: nowrap; }
   .ex { font-size: 12px; font-weight: 600; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; border-radius: 8px; padding: 4px 10px; }
   .fb { display: flex; gap: 3px; height: 8px; margin: 6px 14px 8px; border-radius: 4px; overflow: hidden; } .fb u { display: block; min-width: 4px; }
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
