@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { accCache, fetchAccounts } from '../lib/prefetch.js';
   import { money, moneyC, noEmoji } from '../lib/format.js';
-  import { fx, loadFx, approxBase, sym } from '../lib/currency.svelte.js';
+  import { fx, loadFx, approxBase, sym, curName } from '../lib/currency.svelte.js';
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
   import TxList from '../lib/TxList.svelte';
@@ -53,10 +53,16 @@
     for (const r of rows.filter((x) => x.foreign && baseNames.has(x.name) && !(x.balance === 0))) m.set(r.name, [...(m.get(r.name) ?? []), r]);
     return m;
   });
-  let fgroups = $derived.by(() => {
+  const PL = { USD: 'Доллары', EUR: 'Евро', PLN: 'Злотые', GBP: 'Фунты', CHF: 'Франки', CZK: 'Кроны' };
+  let fcur = $derived.by(() => {
+    fx.rows;
     const m = new Map();
-    for (const r of rows.filter((x) => x.foreign && !x.hide && !baseNames.has(x.name)).sort((a, b) => a.name.localeCompare(b.name, 'ru') || a.cur.localeCompare(b.cur))) m.set(r.name, [...(m.get(r.name) ?? []), r]);
-    return [...m].map(([name, list]) => ({ name, list, sum: list.reduce((s, r) => s + (approxBase(r.balance, r.cur) ?? 0), 0) }));
+    for (const r of rows.filter((x) => x.foreign && !x.hide && !baseNames.has(x.name))) m.set(r.cur, [...(m.get(r.cur) ?? []), r]);
+    return [...m].map(([cur, list]) => ({
+      cur, name: PL[cur] ?? curName(cur),
+      list: list.sort((x, y) => (y.balance - x.balance) || x.name.localeCompare(y.name, 'ru')),
+      sum: list.reduce((t, r) => t + (approxBase(r.balance, cur) ?? 0), 0)
+    })).sort((x, y) => y.sum - x.sum);
   });
   let exch = $state(null), exchOpen = $state(false);
   const askExch = (f, e) => { e.stopPropagation(); exch = { line: f, base: rows.find((x) => !x.foreign && x.name === f.name) }; exchOpen = true; };
@@ -142,21 +148,22 @@
         </div>
       {/if}
     {/each}
-    {#if fgroups.length}
+    {#if fcur.length}
       <h2 class="rise" style:--i={10}>Валютные счета <span class="tag">вне бюджета</span></h2>
-      {#each fgroups as g, gi (g.name)}
-        <div class="card fc rise" style:--i={11 + gi}>
-          <div class="fh"><div class="fn"><div class="ic"><Icon name="wallet" size={19} /></div><b>{g.name}</b>{#if g.sum}<small>≈ {money(g.sum)}</small>{/if}</div></div>
-          {#each g.list as r, k (r.id)}
-            <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
-              <button class="r nf sub" onclick={() => open(r)}>
-                <div class="t">{r.cur}</div>
+      <div class="card rise" style:--i={11}>
+        {#each fcur as g, gi (g.cur)}
+          <div class="sh" class:nf={gi > 0}><span>{g.name}</span>{#if g.sum}<small>≈ {money(g.sum)}</small>{/if}</div>
+          {#each g.list as r (r.id)}
+            <SwipeRow enabled onremove={() => askDel(r)}>
+              <button class="r" onclick={() => open(r)}>
+                <div class="ic"><b class="cg" class:wide={sym(r.cur).length > 1}>{sym(r.cur)}</b></div>
+                <div class="t">{r.name}</div>
                 <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
               </button>
             </SwipeRow>
           {/each}
-        </div>
-      {/each}
+        {/each}
+      </div>
     {/if}
   {/if}
 </div>
@@ -224,5 +231,7 @@
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }
   .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; font: inherit; }
-  .cg { font-size: 19px; font-weight: 700; line-height: 1; color: #fff; letter-spacing: -.3px; } .cg.wide { font-size: 14px; }
+  .cg { font-size: 17px; font-weight: 600; line-height: 1; letter-spacing: -.3px; } .cg.wide { font-size: 13px; }
+  .sh { display: flex; align-items: baseline; padding: 12px 14px 4px; font-size: 13px; color: var(--muted); position: relative; } .sh small { margin-left: auto; font-size: 13px; }
+  .sh.nf::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: .5px; background: var(--line); }
 </style>
