@@ -90,13 +90,15 @@
   onMount(() => { if (chipsEl) chipsEl.scrollLeft = chipsEl.scrollWidth; load(); });
   function pick(i) { if (i !== mi) { mi = i; load(true); } }
 
-  let filtered = $derived.by(() => {
+  let pre = $derived.by(() => {
     const q = query.trim().toLowerCase();
     return rows.filter((t) =>
       (ftype === 'ALL' || t.action === ftype) && (!fcat || t.category_id === fcat) &&
       (!facc || t.account_id === facc || t.from_account_id === facc || t.to_account_id === facc) &&
       (!q || [t.note, t.category, t.account, t.from, t.to].some((s) => s?.toLowerCase().includes(q))));
   });
+  // Выбрана валюта — в списке только её операции; «Все» — всё. Перевод попадает, если одна из сторон в этой валюте
+  let filtered = $derived(scEff === 'ALL' ? pre : pre.filter((t) => t.action === 'TRANSFER' ? (t.fromCur || cfg.base) === scEff || (t.toCur || cfg.base) === scEff : (t.accCur || cfg.base) === scEff));
   const key = (iso) => { const d = new Date(iso); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const head = (iso) => {
     const d = new Date(iso), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1);
@@ -111,7 +113,7 @@
       let g = out.at(-1);
       if (!g || g.k !== k) out.push((g = { k, title: head(t.date), sum: 0, items: [] }));
       g.items.push(t);
-      if (t.accCur === cfg.base) g.sum += opSigned(t);
+      if ((t.accCur || cfg.base) === (scEff === 'ALL' ? cfg.base : scEff)) g.sum += opSigned(t);
     }
     return out;
   });
@@ -119,7 +121,7 @@
   let tot = $derived.by(() => {
     const m = new Map(); const get = (c) => m.get(c) ?? m.set(c, { exp: 0, inc: 0 }).get(c);
     get(cfg.base);
-    for (const t of filtered) {
+    for (const t of pre) {
       if (t.action === 'TRANSFER') continue;
       const x = get(t.accCur || cfg.base);
       if (t.action === 'EXPENSE') x.exp += t.amount; else if (t.action === 'RETURN') x.exp -= t.amount; else if (t.action === 'INCOME') x.inc += t.amount;
@@ -184,7 +186,7 @@
       </div>
     {/if}
     {#each groups as g (g.k)}
-      <div class="dh" class:in={shown}><span>{g.title}</span><b>{g.sum ? signed(g.sum, 2) : ''}</b></div>
+      <div class="dh" class:in={shown}><span>{g.title}</span><b>{g.sum ? (scEff === 'ALL' || scEff === cfg.base ? signed(g.sum, 2) : (g.sum < 0 ? '−' : '+') + moneyC(Math.abs(g.sum), scEff, 2)) : ''}</b></div>
       <div class="grp" class:in={shown}>
         {#each g.items as t (t.id)}<OpRow {t} onpick={(x) => (picked = x)} />{/each}
       </div>
