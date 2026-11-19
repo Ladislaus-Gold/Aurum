@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { accCache, fetchAccounts } from '../lib/prefetch.js';
   import { money, moneyC, noEmoji } from '../lib/format.js';
-  import { fx, loadFx, approxBase } from '../lib/currency.svelte.js';
+  import { fx, loadFx, approxBase, sym } from '../lib/currency.svelte.js';
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
   import TxList from '../lib/TxList.svelte';
@@ -111,7 +111,7 @@
           {#each g.list as r, k (r.id)}
             <SwipeRow enabled={!r.mono} onremove={() => askDel(r)}>
               <button class="r" class:nf={k > 0} onclick={() => open(r)}>
-                <div class="ic"><Icon name={r.icon} size={19} /></div>
+                <div class="ic"><span class="cg" class:wide={sym(r.cur).length > 1}>{sym(r.cur)}</span></div>
                 <div class="t">{r.name}</div>
                 <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
               </button>
@@ -178,4 +178,5 @@
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }
   .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; font: inherit; }
+  .cg { font-size: 19px; font-weight: 700; line-height: 1; color: #fff; letter-spacing: -.3px; } .cg.wide { font-size: 14px; }
 </style>

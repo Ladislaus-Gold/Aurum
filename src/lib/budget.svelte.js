@@ -33,7 +33,7 @@ export async function loadBudget(y, m) {
       supabase.from('budgets').select('id,category_id,amount').eq('month', month),
       supabase.rpc('month_category_totals', { p_month: month }),
       supabase.from('budget_distribution').select('category_id,advance,salary,other').eq('month', month),
-      supabase.from('transactions').select('date,action,amount,category_id,transaction_splits(category_id,amount)')
+      supabase.from('transactions').select('date,action,amount,category_id,account_id,transaction_splits(category_id,amount)')
         .gte('date', new Date(y, m, 1, -3).toISOString()).lt('date', new Date(y, m + 1, 1, 3).toISOString())
         .in('action', ['EXPENSE', 'RETURN']).limit(5000)
     ]);

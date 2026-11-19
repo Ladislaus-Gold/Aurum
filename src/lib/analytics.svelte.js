@@ -92,7 +92,7 @@ function aggregate(rows, start, end) {
   const out = { income: 0, expense: 0, returns: 0, count: 0, gran, cat: { EXPENSE: {}, INCOME: {}, RETURN: {} }, merch: {}, dayMap: {}, wd: [0, 0, 0, 0, 0, 0, 0], top: [], buckets: buckets(start, end, gran) };
   const addTo = (m, k, n) => { m[k] = (m[k] || 0) + n; };
   for (const r of rows) {
-    if (r.action === 'TRANSFER') continue;
+    if (r.action === 'TRANSFER' || refs.foreign[r.account_id]) continue; // валютные счета вне бюджета
     const d = new Date(r.date); if (isNaN(d)) continue;
     const n = Math.abs(Number(r.amount || 0));
     const t = d.getTime();

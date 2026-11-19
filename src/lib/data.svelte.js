@@ -17,7 +17,7 @@ const ok = (r) => { if (r.error) throw r.error; return r.data; };
 async function allTransactions() {
   const out = [];
   for (let from = 0; ; from += 1000) {
-    const rows = ok(await supabase.from('transactions').select('date,action,amount,to_amount,from_account_id,to_account_id')
+    const rows = ok(await supabase.from('transactions').select('date,action,amount,to_amount,account_id,from_account_id,to_account_id')
       .order('date', { ascending: false }).range(from, from + 999));
     out.push(...rows);
     if (rows.length < 1000) break;
@@ -26,7 +26,7 @@ async function allTransactions() {
 }
 
 // Влияние операции на общий баланс (без валютных счетов): обмен гривны на валюту уменьшает его, обратный обмен увеличивает
-const net = (t, foreign) => (t.action === 'INCOME' || t.action === 'RETURN' ? Number(t.amount)
+const net = (t, foreign) => (foreign.has(t.account_id) ? 0 : t.action === 'INCOME' || t.action === 'RETURN' ? Number(t.amount)
   : t.action === 'EXPENSE' ? -Number(t.amount)
   : t.action === 'TRANSFER' ? ((foreign.has(t.to_account_id) ? -Number(t.amount) : 0) + (foreign.has(t.from_account_id) ? Number(t.to_amount ?? t.amount) : 0)) : 0);
 
