@@ -1,9 +1,10 @@
 <script>
   import OpAvatar from './OpAvatar.svelte';
   import { signed, dayLabel, moneyC } from './format.js';
+  import { cfg } from './currency.svelte.js';
   import { opTitle, opSub, opSigned } from './refs.svelte.js';
   let { t, onpick, showDate = false, d = 2 } = $props();
-  const amount = (t) => (t.action === 'TRANSFER' ? moneyC(t.amount, t.fromCur, d) : signed(opSigned(t), d));
+  const amount = (t) => (t.action === 'TRANSFER' ? moneyC(t.amount, t.fromCur, d) : t.accCur && t.accCur !== cfg.base ? (t.action === 'EXPENSE' ? '−' : '+') + moneyC(Math.abs(t.amount), t.accCur, d) : signed(opSigned(t), d));
 </script>
 
 <button class="row" onclick={() => onpick(t)}>

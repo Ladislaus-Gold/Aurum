@@ -119,7 +119,7 @@
     else if (parts[0]?.c) cat = parts[0].c;
   }
   const setAction = (a) => { action = a; cat = 0; split = false; parts = [{ c: 0, a: '' }, { c: 0, a: '' }]; };
-  const sub = $derived(isT ? 'между своими счетами' : outside ? 'валютный счёт · вне бюджета' : [hasLogo ? 'Магазин' : '', chosen?.name].filter(Boolean).join(' · ') || 'выбери категорию');
+  const sub = $derived(isT ? 'между своими счетами' : [hasLogo ? 'Магазин' : '', chosen?.name].filter(Boolean).join(' · ') || 'выбери категорию');
 
   async function save() {
     err = '';
@@ -138,9 +138,7 @@
       Object.assign(row, { from_account_id: from, to_account_id: to, account_id: null, category_id: null });
     } else {
       if (!acc) { err = 'Выбери счёт.'; return; }
-      if (outside) {
-        cat = 0;
-      } else if (split) {
+      if (split) {
         sp = parts.filter((p) => p.c && num(p.a) > 0).map((p) => ({ category_id: p.c, amount: Math.round(num(p.a) * 100) / 100 }));
         if (sp.length < 2) { err = 'Добавь минимум две категории с суммами.'; return; }
         if (Math.abs(splitSum - amt) > 0.005) { err = 'Сумма частей не равна сумме операции.'; return; }
@@ -227,7 +225,7 @@
         </div>
       {/if}
 
-      {#if !isT && !outside}
+      {#if !isT}
         {#if !split}
           <div class="lbl">Категория</div>
           <div class="card ribbon"><div class="scrl">
@@ -248,14 +246,14 @@
             <button class="add" onclick={() => (parts = [...parts, { c: 0, a: '' }])}>+ Добавить категорию</button>
           </div>
           <div class="tt" class:okc={total > 0 && Math.abs(splitSum - total) < 0.005} class:bad={Math.abs(splitSum - total) >= 0.005}>
-            {Math.abs(splitSum - total) < 0.005 && total > 0 ? `✓ Итого ${money2(splitSum)} ₴ — сходится` : `Итого ${money2(splitSum)} из ${money2(total)} ₴`}
+            {Math.abs(splitSum - total) < 0.005 && total > 0 ? `✓ Итого ${money2(splitSum)} ${sym(curShown)} — сходится` : `Итого ${money2(splitSum)} из ${money2(total)} ${sym(curShown)}`}
           </div>
         {/if}
       {/if}
 
       <div class="card">
         <label class="r"><div class="ic"><Icon name="card" size={17} /></div><div class="l">Дата</div><input class="dt" type="date" bind:value={date} disabled={bank} /></label>
-        {#if !isT && !outside}
+        {#if !isT}
           <label class="r"><div class="ic"><Icon name="swap" size={17} /></div><div class="l">Разделить на категории</div><input class="sw" type="checkbox" checked={split} onchange={toggleSplit} /></label>
           {#if name.trim() && !split}<label class="r"><div class="ic"><Icon name="rule" size={17} /></div><div class="l">Запомнить для «{name.trim()}»</div><input class="sw" type="checkbox" bind:checked={rule} /></label>{/if}
         {/if}
