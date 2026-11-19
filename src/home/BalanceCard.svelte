@@ -1,5 +1,6 @@
 <script>
   import { money, signed } from '../lib/format.js';
+  import { cfg, sym } from '../lib/currency.svelte.js';
   let { total, series, shown, onaccounts } = $props();
   const RANGES = [['1М', 30, 'за месяц'], ['3М', 91, 'за 3 мес.'], ['6М', 182, 'за полгода'], ['1Г', 365, 'за год'], ['Всё', 1e9, 'за всё время']];
   let ri = $state(0);
@@ -29,7 +30,7 @@
 
 <section class="hero" class:rs>
   <div class="cap"><span>Общий баланс</span><button onclick={onaccounts}>Счета ›</button></div>
-  <div class="sum" class:in={anim}>{money(total, 2).replace(' ₴', '')} <small>₴</small></div>
+  <div class="sum" class:in={anim}>{money(total, 2).replace(' ' + sym(cfg.base), '')} <small>{sym(cfg.base)}</small></div>
   <div class="chip" class:in={anim}>{delta >= 0 ? '▲' : '▼'} {signed(delta)} · {delta >= 0 ? '+' : '−'}{Math.abs(pct).toFixed(1).replace('.', ',')}% {RANGES[ri][2]}</div>
   <svg class="chart" viewBox="0 0 {W} {H}" preserveAspectRatio="none" aria-hidden="true">
     <defs>

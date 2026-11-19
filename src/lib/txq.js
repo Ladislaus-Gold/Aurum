@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 import { loadRefs, enrich } from './refs.svelte.js';
 
-const COLS = 'id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id';
+const COLS = 'id,date,action,amount,category_id,account_id,from_account_id,to_account_id,note,mono_op_id,to_amount,rate';
 
 // Операции категории за месяц (с учётом разделённых операций)
 export async function txByCategory(catId, y, m) {

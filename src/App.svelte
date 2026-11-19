@@ -15,6 +15,7 @@
   import Analytics from './pages/Analytics.svelte';
   import Status from './pages/Status.svelte';
   import Backup from './pages/Backup.svelte';
+  import Currency from './pages/Currency.svelte';
   import NewOp from './lib/NewOp.svelte';
   import { landBack } from './lib/fly.js';
   import { prefetchAll } from './lib/prefetch.js';
@@ -53,6 +54,8 @@
       <Status />
     {:else if current === 'backup'}
       <Backup />
+    {:else if current === 'currency'}
+      <Currency />
     {:else if current === 'rules'}
       <Rules />
     {:else if current === 'more'}

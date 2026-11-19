@@ -1,7 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { accCache, fetchAccounts } from '../lib/prefetch.js';
-  import { money, noEmoji } from '../lib/format.js';
+  import { money, moneyC, noEmoji } from '../lib/format.js';
+  import { fx, loadFx, approxBase } from '../lib/currency.svelte.js';
   import Icon from '../lib/Icon.svelte';
   import Sheet from '../lib/Sheet.svelte';
   import TxList from '../lib/TxList.svelte';
@@ -30,12 +31,18 @@
     } catch (e) { error = e?.message ?? String(e); }
     loading = false;
   }
-  onMount(load);
+  onMount(() => { load(); loadFx(); });
 
   const byBalance = (a, b) => (b.mono - a.mono) || (b.balance - a.balance);
   let main = $derived(rows.filter((r) => r.main).sort(byBalance));
-  let rest = $derived(rows.filter((r) => !r.main).sort(byBalance));
-  let total = $derived(rows.reduce((s, r) => s + r.balance, 0));
+  let rest = $derived(rows.filter((r) => !r.main && !r.foreign).sort(byBalance));
+  let groups = $derived.by(() => {
+    const m = new Map();
+    for (const r of rows.filter((x) => x.foreign).sort((a, b) => b.balance - a.balance)) m.set(r.cur, [...(m.get(r.cur) ?? []), r]);
+    return [...m].map(([cur, list]) => ({ cur, list, sum: list.reduce((s, r) => s + r.balance, 0) }));
+  });
+  const approx = (n, cur) => { fx.rows; const v = approxBase(n, cur); return v == null ? '' : '≈ ' + money(v); };
+  let total = $derived(rows.filter((r) => !r.foreign).reduce((s, r) => s + r.balance, 0));
   let bank = $derived(main.reduce((s, r) => s + r.balance, 0));
   let env = $derived(total - bank);
   let top = $derived(rest.filter((r) => r.balance > 0).slice(0, 5));
@@ -83,13 +90,32 @@
         </div>
       {/if}
     {/each}
+    {#if groups.length}
+      <h2 class="rise" style:--i={10}>Валютные счета <span class="tag">вне бюджета</span></h2>
+      {#each groups as g, gi (g.cur)}
+        <div class="card fc rise" style:--i={11 + gi}>
+          <div class="fh"><div><b class="num">{moneyC(g.sum, g.cur, 2)}</b><small>{approx(g.sum, g.cur)}</small></div></div>
+          {#if g.list.filter((r) => r.balance > 0).length > 1}
+            <div class="fb">{#each g.list.filter((r) => r.balance > 0) as r, k (r.id)}<u style:flex={r.balance} style:background={shades[k % shades.length]}></u>{/each}</div>
+          {/if}
+          {#each g.list as r (r.id)}
+            <button class="r" onclick={() => open(r)}>
+              <div class="ic"><Icon name={r.icon} size={19} /></div>
+              <div class="t">{r.name}</div>
+              <div class="a" class:z={r.balance === 0}>{moneyC(r.balance, r.cur, 2)}</div>
+            </button>
+          {/each}
+        </div>
+      {/each}
+    {/if}
   {/if}
 </div>
 
 <Sheet open={!!picked} onclose={() => (picked = null)}>
   {#if c}
     <h3>{c.name}</h3>
-    <div class="bal">{money(c.balance, 2)}</div>
+    <div class="bal">{moneyC(c.balance, c.cur, 2)}</div>
+    {#if c.foreign}<div class="lim">{approx(c.balance, c.cur)}{approx(c.balance, c.cur) ? ' · ' : ''}вне бюджета</div>{/if}
     {#if c.mono && limit > 0}<div class="lim">кредитный лимит {money(limit)}</div>{/if}
     <button class="new" onclick={create}>+ Создать транзакцию</button>
     <TxList rows={tx} loading={txLoad} error={txErr} title="Все операции" />
@@ -130,6 +156,10 @@
   .tag { font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 1px 6px; border-radius: 6px; margin-left: 6px; font-weight: 500; }
   .a { font-weight: 600; font-variant-numeric: tabular-nums; }
   .a.z { color: var(--muted); font-weight: 400; }
+  .fh { padding: 12px 14px 4px; } .fh b { font-size: 22px; font-weight: 700; } .fh small { display: block; font-size: 12px; color: var(--muted); }
+  .fb { display: flex; gap: 3px; height: 8px; margin: 6px 14px 8px; border-radius: 4px; overflow: hidden; } .fb u { display: block; min-width: 4px; }
+  .fc .r::before { left: 62px; }
+  h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }
   .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; font: inherit; }
 </style>

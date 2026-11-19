@@ -4,7 +4,7 @@
   import { auth, signOut } from '../lib/auth.svelte.js';
   import Icon from '../lib/Icon.svelte';
   const version = __APP_VERSION__;
-  const order = { 'Деньги': ['mono', 'import', 'backup'], 'Умные функции': ['analytics', 'rules'], 'Система': ['status'] };
+  const order = { 'Деньги': ['currency', 'mono', 'import', 'backup'], 'Умные функции': ['analytics', 'rules'], 'Система': ['status'] };
   const groups = Object.entries(order).map(([h, ids]) => [h, ids.map((id) => moreItems.find((x) => x.id === id))]);
   let u = $derived(auth.session?.user);
   let meta = $derived(u?.user_metadata ?? {});

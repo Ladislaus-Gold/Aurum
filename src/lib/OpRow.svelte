@@ -1,9 +1,9 @@
 <script>
   import OpAvatar from './OpAvatar.svelte';
-  import { signed, dayLabel, fmt } from './format.js';
+  import { signed, dayLabel, moneyC } from './format.js';
   import { opTitle, opSub, opSigned } from './refs.svelte.js';
   let { t, onpick, showDate = false, d = 2 } = $props();
-  const amount = (t) => (t.action === 'TRANSFER' ? `${fmt(t.amount, d)} ₴` : signed(opSigned(t), d));
+  const amount = (t) => (t.action === 'TRANSFER' ? moneyC(t.amount, t.fromCur, d) : signed(opSigned(t), d));
 </script>
 
 <button class="row" onclick={() => onpick(t)}>
@@ -11,6 +11,7 @@
   <div class="mid"><div class="t">{opTitle(t)}</div><div class="s">{opSub(t)}</div></div>
   <div class="r">
     <div class="t" class:pos={t.action === 'INCOME' || t.action === 'RETURN'}>{amount(t)}</div>
+    {#if t.to_amount}<div class="s pos">+{moneyC(t.to_amount, t.toCur, d)}</div>{/if}
     {#if showDate}<div class="s">{dayLabel(t.date)}</div>{/if}
   </div>
 </button>

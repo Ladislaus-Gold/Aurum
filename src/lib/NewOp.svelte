@@ -7,6 +7,7 @@
   import { supabase } from './supabase.js';
   import { noEmoji, fmt } from './format.js';
   import { loadRefs, logoFor } from './refs.svelte.js';
+  import { cfg, sym, fx, loadFx, bankRate } from './currency.svelte.js';
   let { open = false, edit = null, preAcc = 0, onclose, onsaved } = $props();
 
   const KINDS = [['EXPENSE', 'Расход'], ['INCOME', 'Доход'], ['RETURN', 'Возврат'], ['TRANSFER', 'Перевод']];
@@ -20,28 +21,31 @@
 
   $effect(() => { if (open) untrack(init); });
   async function init() {
+    loadFx(); rate = ''; recv = ''; edited = 'rate';
     askDel = false; err = ''; name = ''; amount = ''; cat = 0; split = false; rule = false; date = today(); action = 'EXPENSE'; parts = [{ c: 0, a: '' }, { c: 0, a: '' }];
     if (!ready) {
       try {
         await loadRefs();
         const [c, a] = await Promise.all([
           supabase.from('categories').select('id,name,type,icon,sort_order').order('sort_order'),
-          supabase.from('accounts').select('id,name,is_monobank,is_budget_source').order('id')
+          supabase.from('accounts').select('id,name,icon,is_monobank,is_budget_source,currency,is_foreign').order('id')
         ]);
         if (c.error) throw c.error; if (a.error) throw a.error;
         cats = c.data.map((x) => ({ id: x.id, name: noEmoji(x.name), type: x.type, icon: x.icon || 'tag' }));
-        accs = a.data.map((x) => ({ id: x.id, name: noEmoji(x.name), mono: x.is_monobank, src: x.is_budget_source }));
+        accs = a.data.map((x) => ({ id: x.id, name: noEmoji(x.name), mono: x.is_monobank, src: x.is_budget_source, cur: x.is_foreign ? x.currency || 'UAH' : cfg.base, foreign: !!x.is_foreign, main: !x.is_foreign && (x.is_monobank || x.is_budget_source || x.icon === 'wallet') }));
         ready = true;
       } catch (e) { err = e?.message ?? String(e); return; }
     }
-    const m = accs.find((x) => x.mono) ?? accs[0];
-    acc = m?.id ?? 0; from = (accs.find((x) => x.src) ?? m)?.id ?? 0; to = accs.find((x) => x.id !== from)?.id ?? 0;
+    const m = accs.find((x) => x.mono && !x.foreign) ?? accs.find((x) => !x.foreign) ?? accs[0];
+    acc = m?.id ?? 0; from = (accs.find((x) => x.src && !x.foreign) ?? m)?.id ?? 0; to = accs.find((x) => x.id !== from)?.id ?? 0;
     if (!edit) {
       try {
         const lt = JSON.parse(localStorage.getItem('aurum.lastTransfer') || 'null');
         if (lt && accs.some((x) => x.id === lt.from) && accs.some((x) => x.id === lt.to) && lt.from !== lt.to) { from = lt.from; to = lt.to; }
       } catch {}
-      if (preAcc && accs.some((x) => x.id === preAcc)) {
+      if (preAcc && accs.find((x) => x.id === preAcc)?.foreign) {
+        action = 'TRANSFER'; from = preAcc; to = accs.find((x) => x.id !== preAcc && x.foreign)?.id ?? accs.find((x) => x.id !== preAcc)?.id ?? 0;
+      } else if (preAcc && accs.some((x) => x.id === preAcc)) {
         acc = preAcc;
         if (from !== preAcc) { if (to === preAcc) to = from; from = preAcc; }
         if (to === from) to = accs.find((x) => x.id !== from)?.id ?? 0;
@@ -50,6 +54,7 @@
     if (edit) {
       action = edit.action; name = edit.note ?? ''; amount = String(edit.amount); date = ymd(edit.date);
       acc = edit.account_id ?? acc; from = edit.from_account_id ?? from; to = edit.to_account_id ?? to; cat = edit.category_id ?? 0;
+      if (edit.to_amount) { recv = String(edit.to_amount); rate = edit.rate ? String(edit.rate) : ''; }
       const sp = await supabase.from('transaction_splits').select('category_id,amount,sort_order').eq('transaction_id', edit.id).order('sort_order');
       if (!sp.error && sp.data.length > 1) { split = true; parts = sp.data.map((x) => ({ c: x.category_id, a: String(x.amount) })); }
     }
@@ -59,7 +64,42 @@
   let chosen = $derived(cats.find((c) => c.id === (split ? parts[0]?.c : cat)));
   let tv = $derived({ action, note: name, icon: chosen?.icon });
   let hasLogo = $derived(!!logoFor(name));
-  const accName = (id) => accs.find((a) => a.id === id)?.name ?? 'выбрать';
+  const label = (a) => (a.foreign ? `${a.cur} · ${a.name}` : a.name);
+  const accName = (id) => { const a = accs.find((x) => x.id === id); return a ? label(a) : 'выбрать'; };
+  // Разделы списка счетов: карта и наличные, конверты, валютные
+  const groupsOf = (withForeign) => [
+    ['Карта и наличные', accs.filter((a) => a.main)], ['Конверты', accs.filter((a) => !a.main && !a.foreign)],
+    ...(withForeign ? [['Валютные счета', accs.filter((a) => a.foreign)]] : [])
+  ].filter(([, l]) => l.length);
+  let gAll = $derived(groupsOf(true)), gBase = $derived(groupsOf(false));
+  let fromA = $derived(accs.find((a) => a.id === from)), toA = $derived(accs.find((a) => a.id === to));
+  let rate = $state(''), recv = $state(''), edited = $state('rate');
+  // Перевод между разными валютами: курс вводит пользователь
+  let pair = $derived.by(() => {
+    if (!isT || !fromA || !toA || fromA.cur === toA.cur) return null;
+    if (fromA.cur === cfg.base) return { mode: 'buy', f: toA.cur };
+    if (toA.cur === cfg.base) return { mode: 'sell', f: fromA.cur };
+    return { mode: 'cross', f: fromA.cur };
+  });
+  let curShown = $derived(isT && fromA ? fromA.cur : cfg.base);
+  const r2 = (v) => Math.round(v * 100) / 100;
+  function fromRate() {
+    const a = total, r = num(rate);
+    recv = a > 0 && r > 0 && pair ? String(r2(pair.mode === 'buy' ? a / r : a * r)) : '';
+  }
+  function fromRecv() {
+    const a = total, v = num(recv);
+    if (a > 0 && v > 0 && pair) rate = String(Math.round((pair.mode === 'buy' ? a / v : v / a) * 10000) / 10000);
+  }
+  $effect(() => { total; pair; untrack(() => (edited === 'rate' ? fromRate() : fromRecv())); });
+  // Ориентир банка в той же записи, что и поле курса
+  let hint = $derived.by(() => {
+    fx.rows;
+    if (!pair || !fromA || !toA) return 0;
+    const br = bankRate(fromA.cur, toA.cur);
+    return !br ? 0 : pair.mode === 'buy' ? Math.round((1 / br) * 100) / 100 : Math.round(br * 100) / 100;
+  });
+  const rf = (v) => String(v).replace('.', ',');
   const num = (v) => { const n = Number(String(v).replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
   let total = $derived(num(amount));
   let splitSum = $derived(Math.round(parts.reduce((s, p) => s + num(p.a), 0) * 100) / 100);
@@ -82,11 +122,16 @@
     err = '';
     const amt = Math.round(total * 100) / 100;
     if (!(amt > 0)) { err = 'Введи сумму больше нуля.'; return; }
-    const row = { action, amount: amt, currency: 'UAH', note: name.trim() || null, date: new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`).toISOString() };
+    const row = { action, amount: amt, currency: isT ? (fromA?.cur ?? cfg.base) : cfg.base, to_amount: null, rate: null, note: name.trim() || null, date: new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`).toISOString() };
     let sp = null;
     if (isT) {
       if (!from || !to) { err = 'Выбери оба счёта.'; return; }
       if (from === to) { err = 'Счета перевода должны отличаться.'; return; }
+      if (pair) {
+        const rv = num(recv), rt = num(rate);
+        if (!(rt > 0) || !(rv > 0)) { err = 'Укажи курс обмена.'; return; }
+        Object.assign(row, { to_amount: Math.round(rv * 100) / 100, rate: rt });
+      }
       Object.assign(row, { from_account_id: from, to_account_id: to, account_id: null, category_id: null });
     } else {
       if (!acc) { err = 'Выбери счёт.'; return; }
@@ -154,18 +199,28 @@
           <OpAvatar t={tv} size={46} />
           <div class="nm"><input placeholder={isT ? 'Название (необязательно)' : 'Название или магазин'} bind:value={name} autocomplete="off" /><small>{sub}</small></div>
         </div>
-        <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={amount} readonly={bank} aria-label="Сумма" style:width="{Math.max(1, amount.length)}ch" /><span>₴</span></div>
+        <div class="big"><input type="text" inputmode="decimal" placeholder="0" bind:value={amount} readonly={bank} aria-label="Сумма" style:width="{Math.max(1, amount.length)}ch" /><span>{sym(curShown)}</span></div>
         {#if isT}
           <div class="pills">
-            <label class="pill">{accName(from)} ▾<select bind:value={from}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
+            <label class="pill">{accName(from)} ▾<select bind:value={from}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
             <span class="ar">→</span>
-            <label class="pill">{accName(to)} ▾<select bind:value={to}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
+            <label class="pill">{accName(to)} ▾<select bind:value={to}>{#each gAll as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
           </div>
         {:else}
-          <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)}{bank ? '' : ' ▾'}<select bind:value={acc} disabled={bank}>{#each accs as a}<option value={a.id}>{a.name}</option>{/each}</select></label>
+          <label class="pill">{action === 'INCOME' ? 'На счёт' : 'Со счёта'}: {accName(acc)}{bank ? '' : ' ▾'}<select bind:value={acc} disabled={bank}>{#each gBase as [gl, gi]}<optgroup label={gl}>{#each gi as a}<option value={a.id}>{label(a)}</option>{/each}</optgroup>{/each}</select></label>
         {/if}
         {#if bank}<div class="lock"><Icon name="lock" size={15} />Операция из Monobank: сумму, счёт и дату менять нельзя</div>{/if}
       </div>
+
+      {#if pair}
+        <div class="card fxc">
+          <label class="r"><div class="ic"><Icon name="coin" size={17} /></div><div class="l">Курс обмена<small>{pair.mode === 'cross' ? `1 ${sym(fromA.cur)} =` : `1 ${sym(pair.f)} =`}</small></div>
+            <input class="fxi" type="text" inputmode="decimal" placeholder="0" bind:value={rate} oninput={() => (edited = 'rate')} aria-label="Курс" /><span class="fxs">{sym(pair.mode === 'cross' ? toA.cur : cfg.base)}</span></label>
+          {#if hint}<button class="hint" onclick={() => { rate = rf(hint); edited = 'rate'; }}>Банк сейчас {rf(hint)} · подставить</button>{/if}
+          <label class="r"><div class="ic"><Icon name="swap" size={17} /></div><div class="l">Зачислится</div>
+            <input class="fxi" type="text" inputmode="decimal" placeholder="0" bind:value={recv} oninput={() => (edited = 'recv')} aria-label="Сумма зачисления" /><span class="fxs">{sym(toA.cur)}</span></label>
+        </div>
+      {/if}
 
       {#if !isT}
         {#if !split}
@@ -206,7 +261,7 @@
     {#if isEdit && !bank}<button class="del" disabled={busy} onclick={() => (askDel = true)}>Удалить операцию</button>{/if}
     {#if askDel}
       <div class="dim" use:dim onclick={() => (askDel = false)} aria-hidden="true"></div>
-      <div class="al" role="alertdialog"><b>Удалить операцию?</b><p>{[name || 'Без названия', `${edit.action === 'EXPENSE' ? '−' : ''}${money2(num(amount))} ₴`].join(' · ')}.<br />Это действие нельзя отменить.</p>
+      <div class="al" role="alertdialog"><b>Удалить операцию?</b><p>{[name || 'Без названия', `${edit.action === 'EXPENSE' ? '−' : ''}${money2(num(amount))} ${sym(cfg.base)}`].join(' · ')}.<br />Это действие нельзя отменить.</p>
         <div class="bt"><button onclick={() => (askDel = false)}>Отмена</button><button class="dg" onclick={del}>Удалить</button></div></div>
     {/if}
   </div>
@@ -254,6 +309,10 @@
   .pa { width: 92px; background: var(--fill); border: 0; border-radius: 10px; padding: 7px 10px; text-align: right; font-weight: 600; color: var(--text); outline: none; }
   .add { width: 100%; text-align: left; padding: 11px 14px; color: var(--gold); border-top: .5px solid var(--line); }
   .tt { text-align: center; font-size: 11.5px; color: var(--muted); padding: 0 0 10px; } .tt.okc { color: var(--pos); } .tt.bad { color: var(--neg); }
+  .fxc .l small { display: block; font-size: 11.5px; color: var(--muted); }
+  .fxi { width: 96px; background: var(--fill); border: 0; border-radius: 10px; padding: 7px 10px; text-align: right; font-weight: 600; color: var(--text); outline: none; }
+  .fxs { color: var(--muted); min-width: 18px; }
+  .hint { display: block; width: 100%; text-align: right; padding: 0 14px 8px; font-size: 11.5px; color: var(--gold); }
   .err { color: var(--neg); font-size: 12px; text-align: center; margin: 4px 0; }
   .gw { position: relative; display: flex; justify-content: center; margin-top: 10px; }
   .go { position: relative; height: 50px; width: 100%; color: #fff; font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center;
