@@ -109,7 +109,7 @@
     </div>
     {#each [['Карта и наличные', main], ['Конверты', rest]] as [title, list], g}
       {#if list.length}
-        <h2 class="rise" style:--i={2 + g * 4}>{title}</h2>
+        <h2 class="rise" style:--i={2 + g * 4}>{title}<span class="hs">{money(list.reduce((t, r) => t + r.balance, 0), 2)}</span></h2>
         <div class="card">
           {#if g === 0 && grouped}
             <button class="r gh" onclick={toggleMono} aria-expanded={monoOpen}>
@@ -149,7 +149,7 @@
       {/if}
     {/each}
     {#if fcur.length}
-      <h2 class="rise" style:--i={10}>Валютные счета <span class="tag">вне бюджета</span></h2>
+      <h2 class="rise" style:--i={10}>Валютные счета <span class="tag">вне бюджета</span>{#if fcur.some((g) => g.sum)}<span class="hs">≈ {money(fcur.reduce((t, g) => t + g.sum, 0))}</span>{/if}</h2>
       <div class="card rise" style:--i={11}>
         {#each fcur as g, gi (g.cur)}
           <div class="sh" class:nf={gi > 0}><span>{g.name}</span>{#if g.sum}<small>≈ {money(g.sum)}</small>{/if}</div>
@@ -228,6 +228,7 @@
   .a { white-space: nowrap; }
   .ex { font-size: 12px; font-weight: 600; background: linear-gradient(180deg, #F0D18A, #C9963A); color: #1a1206; border-radius: 8px; padding: 4px 10px; }
   .fb { display: flex; gap: 3px; height: 8px; margin: 6px 14px 8px; border-radius: 4px; overflow: hidden; } .fb u { display: block; min-width: 4px; }
+  h2 { display: flex; align-items: center; } h2 .hs { margin-left: auto; margin-right: 16px; font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); font-variant-numeric: tabular-nums; }
   h2 .tag { margin-left: 4px; text-transform: none; letter-spacing: 0; }
   .err { color: var(--neg); }
   .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; font: inherit; }
