@@ -21,5 +21,5 @@
   .g { width: 100%; max-width: 320px; min-height: 50px; border-radius: 14px; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff;
     font-size: 15px; font-weight: 600; }
   .g:disabled { opacity: .6; }
-  @media (prefers-color-scheme: dark) { .g { color: #000; } }
+  :global(:root[data-theme="dark"]) .g { color: #000; }
 </style>

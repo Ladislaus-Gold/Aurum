@@ -3,6 +3,7 @@
   import { moreItems, nav } from '../lib/nav.svelte.js';
   import { auth, signOut } from '../lib/auth.svelte.js';
   import Icon from '../lib/Icon.svelte';
+  import ThemeSwitch from '../lib/ThemeSwitch.svelte';
   const version = __APP_VERSION__;
   const order = { 'Деньги': ['accset', 'import', 'backup'], 'Умные функции': ['analytics', 'rules'], 'Система': ['status'] };
   const groups = Object.entries(order).map(([h, ids]) => [h, ids.map((id) => moreItems.find((x) => x.id === id))]);
@@ -18,6 +19,7 @@
   <div class="pr">
     <div class="av">{#if photo && !bad}<img src={photo} alt="" referrerpolicy="no-referrer" onerror={() => (bad = true)} />{:else}{name.slice(0, 1).toUpperCase()}{/if}</div>
     <div class="m"><b>{name}</b><small>{u?.email ?? ''}</small></div>
+    <ThemeSwitch />
   </div>
   {#each groups as [h, list]}
     <h2>{h}</h2>
