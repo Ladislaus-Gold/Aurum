@@ -2,7 +2,7 @@
   import Sheet from '../lib/Sheet.svelte';
   import Icon from '../lib/Icon.svelte';
   import { money, fmt } from '../lib/format.js';
-  import { loadDist, saveDist, groups, formedMap, form, undo, r2, KEYS } from '../lib/dist.svelte.js';
+  import { loadDist, saveDist, setTarget, groups, formedMap, form, undo, r2, KEYS } from '../lib/dist.svelte.js';
   let { open = false, d, onclose, ondone } = $props();
 
   let rows = $state([]), accounts = $state([]), batches = $state([]), tab = $state(1), loading = $state(false), err = $state('');
@@ -53,6 +53,13 @@
     busy = false;
   }
   const chip = (r) => { const a = r.target && accounts.find((x) => x.id === r.target && !x.src); return a ? `→ ${a.name}` : 'в кэше'; };
+  async function pickTarget(r, v) {
+    const id = v === '' ? null : Number(v);
+    const old = r.target; r.target = id; rows = rows; err = '';
+    try { await setTarget(r.id, id); } catch (e) { r.target = old; rows = rows; err = e?.message ?? String(e); }
+  }
+  let tmain = $derived(accounts.filter((a) => !a.src && a.main));
+  let tenv = $derived(accounts.filter((a) => !a.src && !a.main));
   const mmss = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
   const left = (r) => Math.max(0, r2(r.plan - r.advance - r.salary - r.other));
   const month = $derived(d ? new Date(d.y, d.m, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '').replace(/^./, (c) => c.toUpperCase()) : '');
@@ -78,7 +85,7 @@
           <div class="card">
             {#each rows as r (r.id)}
               <div class="r"><div class="ic"><Icon name={r.icon} size={17} /></div>
-                <div class="m"><b>{r.name}<span class="chip" class:c={chip(r) === 'в кэше'}>{chip(r)}</span></b>
+                <div class="m"><b>{r.name}<label class="chip" class:c={chip(r) === 'в кэше'}>{chip(r)} ▾<select value={r.target && accounts.some((x) => x.id === r.target && !x.src) ? String(r.target) : ''} onchange={(e) => pickTarget(r, e.currentTarget.value)} aria-label="Куда отправить {r.name}"><option value="">В кэше</option>{#if tmain.length}<optgroup label="Карта и наличные">{#each tmain as a (a.id)}<option value={String(a.id)}>{a.name}</option>{/each}</optgroup>{/if}{#if tenv.length}<optgroup label="Конверты">{#each tenv as a (a.id)}<option value={String(a.id)}>{a.name}</option>{/each}</optgroup>{/if}</select></label></b>
                   <small>план {f(r.plan)} · ещё {f(left(r))}{#if fm[r.id] > 0} · ✓ переведено {f(fm[r.id])}{/if}</small></div>
                 <input class="am" type="number" min="0" step="100" inputmode="decimal" placeholder="0" value={r[key] > 0 ? r[key] : ''} oninput={(e) => setAmt(r, e.currentTarget.value)} aria-label={r.name} />
               </div>
@@ -133,6 +140,7 @@
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .m small { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chip { font-size: 11px; color: var(--gold); background: var(--gold-soft); border-radius: 6px; padding: 1px 6px; margin-left: 6px; font-weight: 500; }
+  .chip { position: relative; display: inline-block; } .chip select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; }
   .chip.c { color: var(--muted); background: var(--fill); }
   .am { width: 96px; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; background: var(--fill); border: 0; border-radius: 10px; padding: 7px 11px; text-align: right; color: var(--text); }
   .nt { text-align: center; font-size: 11.5px; color: var(--muted); margin: 8px 0 8px; }

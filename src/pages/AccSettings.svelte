@@ -61,10 +61,7 @@
     {#each accs as a (a.id)}
       <div class="bk">
         <div class="bn">{a.name}</div>
-        <div class="sg">
-          <button class:on={a.blk === 'card'} onclick={() => setBlock(a, 'card')}>Карта и наличные</button>
-          <button class:on={a.blk === 'env'} onclick={() => setBlock(a, 'env')}>Конверты</button>
-        </div>
+        <label class="pk">{a.blk === 'card' ? 'Карта' : 'Конверт'} ▾<select value={a.blk} onchange={(e) => setBlock(a, e.currentTarget.value)} aria-label="Блок для {a.name}"><option value="card">Карта и наличные</option><option value="env">Конверты</option></select></label>
       </div>
     {/each}
   </div>
@@ -95,8 +92,9 @@
   .m { flex: 1; min-width: 0; } .m b { font-weight: 500; display: block; } .m small { display: block; font-size: 12px; color: var(--muted); }
   .chev { color: var(--muted); opacity: .5; display: flex; }
   .ck { color: var(--gold); display: flex; }
-  .bk { padding: 10px 14px; position: relative; } .bk + .bk::before { content: ""; position: absolute; left: 14px; right: 0; top: 0; border-top: .5px solid var(--line); }
-  .bn { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .bk { padding: 0 14px; min-height: 48px; display: flex; align-items: center; gap: 10px; position: relative; } .bk + .bk::before { content: ""; position: absolute; left: 14px; right: 0; top: 0; border-top: .5px solid var(--line); }
+  .bn { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; }
+  .pk { position: relative; font-size: 13px; font-weight: 500; color: var(--gold); background: var(--gold-soft); border-radius: 10px; padding: 6px 12px; white-space: nowrap; } .pk select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; }
   .sg { display: flex; gap: 6px; } .sg button { flex: 1; padding: 7px 0; border-radius: 10px; background: var(--fill); font-size: 13px; color: var(--muted); }
   .sg button.on { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; font-weight: 600; }
   .foot { color: var(--muted); font-size: 12px; margin: 6px 16px 0; }

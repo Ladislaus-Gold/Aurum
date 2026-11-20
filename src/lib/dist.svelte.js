@@ -8,11 +8,11 @@ export const KEYS = ['advance', 'salary', 'other'];
 export async function loadDist(d) {
   const [cats, accs, dist, mon] = await Promise.all([
     supabase.from('categories').select('id,name,icon,type,target_account_id,sort_order').eq('type', 'EXPENSE').order('sort_order'),
-    supabase.from('accounts').select('id,name,is_budget_source'),
+    supabase.from('accounts').select('id,name,icon,is_budget_source,is_monobank,is_foreign,block'),
     supabase.from('budget_distribution').select('category_id,advance,salary,other').eq('month', d.month),
     supabase.from('budget_distribution_month').select('month,advance_total,salary_total,batches').eq('month', d.month)
   ]);
-  const accounts = ok(accs).map((a) => ({ id: a.id, name: noEmoji(a.name), src: !!a.is_budget_source }));
+  const accounts = ok(accs).filter((a) => !a.is_foreign).map((a) => ({ id: a.id, name: noEmoji(a.name), src: !!a.is_budget_source, main: a.block ? a.block === 'card' : !!(a.is_monobank || a.is_budget_source || a.icon === 'wallet' || a.icon === 'card') }));
   const saved = new Map(ok(dist).map((r) => [r.category_id, r]));
   const plan = new Map(d.exp.map((c) => [c.id, c.plan]));
   const rows = [];
@@ -24,6 +24,11 @@ export async function loadDist(d) {
   }
   const m = ok(mon)[0];
   return { rows, accounts, batches: Array.isArray(m?.batches) ? m.batches : [], advTotal: Number(m?.advance_total || 0), salTotal: Number(m?.salary_total || 0) };
+}
+
+export async function setTarget(catId, accId) {
+  const { error } = await supabase.from('categories').update({ target_account_id: accId }).eq('id', catId);
+  if (error) throw error;
 }
 
 export async function saveDist(month, rows) {
