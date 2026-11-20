@@ -8,6 +8,8 @@ export const theme = $state({ mode: read() });
 export function applyTheme() {
   const dark = theme.mode === 'dark' || (theme.mode === 'auto' && !!mq?.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  // Строка состояния iOS: в тёмной теме контент под ней (чёрная полоса от самого приложения), в светлой — штатная
+  document.querySelector('meta[name=apple-mobile-web-app-status-bar-style]')?.setAttribute('content', dark ? 'black-translucent' : 'default');
   // Авто: оставляем два meta с media (строка состояния сама следует системе); вручную: обе метки одного цвета
   const c = theme.mode === 'auto' ? null : dark ? '#000000' : '#F2F2F7';
   document.querySelectorAll('meta[name=theme-color]').forEach((e) => {
