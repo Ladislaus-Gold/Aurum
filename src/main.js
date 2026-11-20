@@ -1,4 +1,6 @@
 import './app.css';
+import { applyTheme } from './lib/theme.svelte.js';
+applyTheme();
 import { mount } from 'svelte';
 import App from './App.svelte';
 

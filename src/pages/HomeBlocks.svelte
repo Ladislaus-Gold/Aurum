@@ -73,7 +73,7 @@
   .lt { color: #F4DDA6; font-size: 17px; font-weight: 700; text-align: center; max-width: 300px; }
   .lb { color: rgba(255,255,255,.6); font-size: 13px; text-align: center; }
   .dl { position: relative; width: 100%; max-width: 340px; background: #fff; border-radius: 18px; padding: 4px 0; color: #000; box-shadow: 0 0 0 2px rgba(232,194,119,.8), 0 0 40px rgba(232,194,119,.35); }
-  @media (prefers-color-scheme: dark) { .dl { background: #1C1C1E; color: #fff; } }
+  :global(:root[data-theme="dark"]) .dl { background: #1C1C1E; color: #fff; }
   .dr { display: flex; align-items: center; gap: 10px; height: 58px; background: inherit; position: relative; border-radius: 12px; }
   .dr .dh { width: 40px; display: grid; place-items: center; color: #B8862C; }
   .d0 { animation: m0 6s ease-in-out forwards; z-index: 2; }

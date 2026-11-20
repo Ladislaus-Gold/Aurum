@@ -242,7 +242,7 @@
 
 <style>
   .page { padding: 0 var(--pad); --ws: #A5772F; --ns: #B4534C; }
-  @media (prefers-color-scheme: dark) { .page { --ws: #C4A268; --ns: #C77870; } }
+  :global(:root[data-theme="dark"]) .page { --ws: #C4A268; --ns: #C77870; }
   h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 8px; padding-top: calc(var(--safe-t) + 18px); }
   .mon { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 14px; color: var(--gold); }
   .mon b { font-size: 15px; font-weight: 600; color: var(--text); min-width: 140px; text-align: center; }
