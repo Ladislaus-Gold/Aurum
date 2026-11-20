@@ -97,7 +97,7 @@ export async function loadBudget(y, m) {
       const bp = list.reduce((s, c) => s + c.plan, 0), bf = list.reduce((s, c) => s + c.fact, 0);
       const distributed = dsum(key);
       return {
-        key, name, icon, plan: bp, fact: bf, undist: Math.max(0, bf - distributed),
+        key, name, icon, cats: list.map((c) => ({ id: c.id, name: c.name, plan: c.plan, fact: c.fact })), plan: bp, fact: bf, undist: Math.max(0, bf - distributed),
         names: key === 'other' ? list.filter((c) => c.fact > 0 || c.plan > 0).map((c) => c.name).join(', ') : ''
       };
     });

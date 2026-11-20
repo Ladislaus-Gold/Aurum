@@ -8,6 +8,7 @@
   import TxList from '../lib/TxList.svelte';
   import { txByCategory } from '../lib/txq.js';
   import DistSheet from './DistSheet.svelte';
+  import Amount from '../lib/Amount.svelte';
 
   const now = new Date();
   let ym = $state({ y: now.getFullYear(), m: now.getMonth() });
@@ -91,7 +92,16 @@
     txByCategory(id, ym.y, ym.m).then((r) => { if (picked?.id === id) ctx = r; }).catch((e) => { ctxErr = e?.message ?? String(e); }).finally(() => (ctxLoad = false));
   }
   const minOk = (cat, v) => cat.mandatory ? v >= cat.min : (v === 0 || v >= cat.min);
-  function bump(dv) { plan = Math.max(0, plan + dv); }
+  let ip = $state(null), ilast = $state(null), ivals = $state({}), isaving = $state(false), ierr = $state('');
+  $effect(() => { if (ip) ilast = ip; });
+  let ib = $derived(ip ?? ilast);
+  function openInc(b) { ip = b; ivals = Object.fromEntries(b.cats.map((x) => [x.id, x.plan])); ierr = ''; }
+  async function saveInc() {
+    isaving = true; ierr = '';
+    try { for (const x of ip.cats) if (Number(ivals[x.id] || 0) !== x.plan) await savePlan(x.id, d.month, Number(ivals[x.id] || 0)); ip = null; await load(); }
+    catch (e) { ierr = e?.message ?? String(e); }
+    isaving = false;
+  }
   async function save() {
     if (!minOk(c, plan)) { serr = `Минимум на месяц — ${money(c.min)}`; return; }
     saving = true; serr = '';
@@ -183,12 +193,12 @@
     <h2>Доходы<span>{f(d.incFact)} из {f(d.incPlan)} ₴</span></h2>
     <div class="card">
       {#each d.buckets as b (b.key)}
-        <div class="r">
+        <button class="r" onclick={() => openInc(b)}>
           <div class="ic"><Icon name={b.icon} size={17} /></div>
           <div class="m"><b>{b.name}</b>{#if b.undist > 0}<small>не распределено {f(b.undist)}</small>{:else if b.names}<small>{b.names}</small>{/if}</div>
           <div class="rt">{#if b.plan > 0 && b.fact >= b.plan || (b.plan === 0 && b.fact > 0)}<span class="ok">✓ {f(b.fact)} ₴</span>
             {:else if b.plan > 0}<span class="mu">{f(b.plan)} ₴</span><small>ожидается</small>{:else}<span class="mu">—</span>{/if}</div>
-        </div>
+        </button>
       {/each}
     </div>
    {/key}
@@ -198,11 +208,31 @@
 <DistSheet open={distOpen} {d} onclose={() => (distOpen = false)} ondone={load} />
 <PlanSheet open={planOpen} {d} onclose={() => (planOpen = false)} ondone={load} />
 
+<Sheet open={!!ip} onclose={() => (ip = null)}>
+  {#if ib && d}
+    <h3>{ib.name}</h3>
+    <div class="ml">Доход · {d.label}</div>
+    {#if !ib.cats.length}
+      <p class="ml">Нет категорий дохода для этой строки.</p>
+    {:else if ib.cats.length === 1}
+      <Amount bind:value={ivals[ib.cats[0].id]} />
+    {:else}
+      <div class="list lc">{#each ib.cats as x (x.id)}<div class="dr ic2"><span class="cn">{x.name}</span><Amount bind:value={ivals[x.id]} big={false} /></div>{/each}</div>
+    {/if}
+    <div class="list">
+      <div class="dr"><span>Получено</span><span>{money(ib.fact, 2)}</span></div>
+      <div class="dr"><span>Ожидается</span><span>{money(ib.cats.reduce((t, x) => t + Number(ivals[x.id] || 0), 0), 2)}</span></div>
+    </div>
+    {#if ierr}<p class="err">{ierr}</p>{/if}
+    {#if ib.cats.length}<button class="save" disabled={isaving} onclick={saveInc}>{isaving ? 'Сохраняю…' : 'Сохранить'}</button>{/if}
+  {/if}
+</Sheet>
+
 <Sheet open={!!picked} onclose={() => (picked = null)}>
   {#if c && d}
     <h3>{c.name}</h3>
     <div class="ml">{modeLabel(c)}</div>
-    <div class="step"><button onclick={() => bump(-500)} aria-label="Минус 500">−500</button><div class="pv">{f(plan)} ₴</div><button onclick={() => bump(500)} aria-label="Плюс 500">+500</button></div>
+    <Amount bind:value={plan} />
     <div class="list">{#each detail(c) as [k, v]}<div class="dr"><span>{k}</span><span>{v}</span></div>{/each}</div>
     <TxList rows={ctx} loading={ctxLoad} error={ctxErr} title="Операции за месяц" />
     {#if serr}<p class="err">{serr}</p>{/if}
@@ -260,9 +290,8 @@
   .err { color: var(--neg); } .retry { border: 0; background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; border-radius: 12px; padding: 10px 16px; }
   h3 { margin: 0; font-size: 17px; font-weight: 700; text-align: center; }
   .ml { text-align: center; color: var(--muted); font-size: 12px; margin: 2px 0 10px; }
-  .step { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .step button { width: 72px; height: 40px; border-radius: 12px; background: var(--fill); color: var(--gold); font-weight: 600; }
-  .pv { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .lc { margin-bottom: 12px; } .ic2 { align-items: center; gap: 8px; } .cn { flex: 1; min-width: 0; }
+  .list + .list { margin-top: 12px; }
   .list { background: var(--bg); border-radius: 14px; overflow: hidden; }
   .dr { display: flex; justify-content: space-between; gap: 12px; padding: 11px 16px; font-size: 14px; position: relative; }
   .dr + .dr::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--line); }
