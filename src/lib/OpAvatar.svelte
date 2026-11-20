@@ -20,5 +20,6 @@
   .logo { object-fit: contain; background: #fff; box-shadow: 0 0 0 .5px rgba(60,60,67,.18); }
   .gold { background: linear-gradient(160deg, #EBC77A, #B8862C); color: #fff; box-shadow: 0 1px 2px rgba(120,80,10,.25); }
   @media (prefers-color-scheme: dark) { .gold { background: linear-gradient(160deg, #E8C277, #A8741F); } }
-  .tr { background: linear-gradient(160deg, #2A2416, #0E0C07); color: #EBC77A; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .tr { background: #F6EFDD; color: #8A6416; }
+  @media (prefers-color-scheme: dark) { .tr { background: #3A301C; color: #E8C277; } }
 </style>
