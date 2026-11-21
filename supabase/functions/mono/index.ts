@@ -96,6 +96,12 @@ function resolveRule(rulesMap: any, bankAction: string, note: string): any {
   }
   return null;
 }
+// Monobank пишет отмену/возврат платежа положительной суммой с описанием «Скасування. Магазин».
+const REFUND_RE = /^(скасування|повернення|відміна|возврат|отмена|refund|cancel)/i;
+function refundBase(note: string): string {
+  return note.replace(REFUND_RE, "").replace(/^[\s.:,\-–—]+/, "").trim();
+}
+
 function buildTransactionRow(item: any, binding: any, ctx: any): any {
   const monoOpId = String(item?.id ?? "").trim();
   if (!monoOpId) throw new Error("statementItem.id is missing");
@@ -124,6 +130,12 @@ function buildTransactionRow(item: any, binding: any, ctx: any): any {
     categoryId = rule.category_id;
   } else if (bankAction === "EXPENSE") {
     categoryId = ctx.uncategorizedExpenseId;
+  } else if (REFUND_RE.test(note)) {
+    // плюс от банка с пометкой отмены — это возврат, а не доход
+    action = "RETURN";
+    const base = noteKey(refundBase(note));
+    const sameShop = base ? ctx.rulesMap.get("EXPENSE::" + base) : null;
+    categoryId = sameShop && sameShop.category_id ? sameShop.category_id : ctx.uncategorizedExpenseId;
   }
   return {
     monoOpId,
